@@ -11,8 +11,8 @@ from fastapi import APIRouter, Depends, File, HTTPException, Path, UploadFile, B
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 
-from lib.auth_middleware import get_current_store
-from lib.yaml_helpers import load_store_yaml, save_store_yaml
+from backend.lib.auth_middleware import get_current_store
+from backend.lib.yaml_helpers import load_store_yaml, save_store_yaml
 
 
 router = APIRouter(prefix="/api/store/{store_id}", tags=["floorplan"])
@@ -22,7 +22,7 @@ router = APIRouter(prefix="/api/store/{store_id}", tags=["floorplan"])
 async def get_floorplan(store_id: str = Path(..., regex=r"^\d{1,4}$")):
     """Get the floorplan image for a store"""
     # Check for existing floorplan files in expected formats
-    floorplan_dir = "assets/floorplans"
+    floorplan_dir = "floorplans"
     extensions = ['.png', '.jpg', '.jpeg', '.svg']
     
     for ext in extensions:

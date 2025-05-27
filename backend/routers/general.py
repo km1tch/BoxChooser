@@ -4,7 +4,7 @@ import yaml
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 
-from models.price import Comment
+from backend.models.price import Comment
 
 router = APIRouter(tags=["general"])
 

@@ -6,7 +6,7 @@ from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from functools import wraps
 from typing import Optional, Tuple
-from lib import auth_manager
+from backend.lib import auth_manager
 
 # Bearer token security scheme
 bearer_scheme = HTTPBearer()

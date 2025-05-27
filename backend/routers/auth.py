@@ -6,15 +6,15 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Header
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from lib.auth_middleware import get_current_store, get_optional_auth, get_current_auth
-from lib.auth_manager import (
+from backend.lib.auth_middleware import get_current_store, get_optional_auth, get_current_auth
+from backend.lib.auth_manager import (
     verify_pin, create_session, delete_session,
     hasAuth as store_has_auth, get_db, get_store_info,
     create_email_verification_code, verify_email_code,
     regenerate_pin
 )
-from lib.email_service import send_login_code
-from models.auth import (
+from backend.lib.email_service import send_login_code
+from backend.models.auth import (
     LoginRequest, EmailCodeRequest, VerifyCodeRequest,
     TokenResponse, UpdateEmailRequest
 )

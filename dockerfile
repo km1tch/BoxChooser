@@ -5,14 +5,17 @@ RUN apt-get update && apt-get install -y sqlite3 && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /code
 
-# Create the db directory for SQLite database
-RUN mkdir -p /db && chmod 777 /db
+# Create directories for mounted volumes
+RUN mkdir -p /db /code/stores /code/floorplans && chmod 777 /db
 
 COPY ./requirements.txt /code/requirements.txt
 
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
-EXPOSE 5000
+# Copy only the application code
+COPY ./backend /code/backend
 
-# Ensure the database directory exists and initialize it
-CMD mkdir -p /db && chmod 777 /db && fastapi run main.py --port 5000
+EXPOSE 8000
+
+# Run FastAPI on port 8000 (standard uvicorn port)
+CMD mkdir -p /db && chmod 777 /db && cd /code && uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload

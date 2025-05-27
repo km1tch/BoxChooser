@@ -3,13 +3,13 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, UploadFile
 from fastapi.responses import JSONResponse
 
-from lib.auth_middleware import get_current_store
-from lib.excel_import import (
+from backend.lib.auth_middleware import get_current_store
+from backend.lib.excel_import import (
     export_prices_to_excel, import_prices_from_excel,
     analyze_excel_structure, analyze_import_for_matching,
     apply_import_updates
 )
-from lib.yaml_helpers import load_store_yaml, save_store_yaml
+from backend.lib.yaml_helpers import load_store_yaml, save_store_yaml
 
 router = APIRouter(prefix="/api/store/{store_id}", tags=["import-export"])
 

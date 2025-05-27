@@ -3,13 +3,13 @@ from typing import Tuple
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
 from fastapi.responses import JSONResponse
 
-from lib.auth_middleware import get_current_auth
-from lib.auth_manager import get_db
-from lib.packing_rules_defaults import (
+from backend.lib.auth_middleware import get_current_auth
+from backend.lib.auth_manager import get_db
+from backend.lib.packing_rules_defaults import (
     get_default_rule, get_all_default_rules,
     get_default_engine_config, get_default_engine_config_value
 )
-from models.packing import PackingRulesUpdateRequest, EngineConfigUpdateRequest
+from backend.models.packing import PackingRulesUpdateRequest, EngineConfigUpdateRequest
 
 router = APIRouter(prefix="/api/store/{store_id}", tags=["packing"])
 

@@ -1645,7 +1645,7 @@ async function applyImportChanges() {
         alert(`Successfully updated ${result.updated_count} boxes!`);
         
         // Redirect to price editor or reload
-        window.location.href = `/${currentStoreId}/price_editor`;
+        window.location.href = `/${currentStoreId}/prices`;
         
     } catch (error) {
         console.error('Error applying updates:', error);

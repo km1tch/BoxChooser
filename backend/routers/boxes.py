@@ -12,8 +12,8 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from lib.auth_middleware import get_current_store, require_auth
-from lib.yaml_helpers import load_store_yaml, save_store_yaml, get_box_section, validate_box_data
+from backend.lib.auth_middleware import get_current_store, require_auth
+from backend.lib.yaml_helpers import load_store_yaml, save_store_yaml, get_box_section, validate_box_data
 
 
 router = APIRouter(prefix="/api/store/{store_id}", tags=["boxes"])
