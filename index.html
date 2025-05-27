@@ -33,6 +33,11 @@
                 if (storeId && /^\d+$/.test(storeId)) {
                     // Initialize the navigation bar
                     await initAdminNav('app-container', storeId, 'packing');
+                    
+                    // Check authentication (user or admin)
+                    if (typeof AuthManager !== 'undefined') {
+                        await AuthManager.requireAuth(storeId, false);
+                    }
                 }
             });
         </script>

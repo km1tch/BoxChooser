@@ -1,5 +1,4 @@
 pricing-mode: itemized
-editable: true
 boxes:
   - type: NormalBox
     supplier: ABC
@@ -660,7 +659,7 @@ boxes:
   - type: NormalBox
     supplier: ABC
     model: "MIR-9"
-    dimensions: [36.0, 36.0, 36.0]
+    dimensions: [36.0, 6.0, 36.0]
     itemized-prices:
       box-price: 23.99
       standard-materials: 0

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Packing Wizard</title>
+        <meta name="description" content="Find the perfect box in 3 easy steps">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link rel="stylesheet" href="/assets/css/common.css">
+        <link rel="stylesheet" href="/assets/css/wizard.css">
+        
+        <!-- Load required modules -->
+        <script src="/lib/auth.js"></script>
+        <script src="/lib/pricing.js"></script>
+        <script src="/lib/packing.js"></script>
+        <script src="/lib/packing-rules.js"></script>
+        <script src="/lib/recommendation-engine.js"></script>
+        <script src="/components/navigation.js"></script>
+        <script src="/components/wizard-ui.js"></script>
+    </head>
+    
+    <body>
+        <div id="app-container">
+            <nav id="nav-container"></nav>
+            
+            <div class="container" id="wizard-container">
+                <!-- Wizard UI will be rendered here -->
+            </div>
+        </div>
+        
+        <script>
+            // Initialize wizard when DOM is ready
+            document.addEventListener('DOMContentLoaded', async function() {
+                // Get store ID from path
+                const path = window.location.pathname;
+                const match = path.match(/^\/(\d{1,4})\//);
+                const storeId = match ? match[1] : '1';
+                
+                // Initialize navigation
+                if (typeof initAdminNav !== 'undefined') {
+                    await initAdminNav('nav-container', storeId, 'wizard');
+                }
+                
+                // Check authentication (user or admin)
+                if (typeof AuthManager !== 'undefined') {
+                    await AuthManager.requireAuth(storeId, false);
+                }
+                
+                // Load boxes and engine config for this store
+                let boxes = [];
+                let engineConfig = {};
+                
+                try {
+                    // Load both in parallel
+                    const [boxData, configData] = await Promise.all([
+                        loadBoxes(storeId),
+                        fetch(`/api/store/${storeId}/engine-config`).then(r => r.json())
+                    ]);
+                    
+                    boxes = boxData;
+                    engineConfig = configData;
+                } catch (error) {
+                    console.error('Error loading data:', error);
+                    document.getElementById('wizard-container').innerHTML = 
+                        '<div class="error">Error loading data. Please refresh the page.</div>';
+                    return;
+                }
+                
+                // Initialize recommendation engine with store config
+                const engine = new RecommendationEngine(engineConfig);
+                
+                // Initialize wizard UI
+                const wizard = new WizardUI('wizard-container', {
+                    storeId: storeId,
+                    onFindBoxes: async (itemDims, packingLevel) => {
+                        // Get recommendations from engine
+                        return engine.getRecommendations(boxes, itemDims, packingLevel);
+                    }
+                });
+                
+                wizard.init();
+            });
+            
+            // Global functions for box location and printing
+            async function showBoxLocation(boxModel, recId) {
+                try {
+                    // Get the store ID
+                    const path = window.location.pathname;
+                    const match = path.match(/^\/(\d{1,4})\//);
+                    const storeId = match ? match[1] : '1';
+                    
+                    // Get the store's box data to find location
+                    const response = await fetch(`/api/store/${storeId}/boxes`);
+                    if (!response.ok) {
+                        throw new Error('Failed to load box data');
+                    }
+                    
+                    const data = await response.json();
+                    const boxData = data.boxes.find(b => b.model === boxModel);
+                    
+                    if (!boxData || !boxData.location) {
+                        alert(`Location not set for ${boxModel}`);
+                        return;
+                    }
+                    
+                    // Check if floorplan exists
+                    const floorplanResponse = await fetch(`/api/store/${storeId}/floorplan`);
+                    if (!floorplanResponse.ok) {
+                        // No floorplan, just show text location
+                        if (typeof boxData.location === 'string') {
+                            alert(`${boxModel} Location: ${boxData.location}`);
+                        } else {
+                            alert(`${boxModel} is mapped on the store floorplan`);
+                        }
+                        return;
+                    }
+                    
+                    // Show floorplan modal with location marker
+                    showFloorplanModal(boxModel, boxData.location, floorplanResponse);
+                    
+                } catch (error) {
+                    console.error('Error showing location:', error);
+                    alert('Unable to show box location');
+                }
+            }
+            
+            async function showFloorplanModal(boxModel, location, floorplanResponse) {
+                // Get floorplan image
+                const blob = await floorplanResponse.blob();
+                const imageUrl = URL.createObjectURL(blob);
+                
+                // Create modal
+                const modal = document.createElement('div');
+                modal.className = 'modal-backdrop';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2>${boxModel} Location</h2>
+                            <button class="modal-close" onclick="this.closest('.modal-backdrop').remove()">&times;</button>
+                        </div>
+                        <div id="floorplan-container">
+                            <img id="floorplan-image" src="${imageUrl}">
+                        </div>
+                    </div>
+                `;
+                
+                // Close modal on backdrop click
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.remove();
+                        URL.revokeObjectURL(imageUrl);
+                    }
+                });
+                
+                // Also clean up on close button
+                modal.querySelector('.modal-close').addEventListener('click', () => {
+                    URL.revokeObjectURL(imageUrl);
+                });
+                
+                document.body.appendChild(modal);
+                
+                // Wait for image to load, then add marker
+                const img = modal.querySelector('#floorplan-image');
+                img.onload = () => {
+                    if (location && location.coords) {
+                        const container = modal.querySelector('#floorplan-container');
+                        
+                        // Create marker
+                        const marker = document.createElement('div');
+                        marker.className = 'location-marker';
+                        marker.style.left = `${location.coords[0] * 100}%`;
+                        marker.style.top = `${location.coords[1] * 100}%`;
+                        
+                        // Add label
+                        const label = document.createElement('div');
+                        label.className = 'marker-label';
+                        label.textContent = boxModel;
+                        
+                        marker.appendChild(label);
+                        container.appendChild(marker);
+                    }
+                };
+            }
+            
+            async function printRecommendation(recId, index) {
+                // Get the recommendation card
+                const cards = document.querySelectorAll('.recommendation-card');
+                const card = cards[index];
+                if (!card) return;
+                
+                // Parse the stored data
+                const data = JSON.parse(card.dataset.recommendation);
+                
+                // Get store ID
+                const path = window.location.pathname;
+                const match = path.match(/^\/(\d{1,4})\//);
+                const storeId = match ? match[1] : '1';
+                
+                try {
+                    // Fetch packing rules to get instructions
+                    const rulesResponse = await fetch(`/api/store/${storeId}/packing-rules`);
+                    const rulesData = await rulesResponse.json();
+                    
+                    // Get the selected packing level API name
+                    const packingLevelApi = data.packingLevelApi || 'Basic';
+                    
+                    // Find the matching rule
+                    const rule = rulesData.effective_rules.find(r => r.packing_type === packingLevelApi);
+                    const instructions = rule ? rule.label_instructions : 'No specific instructions available';
+                    
+                    // Prepare floorplan if location exists
+                    let floorplanHtml = '';
+                    if (data.box.location && data.box.location.coords) {
+                        const floorplanResponse = await fetch(`/api/store/${storeId}/floorplan`);
+                        if (floorplanResponse.ok) {
+                            const blob = await floorplanResponse.blob();
+                            const imageUrl = URL.createObjectURL(blob);
+                            
+                            floorplanHtml = `
+                                <div class="print-floorplan-section">
+                                    <h3>Box Location</h3>
+                                    <div class="floorplan-wrapper">
+                                        <img src="${imageUrl}" class="floorplan-image">
+                                        <div class="location-marker-print" style="left: ${data.box.location.coords[0] * 100}%; top: ${data.box.location.coords[1] * 100}%;">
+                                            <span class="marker-x">X</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }
+                    
+                    // Create print content with proper formatting
+                    const printContent = `
+                        <div class="print-label">
+                            <div class="print-line"><strong>Box Model: ${data.box.model} (${data.box.dimensions[0]}"×${data.box.dimensions[1]}"×${data.box.dimensions[2]}")</strong></div>
+                            <div class="print-line">Strategy: ${data.result.strategy}</div>
+                            <div class="print-line"><strong>Total Price: $${data.result.price.toFixed(2)} Box Price: $${data.box.prices[0].toFixed(2)}</strong></div>
+                            
+                            ${floorplanHtml}
+                            
+                            <div class="print-instructions">
+                                <h3>Packing Instructions</h3>
+                                <pre>${instructions}</pre>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Open print dialog
+                    const printWindow = window.open('', '', 'width=600,height=800');
+                    printWindow.document.write(`
+                        <!DOCTYPE html>
+                        <html>
+                            <head>
+                                <title>Packing Label - ${data.box.model}</title>
+                                <link rel="stylesheet" href="/assets/css/print.css">
+                                <style>
+                                    @media print {
+                                        body { margin: 0; padding: 10px; }
+                                        .print-label { font-family: monospace; font-size: 11pt; }
+                                        .print-line { margin: 5px 0; }
+                                        .print-floorplan-section { margin: 20px 0; page-break-inside: avoid; }
+                                        .floorplan-wrapper { position: relative; width: 100%; max-width: 400px; margin: 10px auto; }
+                                        .floorplan-image { width: 100%; height: auto; border: 1px solid #000; }
+                                        .location-marker-print { 
+                                            position: absolute; 
+                                            transform: translate(-50%, -50%);
+                                            pointer-events: none;
+                                        }
+                                        .marker-x { 
+                                            font-size: 48pt; 
+                                            font-weight: bold; 
+                                            color: #000;
+                                            text-shadow: -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff;
+                                        }
+                                        .print-instructions { margin-top: 20px; }
+                                        .print-instructions h3 { margin: 10px 0 5px 0; font-size: 12pt; }
+                                        .print-instructions pre { 
+                                            white-space: pre-wrap; 
+                                            font-family: monospace; 
+                                            font-size: 10pt;
+                                            margin: 0;
+                                            padding: 10px;
+                                            border: 1px solid #000;
+                                            background: #f5f5f5;
+                                        }
+                                    }
+                                    @media screen {
+                                        body { font-family: monospace; padding: 20px; }
+                                        .print-label { max-width: 600px; margin: 0 auto; }
+                                        .print-line { margin: 10px 0; font-size: 14pt; }
+                                        .floorplan-wrapper { position: relative; max-width: 400px; margin: 20px auto; }
+                                        .floorplan-image { width: 100%; border: 1px solid #ccc; }
+                                        .location-marker-print { position: absolute; transform: translate(-50%, -50%); }
+                                        .marker-x { font-size: 36pt; font-weight: bold; color: red; }
+                                        .print-instructions pre { white-space: pre-wrap; padding: 10px; background: #f5f5f5; }
+                                    }
+                                </style>
+                            </head>
+                            <body>${printContent}</body>
+                        </html>
+                    `);
+                    printWindow.document.close();
+                    
+                    // Wait for image to load before printing
+                    if (floorplanHtml) {
+                        printWindow.onload = () => {
+                            setTimeout(() => {
+                                printWindow.print();
+                            }, 500);
+                        };
+                    } else {
+                        printWindow.print();
+                    }
+                    
+                } catch (error) {
+                    console.error('Error preparing print:', error);
+                    // Fallback to simple print
+                    window.print();
+                }
+            }
+        </script>
+    </body>
+</html>

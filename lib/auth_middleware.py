@@ -5,92 +5,169 @@ FastAPI authentication middleware and decorators
 from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from functools import wraps
-from typing import Optional
+from typing import Optional, Tuple
 from lib import auth_manager
 
 # Bearer token security scheme
 bearer_scheme = HTTPBearer()
 
-def get_current_store(
+# FIXME: TEMPORARY HACK - Remove when removing auto-login hack
+# Optional bearer scheme that doesn't fail on missing auth
+# This is only needed to support the auto-login hack in routers/auth.py
+# When removing the hack, change this back to: HTTPBearer()
+optional_bearer_scheme = HTTPBearer(auto_error=False)
+
+def _get_current_auth_impl(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)
-) -> str:
+) -> Tuple[str, str]:
     """
-    Verify Bearer token and return the store_id
-    
-    Raises:
-        HTTPException: If token is invalid or expired
+    Implementation that verifies Bearer token and returns (store_id, auth_level)
     """
     token = credentials.credentials
-    store_id = auth_manager.verify_session(token)
+    result = auth_manager.verify_session(token)
     
-    if not store_id:
+    if not result:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    return result
+
+def get_current_auth():
+    """
+    Verify Bearer token and return (store_id, auth_level)
+    
+    Raises:
+        HTTPException: If token is invalid or expired
+    """
+    return Depends(_get_current_auth_impl)
+
+def get_current_store(
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)
+) -> str:
+    """
+    Verify Bearer token and return the store_id
+    (Backward compatibility - ignores auth level)
+    
+    Raises:
+        HTTPException: If token is invalid or expired
+    """
+    token = credentials.credentials
+    result = auth_manager.verify_session(token)
+    
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    store_id, _ = result
     return store_id
 
-def require_store_auth(store_id_param: str = "store_id"):
+def require_auth(admin: bool = False):
     """
-    Decorator to require authentication for a specific store
+    Decorator to require authentication
     
     Args:
-        store_id_param: Name of the path parameter containing store_id
+        admin: If True, requires admin auth level
     
     Usage:
-        @app.get("/api/store/{store_id}/protected")
-        @require_store_auth()
-        def protected_endpoint(store_id: str):
-            # This will only execute if user is authenticated for this store
+        @app.get("/api/store/{store_id}/data")
+        @require_auth()  # User or admin can access
+        def get_data(store_id: str):
+            pass
+            
+        @app.post("/api/store/{store_id}/update")
+        @require_auth(admin=True)  # Only admin can access
+        def update_data(store_id: str):
             pass
     """
     def decorator(func):
         @wraps(func)
-        async def wrapper(*args, **kwargs):
-            # Get the authenticated store_id
-            auth_store_id = kwargs.get("auth_store_id")
+        async def wrapper(
+            *args,
+            store_id: str = None,
+            auth_info: Tuple[str, str] = Depends(_get_current_auth_impl),
+            **kwargs
+        ):
+            auth_store_id, auth_level = auth_info
             
-            # Get the requested store_id from path
-            requested_store_id = kwargs.get(store_id_param)
-            
-            if not auth_store_id or not requested_store_id:
+            # Check if admin is required
+            if admin and auth_level != "admin":
                 raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Authentication configuration error"
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Admin access required"
                 )
             
             # Verify user has access to this specific store
-            if auth_store_id != requested_store_id:
+            if store_id and auth_store_id != store_id:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail=f"Not authorized to access store {requested_store_id}"
+                    detail=f"Not authorized to access store {store_id}"
                 )
             
-            # Remove auth_store_id from kwargs before calling original function
-            kwargs.pop("auth_store_id", None)
-            
-            return await func(*args, **kwargs)
+            # Call the original function with auth info
+            return await func(
+                *args,
+                store_id=store_id,
+                current_store_id=auth_store_id,
+                auth_level=auth_level,
+                **kwargs
+            )
         
-        # Inject the auth dependency
-        wrapper.__annotations__["auth_store_id"] = str
-        defaults = wrapper.__defaults__ or ()
-        wrapper.__defaults__ = (*defaults, Depends(get_current_store))
+        # Copy over function signature to preserve FastAPI's ability to parse it
+        wrapper.__name__ = func.__name__
+        wrapper.__doc__ = func.__doc__
+        
+        # Preserve the original function's signature for FastAPI
+        import inspect
+        sig = inspect.signature(func)
+        params = list(sig.parameters.values())
+        
+        # Add auth_info parameter if not present
+        auth_param = inspect.Parameter(
+            "auth_info",
+            inspect.Parameter.POSITIONAL_OR_KEYWORD,
+            default=Depends(_get_current_auth_impl),
+            annotation=Tuple[str, str]
+        )
+        
+        # Find where to insert auth_info (before kwargs if present)
+        insert_idx = len(params)
+        for i, p in enumerate(params):
+            if p.kind == inspect.Parameter.VAR_KEYWORD:
+                insert_idx = i
+                break
+        
+        if not any(p.name == "auth_info" for p in params):
+            params.insert(insert_idx, auth_param)
+        
+        wrapper.__signature__ = sig.replace(parameters=params)
         
         return wrapper
     return decorator
 
-def get_optional_auth() -> Optional[str]:
+def require_store_auth(store_id_param: str = "store_id"):
     """
-    Get the current store_id if authenticated, None otherwise
+    Decorator to require authentication for a specific store
+    (Backward compatibility wrapper around require_auth)
+    """
+    return require_auth(admin=False)
+
+def get_optional_auth() -> Optional[Tuple[str, str]]:
+    """
+    Get the current (store_id, auth_level) if authenticated, None otherwise
     
     This is useful for endpoints that behave differently when authenticated
     """
     def _get_optional_auth(
         request: Request,
-        credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme)
-    ) -> Optional[str]:
+        # FIXME: Change back to bearer_scheme when removing auto-login hack
+        credentials: Optional[HTTPAuthorizationCredentials] = Depends(optional_bearer_scheme)
+    ) -> Optional[Tuple[str, str]]:
         if not credentials:
             return None
         
@@ -102,27 +179,4 @@ def get_optional_auth() -> Optional[str]:
     
     return Depends(_get_optional_auth)
 
-# Compatibility function for gradual migration
-def check_store_auth_or_editable(store_id: str, is_authenticated: bool = False) -> bool:
-    """
-    Check if store access is allowed via auth OR editable flag
-    
-    This allows gradual migration from editable to auth system
-    
-    Args:
-        store_id: The store to check
-        is_authenticated: Whether user is authenticated for this store
-    
-    Returns:
-        True if access is allowed
-    """
-    if is_authenticated:
-        return True
-    
-    # Fall back to checking editable flag during transition
-    try:
-        from main import load_store_yaml
-        data = load_store_yaml(store_id)
-        return data.get("editable", False)
-    except:
-        return False
+

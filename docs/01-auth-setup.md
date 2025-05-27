@@ -2,9 +2,11 @@
 
 ## Overview
 
-The Packing Website uses store-level authentication with automatically generated 3-word passwords (like "happy-tiger-blue"). Each store has its own password for accessing the price editor. These passwords use common, memorable words from the EFF Special wordlist for easy typing.
+The Packing Website uses a two-tier authentication system:
+- **User Access (PIN)**: 6-digit PIN for store associates with read-only access
+- **Admin Access (Email)**: Email-based verification for managers with full access
 
-**Password Flexibility**: Passwords are normalized for user convenience. You can enter them in any format - "Happy-Tiger-Blue", "happy tiger blue", or "HAPPY TIGER BLUE" will all work. Only the letters matter, not the case or separators.
+Each store has its own authentication configuration with both a PIN for users and email verification for administrators.
 
 ## Initial Setup
 
@@ -13,69 +15,70 @@ The Packing Website uses store-level authentication with automatically generated
 **Prerequisites**: The store YAML file (e.g., `stores/store1.yml`) must exist before creating authentication.
 
 ```bash
-# Generate automatic password (outputs to stdout)
-./tools/auth create 1
-
-# Create with custom password (superadmin only)
-./tools/auth create 1 --password "MyCustomP@ssw0rd!"
+# Create authentication with email and auto-generated PIN
+./tools/auth create 1 admin@example.com
 ```
 
 **What happens:**
 
 1. Checks if `stores/store1.yml` exists (fails if not)
 2. Checks if store already has auth (prompts for confirmation if yes)
-3. Generates/normalizes password (this makes user typos [caps lock, whitespace, etc] a non-factor)
-4. **Outputs password to stdout** for user to save
-5. Stores hashed password in database
+3. Generates a 6-digit PIN for user access
+4. Sets the admin email for manager access
+5. **Outputs the PIN to stdout** for you to save
+6. Stores hashed PIN and admin email in database
 
-**Password Examples:**
+**Example Output:**
+```
+Authentication configured for Store 1
+Admin Email: admin@example.com
+User PIN: 384729
 
-- Generated output: `Password: happy-tiger-blue`
-- Custom input: `DHSdsu21723$$2_q!` → Output: `Normalized: dhsdsuq` (we frown upon the use of --password If the user wants to get any real entropy from this, better use a LOOOOONG password)
+IMPORTANT: Save this PIN! It cannot be recovered.
+Share this PIN with store associates who need read-only access.
+```
 
-**IMPORTANT**: Save passwords immediately! They cannot be recovered.
+**IMPORTANT**: Save the PIN immediately! It cannot be recovered.
 
 ## Superadmin Operations
 
 **Quick Reference:**
 
-- **(a) Create New Store**: `./tools/auth create {store_id}` (requires stores/store{id}.yml)
-- **(b) Remove Store**: Not currently implemented - passwords persist once created
-- **(c) Update Password**: `./tools/auth update {store_id}`
+- **(a) Create New Store**: `./tools/auth create {store_id} {admin_email}` (requires stores/store{id}.yml)
+- **(b) Regenerate PIN**: `./tools/auth regenerate-pin {store_id}`
+- **(c) Update Admin Email**: Via settings page after admin login
 
 **Notes:**
 
-- All commands output passwords to stdout
+- All commands output PINs to stdout
 - Store YAML files must exist before creating auth
-- Existing stores prompt for confirmation unless using --force
+- Existing stores prompt for confirmation
 
-### Create or Update Store Password
-
-Creating a new store and updating an existing store use the same command:
+### Create or Update Store Authentication
 
 ```bash
-# Create new store or update existing (will prompt for confirmation)
-./tools/auth create 1
+# Create new store auth
+./tools/auth create 1 admin@example.com
 
-# Update existing store password
-./tools/auth update 1
-
-# Update with custom password
-./tools/auth update 1 --password "MyCustomP@ss"
+# Update existing store (will prompt for confirmation)
+./tools/auth create 1 newemail@example.com
 ```
 
-### Remove Store Authentication
+### Regenerate PIN
 
-**Note**: There is currently no dedicated remove command. To effectively disable authentication for a store:
+When a PIN needs to be changed (employee turnover, security, etc.):
 
-1. You can let the password exist but not use it
-2. Or blow away/re-init the entire database (removes ALL passwords)
+```bash
+# Regenerate PIN for a store
+./tools/auth regenerate-pin 1
 
-## Managing Passwords
+# Force regeneration without confirmation
+./tools/auth regenerate-pin 1 --force
+```
 
-### Update/Reset Store Password
+This generates a new 6-digit PIN and invalidates the old one.
 
-See "Create or Update Store Password" above - it's the same operation.
+## Managing Authentication
 
 ### List All Stores with Auth
 
@@ -83,15 +86,15 @@ See "Create or Update Store Password" above - it's the same operation.
 ./tools/auth list
 ```
 
-Shows all stores that have passwords configured.
+Shows all stores with authentication configured, including their admin emails.
 
-### Verify a Password
+### Verify a PIN
 
 ```bash
 ./tools/auth verify 1
 ```
 
-Prompts for the password and verifies it's correct.
+Shows store info and prompts for the PIN to verify it's correct.
 
 ### View Audit Log
 
@@ -108,33 +111,42 @@ Prompts for the password and verifies it's correct.
 
 ## How It Works
 
-1. **Password Generation**:
-   - Default: Uses `xkcdpass` with EFF Special wordlist to generate memorable 3-word phrases
-   - Custom: Superadmins can specify their own passwords with the `--password` flag
-2. **Password Normalization**: All passwords (generated or custom) are normalized to lowercase letters only (a-z), ignoring case and non-letter characters
-3. **Storage**: Normalized passwords are bcrypt-hashed in SQLite database
-4. **Sessions**: 24-hour sessions created after successful login
+1. **PIN Generation**: System generates cryptographically secure 6-digit PINs using `secrets` module
+2. **Storage**: PINs are bcrypt-hashed in SQLite database along with admin email addresses
+3. **Sessions**: 24-hour sessions created after successful login
+4. **Auth Levels**: 
+   - User (PIN): Read-only access to wizard, packing calculator, and price viewer
+   - Admin (Email): Full access to all features including price editing and settings
 5. **Audit Trail**: All login attempts and actions are logged
 
-## Accessing the Price Editor
+## Login Process
 
-Once a store has a password:
+### For Store Associates (User Access)
 
-1. Navigate to `/{store_id}/price_editor`
-2. Enter the store password when prompted
-3. Session lasts 24 hours
-4. Logout available from the editor interface
+1. Navigate to `/login` or `/{store_id}/login`
+2. Select "Store Associate" mode
+3. Enter store number and 6-digit PIN
+4. Get redirected to wizard with read-only access
+
+### For Managers (Admin Access)
+
+1. Navigate to `/login` or `/{store_id}/login`
+2. Select "Manager Access" mode
+3. Enter store number and admin email
+4. Receive 6-character verification code via email
+5. Enter code (expires in 5 minutes)
+6. Get redirected with full admin access
 
 ## Security Notes
 
-- Passwords are never stored in plain text
-- Each store has its own password
+- PINs are bcrypt-hashed, never stored in plain text
+- Each store has its own PIN and admin email
 - Sessions expire after 24 hours
 - All access attempts are logged
-- No password recovery - only reset
-- 3-word passwords from EFF Special wordlist provide ~31 bits of entropy
-- 1,296³ = ~2.2 billion possible combinations
-- Adequate security for non-critical tool with audit logs
+- No PIN recovery - only regeneration
+- 6-digit PINs provide 1 million combinations
+- Email verification codes expire after 5 minutes
+- Single-use email codes prevent replay attacks
 
 ## Frontend Integration
 
@@ -193,8 +205,11 @@ AuthManager.logout(storeId);
 The navigation component (`/components/navigation.js`) automatically integrates with AuthManager to show:
 
 - Nothing if no auth configured
-- "Login" link if auth required but not logged in
-- "Authenticated" badge + logout button when logged in
+- "Sign In" button if auth required but not logged in  
+- Auth badge with crown (👑) for admin or unlock (🔓) for user access
+- Different navigation items based on auth level:
+  - User: Wizard, Packing Calculator, View Prices
+  - Admin: All user items plus Edit Prices, Import, Floorplan, Settings
 
 ```html
 <div id="nav-container"></div>
@@ -205,30 +220,44 @@ The navigation component (`/components/navigation.js`) automatically integrates 
 </script>
 ```
 
+## Email Configuration
+
+The system uses SMTP for sending verification codes to administrators.
+
+### Development (MailHog)
+
+The docker-compose includes MailHog for local email testing:
+- SMTP: `localhost:1025`
+- Web UI: `http://localhost:8026`
+
+### Production SMTP
+
+Set these environment variables for production:
+
+```bash
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USE_TLS=true
+SMTP_USERNAME=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+SMTP_FROM=your-email@gmail.com
+```
+
 ## Troubleshooting
 
-### "CRITICAL ERROR: xkcdpass IS NOT INSTALLED!"
+### Lost PIN
 
-There is NO fallback. You MUST install xkcdpass:
-
-```bash
-docker compose exec web pip install xkcdpass
-```
-
-The system will refuse to generate passwords without it.
-
-**Tool Architecture:**
-
-- `./tools/auth` (host) - Bash wrapper that automatically runs commands in Docker
-- `tools/manage_auth.py` (container) - Python script that handles authentication operations
-
-### Lost Password
-
-There's no recovery mechanism. You must reset the password:
+There's no recovery mechanism. You must regenerate the PIN:
 
 ```bash
-./tools/auth update {store_id}
+./tools/auth regenerate-pin {store_id}
 ```
+
+### Email Not Sending
+
+1. Check MailHog web UI at `http://localhost:8026` in development
+2. Verify SMTP settings in environment variables
+3. Check container logs: `docker compose logs site`
 
 ### Database Issues
 
@@ -238,10 +267,17 @@ If the database is corrupted, restart the Docker container to reinitialize:
 docker compose restart
 ```
 
-Note: This will lose all existing passwords.
+Note: The database is persisted in `./db/packingwebsite.db`, so auth data survives container restarts.
 
 ### Frontend Auth Issues
 
 - **Token persists after logout**: Clear localStorage manually in browser console
 - **Redirect loops**: Check if the API endpoints are returning correct status codes
 - **Can't see auth UI**: Ensure `/lib/auth.js` is loaded before components
+
+### Legacy Mode
+
+Stores with YAML files but no auth configuration operate in "legacy mode":
+- Only the packing calculator (`/{store_id}/`) is accessible
+- No navigation menu or other features
+- To enable full features, create authentication for the store

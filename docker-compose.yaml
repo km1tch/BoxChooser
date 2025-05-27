@@ -1,10 +1,42 @@
 services:
   site:
     build: .
-    volumes: 
+    volumes:
       - ./:/code
       - ./db:/db
     ports:
       - "5893:5000"
     environment:
       - SQLITE_DB_PATH=/db/packingwebsite.db
+      # SMTP email configuration (defaults to MailHog in dev)
+      - SMTP_HOST=${SMTP_HOST:-mailhog}
+      - SMTP_PORT=${SMTP_PORT:-1025}
+      - SMTP_USE_TLS=${SMTP_USE_TLS:-false}
+      - SMTP_USERNAME=${SMTP_USERNAME:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - SMTP_FROM=${SMTP_FROM:-noreply@packingsite.com}
+    depends_on:
+      - mailhog
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: packingsite_mailhog
+    ports:
+      - "8026:8025" # Web UI (8026 on host, 8025 in container)
+      - "1026:1025" # SMTP Server (1026 on host, 1025 in container)
+    restart: unless-stopped
+
+  test:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./package.json:/app/package.json:ro
+      - ./vitest.config.js:/app/vitest.config.js:ro
+      - ./lib:/app/lib:ro
+      - ./tests:/app/tests:ro
+      - node_modules:/app/node_modules
+    command: sh -c "npm install && npm test"
+    profiles: ["test"]
+
+volumes:
+  node_modules:

@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Box Price Editor</title>
+    <title>Box Prices</title>
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/select/1.3.4/css/select.dataTables.min.css">
@@ -21,9 +21,9 @@
             min-height: 100vh;
         }
         .container {
-            width: 90%;
-            max-width: none !important; /* Override Bootstrap max-width constraint */
-            margin: 0 auto;
+            width: 100%;
+            max-width: none !important;
+            margin: 0;
             padding: 15px;
             flex: 1;
         }
@@ -33,6 +33,8 @@
         .dataTables_wrapper {
             margin-top: 20px;
         }
+        
+        /* Editable cells */
         .editable {
             background-color: #f8f9fa;
             cursor: pointer;
@@ -40,35 +42,53 @@
         .editable:hover {
             background-color: #e9ecef;
         }
+        
+        /* Remove spinner buttons from number inputs */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield; /* Firefox */
+        }
+        
+        /* Position the search box */
+        .dataTables_filter {
+            float: left !important;
+            margin-bottom: 10px;
+            margin-left: 0;
+        }
+        .dataTables_filter label {
+            margin-bottom: 0;
+            display: flex;
+            align-items: center;
+        }
+        .dataTables_filter input {
+            margin-left: 5px;
+            padding: 4px 8px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        
+        /* Section headers */
         .section-header {
             background-color: #343a40;
             color: white;
             font-weight: bold;
             padding: 5px 10px;
         }
-        .blue-row {
-            background-color: #cfe2f3 !important;
-        }
-        .yellow-row {
-            background-color: #fff2cc !important;
-        }
-        .green-row {
-            background-color: #d9ead3 !important;
-        }
-        .pink-row {
-            background-color: #f4cccc !important;
-        }
-        .orange-row {
-            background-color: #fce5cd !important;
-        }
-        .normal-row {
-            background-color: rgba(135, 206, 250, 0.3) !important; /* Sky Blue */
-        }
-        .custom-row {
-            background-color: rgba(221, 160, 221, 0.3) !important; /* Plum */
-        }
         
-        /* Print button styles */
+        /* Row colors by section */
+        .blue-row { background-color: #cfe2f3 !important; }
+        .yellow-row { background-color: #fff2cc !important; }
+        .green-row { background-color: #d9ead3 !important; }
+        .pink-row { background-color: #f4cccc !important; }
+        .orange-row { background-color: #fce5cd !important; }
+        .normal-row { background-color: rgba(135, 206, 250, 0.3) !important; }
+        .custom-row { background-color: rgba(221, 160, 221, 0.3) !important; }
+        
+        /* Print button */
         .print-button {
             background-color: #4CAF50;
             color: white;
@@ -79,107 +99,147 @@
             font-size: 16px;
             margin-left: 10px;
         }
-        
         .print-button:hover {
             background-color: #45a049;
         }
         
-        /* Column-based color scheme */
-        
-        /* Box price column - Light blue */
-        td:nth-child(4) {
-            background-color: rgba(173, 216, 230, 0.3) !important; /* Light Blue */
+        /* Box price cell - transparent to show row color */
+        td.box-price-cell,
+        td.editable.box-price-cell {
+            background-color: transparent !important;
         }
         
-        /* Standard group columns - Green hues */
-        .standard-group {
-            background-color: rgba(144, 238, 144, 0.3) !important; /* Light Green */
+        /* Column color groups - more specific to override .editable */
+        td.basic-group,
+        td.editable.basic-group,
+        td.total-cell.basic-group {
+            background-color: rgba(230, 230, 250, 0.3) !important;
+        }
+        td.standard-group,
+        td.editable.standard-group,
+        td.total-cell.standard-group {
+            background-color: rgba(152, 251, 152, 0.3) !important;
+        }
+        td.fragile-group,
+        td.editable.fragile-group,
+        td.total-cell.fragile-group {
+            background-color: rgba(255, 218, 185, 0.3) !important;
+        }
+        td.custom-group,
+        td.editable.custom-group,
+        td.total-cell.custom-group {
+            background-color: rgba(255, 182, 193, 0.3) !important;
         }
         
-        /* Fragile group columns - Gold/Yellow hues */
-        .fragile-group {
-            background-color: rgba(255, 215, 0, 0.3) !important; /* Gold */
+        /* Group headers */
+        .group-header {
+            text-align: center;
+            font-weight: bold;
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+        .group-header.basic-group {
+            background-color: rgba(230, 230, 250, 0.5);
+        }
+        .group-header.standard-group {
+            background-color: rgba(152, 251, 152, 0.5);
+        }
+        .group-header.fragile-group {
+            background-color: rgba(255, 218, 185, 0.5);
+        }
+        .group-header.custom-group {
+            background-color: rgba(255, 182, 193, 0.5);
         }
         
-        /* Custom group columns - Pink/Red hues */
-        .custom-group {
-            background-color: rgba(255, 182, 193, 0.3) !important; /* Light Pink */
+        /* Combined box details column for view mode */
+        .box-details {
+            line-height: 1.4;
+        }
+        .dimensions-line {
+            font-weight: bold;
+        }
+        .model-line {
+            font-size: 0.9em;
+            color: #666;
         }
         
-        /* Location column - Light gray */
-        td:last-child {
-            background-color: rgba(211, 211, 211, 0.3) !important; /* Light Gray */
+        /* Change tracking */
+        .changes-pending {
+            color: #ff6b6b;
+            font-weight: bold;
         }
         
-        /* Location column now includes undo button */
-        
-        /* Row specific colors - add a slight tint to show row grouping */
-        .blue-row td {
-            box-shadow: inset 0 0 0 1000px rgba(135, 206, 250, 0.1) !important; /* Sky Blue tint */
+        /* Status messages */
+        .status-message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            display: none;
+        }
+        .status-message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status-message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status-message.loading {
+            background-color: #cce5ff;
+            color: #004085;
+            border: 1px solid #b8daff;
         }
         
-        .yellow-row td {
-            box-shadow: inset 0 0 0 1000px rgba(255, 255, 224, 0.1) !important; /* Light Yellow tint */
+        /* Undo button */
+        .undo-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .undo-btn:hover {
+            background: #5a6268;
+        }
+        .undo-btn.show-undo {
+            opacity: 1 !important;
         }
         
-        .green-row td {
-            box-shadow: inset 0 0 0 1000px rgba(152, 251, 152, 0.1) !important; /* Pale Green tint */
+        /* Total cells */
+        .total-cell {
+            font-weight: bold;
+            background-color: rgba(0, 0, 0, 0.03) !important;
         }
         
-        .pink-row td {
-            box-shadow: inset 0 0 0 1000px rgba(255, 182, 193, 0.1) !important; /* Light Pink tint */
+        /* Icons */
+        th img {
+            cursor: help;
         }
         
-        .orange-row td {
-            box-shadow: inset 0 0 0 1000px rgba(255, 160, 122, 0.1) !important; /* Light Salmon tint */
-        }
-        
-        .normal-row td {
-            box-shadow: inset 0 0 0 1000px rgba(135, 206, 250, 0.1) !important; /* Sky Blue tint */
-        }
-        
-        .custom-row td {
-            box-shadow: inset 0 0 0 1000px rgba(221, 160, 221, 0.1) !important; /* Plum tint */
-        }
-        
-        /* Location cell styles */
-        .location-cell {
-            text-align: left;
-            padding-left: 6px !important;
-            padding-right: 4px !important;
-            width: 110px !important; /* Compact but fits 4 icons */
-            min-width: 110px !important;
-            max-width: 110px !important;
-        }
-        
+        /* Location buttons */
         .location-buttons {
             display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            gap: 2px; /* Very tight spacing */
-            width: 100%;
-        }
-        
-        .location-btn {
-            background: none;
-            border: 1px solid #ddd;
-            border-radius: 3px;
-            padding: 3px;
-            cursor: pointer;
-            color: #666;
-            transition: all 0.2s;
-            width: 26px; /* Fixed width for consistent layout */
-            height: 26px; /* Fixed height for consistent layout */
-            flex: 0 0 26px; /* Prevent flex growth/shrink */
-            display: flex;
+            gap: 3px;
             align-items: center;
             justify-content: center;
         }
         
-        .location-btn:hover:not(:disabled):not([data-no-floorplan="true"]) {
-            background: #f5f5f5;
+        .location-btn {
+            background: none;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            padding: 2px 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .location-btn:hover:not(:disabled) {
+            background-color: #f0f0f0;
             border-color: #999;
-            color: #333;
         }
         
         .location-btn:disabled {
@@ -187,377 +247,165 @@
         }
         
         .location-btn svg {
+            width: 14px;
+            height: 14px;
             display: block;
         }
         
-        .view-location {
-            color: #2196F3; /* Blue for view */
+        /* Inline location button in box details */
+        .inline-location-btn {
+            display: inline-block;
+            padding: 0 2px;
+            vertical-align: middle;
+            margin-left: 4px;
+        }
+        .inline-location-btn svg {
+            display: inline-block;
+            vertical-align: text-bottom;
         }
         
-        .edit-location {
-            color: #4CAF50; /* Green for edit */
+        /* Hide section column in read-only mode on screen */
+        @media screen {
+            body:not(.admin-authenticated) #priceTable thead tr:first-child th:first-child,
+            body:not(.admin-authenticated) #priceTable tbody td:first-child {
+                display: none;
+            }
         }
         
-        .notes-location {
-            color: #FF9800; /* Orange for notes */
-        }
-        
-        /* We're not using the location-label in the compact layout */
-        .location-label {
-            display: none;
-        }
-        
-        /* Tooltip for notes */
-        .location-note-tooltip {
-            font-size: 12px;
-            max-width: 200px;
-            word-break: break-word;
-        }
-        
-        /* Location modal styles */
-        .location-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-        }
-        
-        .location-modal {
-            background: white;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 800px;
-            max-height: 90vh;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 20px;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .modal-header h3 {
-            margin: 0;
-            font-size: 18px;
-            color: #333;
-        }
-        
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #666;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 4px;
-        }
-        
-        .modal-close:hover {
-            background: #f5f5f5;
-            color: #333;
-        }
-        
-        .modal-body {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-        }
-        
-        .modal-footer {
-            display: flex;
-            justify-content: space-between;
-            padding: 15px 20px;
-            border-top: 1px solid #eee;
-        }
-        
-        /* Floorplan viewer styles */
-        .floorplan-viewer {
-            position: relative;
-            width: 100%;
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-        
-        .floorplan-container {
-            position: relative;
-            width: 100%;
-            border: 2px solid #ddd;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        
-        .floorplan-image {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-        
-        .marker-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-        
-        .edit-mode .marker-layer {
-            pointer-events: auto;
-            cursor: crosshair;
-        }
-        
-        .location-marker {
-            position: absolute;
-            width: 30px;
-            height: 30px;
-            margin-left: -15px;
-            margin-top: -15px;
-            color: red;
-            font-size: 24px;
-            font-weight: bold;
-            text-align: center;
-            line-height: 30px;
-            pointer-events: auto;
-            cursor: pointer;
-            text-shadow: 2px 2px 2px rgba(255,255,255,0.8);
-        }
-        
-        .marker-current {
-            color: red;
-            font-size: 28px;
-        }
-        
-        .location-label-input {
-            margin-top: 15px;
-        }
-        
-        .location-label-input label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        
-        .location-label-input input {
-            width: 100%;
-            max-width: 300px;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        
-        .location-label-display {
-            margin-top: 15px;
-            padding: 10px;
-            background: #f5f5f5;
-            border-radius: 4px;
-        }
-        
-        .no-floorplan {
-            padding: 40px;
-            text-align: center;
-            background: #f5f5f5;
-            border-radius: 4px;
-        }
-        .changes-pending {
-            background-color: #ffe0e0;
-        }
-        .buttons-container {
-            margin: 20px 0;
-        }
-        .save-button {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .save-button:hover {
-            background-color: #218838;
-        }
-        .save-button:disabled {
-            background-color: #6c757d;
-            cursor: not-allowed;
-        }
-        .status-message {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 4px;
-        }
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        .loading {
-            background-color: #cce5ff;
-            color: #004085;
-        }
-        
-        /* Remove up/down arrows (spinners) from number inputs */
-        input[type="number"] {
-            -webkit-appearance: textfield;
-            -moz-appearance: textfield;
-            appearance: textfield;
-        }
-        
-        /* Chrome, Safari, Edge, Opera */
-        input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        
-        /* Firefox */
-        input[type="number"] {
-            -moz-appearance: textfield;
-        }
-        
-        .total-cell {
-            font-weight: bold;
-            color: #495057;
-            cursor: not-allowed;
-            border-left: 1px solid rgba(0, 0, 0, 0.2) !important;
-            border-right: 1px solid rgba(0, 0, 0, 0.2) !important;
-        }
-        
-        /* Total cell specific colors - more saturated versions of column colors */
-        .standard-group.total-cell {
-            background-color: rgba(144, 238, 144, 0.6) !important; /* Light Green */
-            font-weight: bold;
-        }
-        .fragile-group.total-cell {
-            background-color: rgba(255, 215, 0, 0.6) !important; /* Gold */
-            font-weight: bold;
-        }
-        .custom-group.total-cell {
-            background-color: rgba(255, 182, 193, 0.6) !important; /* Light Pink */
-            font-weight: bold;
-        }
-        
-        /* Fix table header padding for icons */
-        th {
-            padding: 5px 3px !important;
-            text-align: center !important;
-            vertical-align: middle !important;
-        }
-        
-        /* Center images in headers and add pointer cursor for tooltips */
-        th img {
-            display: block;
-            margin: 0 auto;
-            max-width: 100%;
-            height: auto;
-            cursor: help;
-        }
-        
-        /* Group header styles need to ensure icons display correctly */
-        .group-header {
-            padding-bottom: 0 !important;
-        }
-        .group-header {
-            background-color: #e9ecef;
-            text-align: center;
-            font-weight: bold;
-        }
-        /* Header group colors - more saturated */
-        th.standard-group {
-            background-color: rgba(60, 179, 113, 0.6) !important; /* Medium Sea Green */
-            border-bottom: 1px solid rgba(0, 100, 0, 0.5);
-            color: white;
-        }
-        th.fragile-group {
-            background-color: rgba(218, 165, 32, 0.6) !important; /* Goldenrod */
-            border-bottom: 1px solid rgba(184, 134, 11, 0.5);
-            color: white;
-        }
-        th.custom-group {
-            background-color: rgba(205, 92, 92, 0.6) !important; /* Indian Red */
-            border-bottom: 1px solid rgba(139, 0, 0, 0.5);
-            color: white;
-        }
-        .undo-btn {
-            opacity: 0;
-            cursor: pointer;
-            color: #dc3545; /* Always red for visibility */
-            font-size: 20px; /* Bigger */
-            font-weight: 900; /* Extra bold */
-            transition: opacity 0.2s;
-            background: rgba(220, 53, 69, 0.1); /* Light red background */
-            border: 1px solid #dc3545;
-            padding: 1px 3px;
-            border-radius: 3px;
-            width: 26px;
-            height: 26px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
-        }
-        .undo-btn:hover {
-            background: rgba(220, 53, 69, 0.2);
-            transform: scale(1.1);
-        }
-        .undo-btn.show-undo {
-            opacity: 1 !important;
-        }
-        /* Remove all icon styles from here - now in icons.css */
-        
-        /* Ensure tooltips work on header images */
-        th img {
-            cursor: help;
+        /* Screen/print column visibility */
+        .print-only {
+            display: none !important;
         }
         
         /* Print-specific styles */
         @media print {
-            /* Remove all potential hiding */
+            /* Force portrait orientation with minimal margins */
+            @page {
+                orientation: portrait;
+                size: 8.5in 11in;
+                margin: 0.5in 0.25in; /* top/bottom: 0.5in, left/right: 0.25in */
+            }
+            
+            /* Container width for portrait orientation */
+            .container {
+                width: 100% !important;
+                max-width: none !important;
+                margin-top: 0 !important;
+                padding-top: 0 !important;
+                orphans: 3;
+                widows: 3;
+            }
+            
+            /* Remove any top margin/padding from table wrapper */
+            .dataTables_wrapper {
+                margin-top: 0 !important;
+                padding-top: 0 !important;
+            }
+            
+            /* Adjust table font sizes */
+            table.dataTable {
+                font-size: 11pt !important;
+                width: 100% !important;
+            }
+            
+            table.dataTable th,
+            table.dataTable td {
+                padding: 3px 5px !important;
+                font-size: 10pt !important;
+            }
+            
+            /* Always show section column in print */
+            #priceTable th:first-child,
+            #priceTable td:first-child {
+                display: table-cell !important;
+            }
+            
+            /* Hide sorting indicators */
             table.dataTable thead th {
+                cursor: default !important;
+                position: static !important;
+            }
+            table.dataTable thead th:after,
+            table.dataTable thead th:before {
+                display: none !important;
+            }
+            table.dataTable thead .sorting,
+            table.dataTable thead .sorting_asc,
+            table.dataTable thead .sorting_desc,
+            table.dataTable thead .sorting_asc_disabled,
+            table.dataTable thead .sorting_desc_disabled {
+                background-image: none !important;
+                cursor: default !important;
+            }
+            
+            /* Hide location column in print (both edit and view modes) */
+            /* Admin mode uses emoji pin header */
+            th[title="Location"] {
+                display: none !important;
+            }
+            
+            /* Hide location cells that contain the location buttons */
+            #priceTable td:has(.location-buttons) {
+                display: none !important;
+            }
+            
+            /* Fallback for older browsers - hide by position if it's the last column */
+            .admin-authenticated #priceTable.editable-mode thead tr th:last-child[title="Location"],
+            .admin-authenticated #priceTable.editable-mode tbody tr td:last-child {
+                display: none !important;
+            }
+            
+            /* Hide location eyeball buttons */
+            .location-btn,
+            .inline-location-btn {
+                display: none !important;
+            }
+            
+            /* Show print columns, hide screen columns */
+            .print-only {
                 display: table-cell !important;
-                visibility: visible !important;
+            }
+            .screen-only {
+                display: none !important;
             }
             
-            /* Force ALL icons to be visible */
-            table.dataTable thead th img {
-                display: inline-block !important;
-                visibility: visible !important;
-                width: 14px !important;
-                height: 14px !important;
+            /* Smart page break handling for DataTables */
+            /* Ensure DataTables wrapper doesn't interfere with page breaks */
+            .dataTables_wrapper {
+                page-break-inside: auto !important;
             }
             
-            /* Override any inherited hiding */
-            .custom-group {
-                display: table-cell !important;
-                visibility: visible !important;
+            /* Allow natural page breaks within table */
+            #priceTable tbody tr {
+                page-break-inside: avoid;
+                break-inside: avoid;
             }
             
-            .custom-group img {
-                display: inline-block !important;
-                visibility: visible !important;
+            /* Prevent orphaned rows - keep at least 3 rows together */
+            #priceTable tbody {
+                orphans: 3;
+                widows: 3;
             }
-            /* Hide interactive UI elements */
+            
+            /* Section-based page break hints */
+            /* Avoid breaks within small sections */
+            #priceTable tbody tr[data-section="CUBE"] {
+                page-break-after: avoid;
+            }
+            
+            /* Allow break after LARGE section if needed */
+            #priceTable tbody tr[data-section="LARGE"]:last-child {
+                page-break-after: auto;
+            }
+            
+            /* Suggest break before SPECIALTY if not at page top */
+            #priceTable tbody tr[data-section="SPECIALTY"]:first-child {
+                page-break-before: auto;
+            }
+            
+            /* Hide interactive elements */
             .buttons-container,
             .status-message,
-            #backLink,
             #editInstructions,
             #readOnlyMessage,
             .undo-btn,
@@ -565,11 +413,7 @@
             .dataTables_filter,
             .dataTables_info,
             .dataTables_paginate,
-            .admin-nav {
-                display: none !important;
-            }
-            
-            /* Hide the entire header section */
+            .admin-nav,
             .header {
                 display: none !important;
             }
@@ -578,78 +422,12 @@
             table.dataTable {
                 width: 100% !important;
                 page-break-inside: auto;
-                font-size: 10pt;
             }
             
-            /* Compact table spacing for portrait mode */
+            /* Compact spacing */
             table.dataTable th,
             table.dataTable td {
                 padding: 3px 5px !important;
-                font-size: 9pt;
-            }
-            
-            /* Make headers smaller */
-            table.dataTable th {
-                font-size: 8pt;
-                font-weight: bold;
-            }
-            
-            /* Section headers smaller */
-            .section-header {
-                font-size: 11pt !important;
-                padding: 4px 8px !important;
-            }
-            
-            /* Keep table rows together */
-            table.dataTable tr {
-                page-break-inside: avoid;
-                page-break-after: auto;
-            }
-            
-            /* Hide Location column in print */
-            /* First row: only headers that have rowspan="2" AND are last */
-            table.dataTable thead tr:first-child th[rowspan="2"]:nth-last-child(1) {
-                display: none !important;
-            }
-            
-            /* Data cells - hide location column */
-            table.dataTable tbody tr td:last-child {
-                display: none !important;
-            }
-            
-            /* Hide DataTables sorting arrows and indicators */
-            table.dataTable thead .sorting::before,
-            table.dataTable thead .sorting::after,
-            table.dataTable thead .sorting_asc::before,
-            table.dataTable thead .sorting_asc::after,
-            table.dataTable thead .sorting_desc::before,
-            table.dataTable thead .sorting_desc::after,
-            table.dataTable thead .sorting_asc_disabled::before,
-            table.dataTable thead .sorting_asc_disabled::after,
-            table.dataTable thead .sorting_desc_disabled::before,
-            table.dataTable thead .sorting_desc_disabled::after {
-                display: none !important;
-                content: none !important;
-            }
-            
-            /* Remove sorting classes entirely to prevent any styling */
-            table.dataTable thead th.sorting,
-            table.dataTable thead th.sorting_asc,
-            table.dataTable thead th.sorting_desc {
-                background-image: none !important;
-                cursor: default !important;
-                position: relative !important;
-            }
-            
-            /* DataTables 1.11 specific */
-            table.dataTable thead th.sorting:before,
-            table.dataTable thead th.sorting:after,
-            table.dataTable thead th.sorting_asc:before,
-            table.dataTable thead th.sorting_asc:after,
-            table.dataTable thead th.sorting_desc:before,
-            table.dataTable thead th.sorting_desc:after {
-                display: none !important;
-                content: "" !important;
             }
             
             /* Ensure colors are preserved */
@@ -659,230 +437,642 @@
                 print-color-adjust: exact !important;
             }
             
-            /* Adjust body margins for print */
+            /* Body margins - already handled by @page, so remove to avoid double margins */
             body {
-                margin: 0.4in;
-                font-size: 11pt;
+                margin: 0;
             }
-            
-            /* Ensure section headers stay with their tables */
-            .section-header {
-                page-break-after: avoid;
-            }
-            
-            /* Keep icons visible in print */
-            th img {
-                width: 14px !important;
-                height: 14px !important;
-                display: inline-block !important;
-                visibility: visible !important;
-            }
-            
-            /* Ensure all header images and cells are visible by default */
-            table.dataTable thead tr th {
-                display: table-cell !important;
-            }
-            
-            table.dataTable thead tr th img {
-                display: inline-block !important;
-                visibility: visible !important;
-            }
-            
-            /* For the second row specifically, ensure all icons are visible */
-            table.dataTable thead tr:nth-child(2) th {
-                display: table-cell !important;
-            }
-            
-            table.dataTable thead tr:nth-child(2) th img {
-                display: inline-block !important;
-                visibility: visible !important;
-                width: 14px !important;
-                height: 14px !important;
-            }
-            
-            /* Adjust group headers for better spacing */
-            .group-header {
-                font-size: 9pt !important;
-                padding: 3px !important;
-            }
+        }
+        
+        /* Floorplan modal styles */
+        .floorplan-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+        }
+        
+        .floorplan-modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .floorplan-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .floorplan-modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .floorplan-container {
+            position: relative;
+            display: inline-block;
+            cursor: crosshair;
+        }
+        
+        .floorplan-container img {
+            max-width: 800px;
+            max-height: 600px;
+            display: block;
+        }
+        
+        .location-marker {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            margin-left: -15px;
+            margin-top: -15px;
+            background: red;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
     </style>
 </head>
 <body>
     <div id="app-container">
-        <!-- The navigation bar will be inserted here by initAdminNav -->
-        
         <div class="container">
             <div class="header">
-                <h1 id="storeHeader">Box Price Editor</h1>
+                <h1 id="storeHeader">Box Prices</h1>
                 <p id="editInstructions">Click on any price cell to edit. Your changes will be tracked and can be saved to the YAML file.</p>
-                <div id="readOnlyMessage" style="display: none; padding: 10px; background-color: #ffe0e0; margin-bottom: 15px; border-radius: 4px;">
-                    <strong>Read-only Mode:</strong> You must be logged in to edit prices.
-                </div>
-                <div id="backLink"></div>
             </div>
             
             <div class="buttons-container">
-                <button id="saveChanges" class="save-button" disabled>Save Changes</button>
-                <span id="changeCount">No changes pending</span>
-                <button id="printView" class="print-button">Print View</button>
+                <button id="saveChanges" disabled>Save Changes</button>
+                <span id="changeCount" style="margin-left: 20px;">No changes pending</span>
+                <button class="print-button" onclick="window.print()">Print Table</button>
             </div>
             
-            <div id="statusMessage" class="status-message" style="display: none;"></div>
+            <div id="statusMessage" class="status-message"></div>
             
-            <table id="priceTable" class="display responsive nowrap" style="width:100%">
-                <thead id="priceTableHeader">
-                    <!-- Header will be built dynamically based on pricing mode -->
-                </thead>
-                <tbody>
-                    <!-- Data will be loaded dynamically -->
-                </tbody>
-            </table>
+            <div id="priceTableContainer">
+                <!-- Table will be inserted here by JavaScript -->
+            </div>
         </div>
     </div>
     
+    <!-- Floorplan Modal -->
+    <div id="floorplanModal" class="floorplan-modal">
+        <div class="floorplan-modal-content">
+            <div class="floorplan-modal-header">
+                <h3 id="floorplanModalTitle">Box Location</h3>
+                <button class="floorplan-modal-close" onclick="closeFloorplanModal()">&times;</button>
+            </div>
+            <div class="floorplan-container" id="floorplanContainer">
+                <!-- Floorplan image and marker will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
     <script src="https://cdn.datatables.net/select/1.3.4/js/dataTables.select.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
     <script src="/lib/auth.js"></script>
-    <script src="/components/navigation.js"></script>
-    <script src="/pricing.js"></script>
     <script src="/lib/api.js"></script>
+    <script src="/components/navigation.js"></script>
+    <script src="/components/price-table.js"></script>
+    <script src="/components/price-table-view.js"></script>
+    <script src="/components/price-table-edit.js"></script>
+    
     <script>
-    $(document).ready(async function() {
-        // Extract store number from URL and create the back link
-        const pathParts = window.location.pathname.split('/');
-        const storeId = pathParts[1] || '1';
-        $('#backLink').html(`<a href="/${storeId}">Back to Store ${storeId} Main Page</a>`);
-        $('#storeHeader').text(`Box Price Editor - Store ${storeId}`);
+        // Get store ID from URL
+        const storeId = window.location.pathname.split('/')[1];
+        let priceTable = null;
         
-        // Initialize the navigation bar
-        await initAdminNav('app-container', storeId, 'prices');
-        
-        // Check if authentication is required
-        if (typeof AuthManager !== 'undefined') {
-            AuthManager.requireAuth(storeId).then(isAuthenticated => {
-                if (!isAuthenticated) {
-                    // If authentication fails, AuthManager will handle the redirect
-                    return;
-                }
-                // If authenticated or no auth required, continue with app initialization
-                console.log('Authentication check passed, continuing with app initialization');
-            }).catch(error => {
-                console.error('Authentication error:', error);
-            });
-        }
-        
-        // Store all changes to be saved
-        let changedData = {};
-        let changeCount = 0;
-        let isEditable = false; // Default to read-only
-        let pricingMode = 'standard'; // Default pricing mode
-        let priceTable;
-        let originalData = []; // Store original data for undo functionality
-        let changedLocations = {}; // Store location changes separately
-
-        // Generate a simple CSRF token for this session
+        // Generate a CSRF token for this session
         const csrfToken = Math.random().toString(36).substring(2, 15) +
                          Math.random().toString(36).substring(2, 15);
-
+        window.csrfToken = csrfToken; // Make it globally available
         
-        // Function to update the change counter
-        function updateChangeCounter() {
-            const $saveButton = $('#saveChanges');
-            const $changeCount = $('#changeCount');
+        // Location viewer function with floorplan modal
+        async function openLocationViewer(model, location) {
+            if (!location || !location.coords || location.coords.length === 0) {
+                alert('No location coordinates set for this box.');
+                return;
+            }
             
-            const locationChangeCount = Object.keys(changedLocations).length;
-            const totalChangeCount = changeCount + locationChangeCount;
-            
-            if (totalChangeCount > 0) {
-                $saveButton.prop('disabled', !isEditable);
-                $changeCount.text(totalChangeCount + ' change' + (totalChangeCount > 1 ? 's' : '') + ' pending');
-                $changeCount.addClass('changes-pending');
+            // Handle different coordinate formats
+            let x, y;
+            if (Array.isArray(location.coords[0])) {
+                // Format: [[x, y]]
+                [x, y] = location.coords[0];
+            } else if (typeof location.coords[0] === 'object' && location.coords[0].x !== undefined) {
+                // Format: [{x: val, y: val}]
+                x = location.coords[0].x;
+                y = location.coords[0].y;
+            } else if (location.coords.length === 2 && typeof location.coords[0] === 'number') {
+                // Format: [x, y]
+                [x, y] = location.coords;
             } else {
-                $saveButton.prop('disabled', true);
-                $changeCount.text('No changes pending');
-                $changeCount.removeClass('changes-pending');
+                // Unknown format
+                console.error('Unknown coordinate format:', location.coords);
+                return;
             }
-        }
-        
-        // Function to update location change counter
-        function updateLocationChangeCounter() {
-            updateChangeCounter();
-        }
-        
-        // Function to show status message
-        function showStatus(message, type) {
-            const $status = $('#statusMessage');
-            $status.removeClass('success error loading').addClass(type);
-            $status.text(message);
-            $status.show();
-
-            if (type !== 'loading') {
-                setTimeout(function() {
-                    $status.fadeOut();
-                }, 5000);
-            }
-        }
-        
-        // We've moved this check to be combined with pricing mode check
-        
-        // First check pricing mode and editability using api.js functions
-        window.api.fetchPricingMode(storeId)
-            .then(mode => {
-                pricingMode = mode;
-                
-                // Check authentication status for editing capabilities
-                if (typeof AuthManager !== 'undefined') {
-                    return AuthManager.getAuthStatus(storeId);
-                } else {
-                    return { hasAuth: false, isAuthenticated: false };
+            
+            // Load floorplan
+            try {
+                const response = await fetch(`/api/store/${storeId}/floorplan`);
+                if (!response.ok) {
+                    alert('No floorplan available for this store.');
+                    return;
                 }
-            })
-            .then(authStatus => {
-                isEditable = authStatus.isAuthenticated;
+                
+                const blob = await response.blob();
+                const imageUrl = URL.createObjectURL(blob);
+                
+                // Show modal
+                const modal = document.getElementById('floorplanModal');
+                const container = document.getElementById('floorplanContainer');
+                const title = document.getElementById('floorplanModalTitle');
+                
+                title.textContent = `${model} - ${location.label || 'Location'}`;
+                
+                // Clear previous content
+                container.innerHTML = '';
+                
+                // Create image
+                const img = document.createElement('img');
+                img.src = imageUrl;
+                img.onload = function() {
+                    // Add marker at the location
+                    const marker = document.createElement('div');
+                    marker.className = 'location-marker';
+                    marker.style.left = (x * 100) + '%';
+                    marker.style.top = (y * 100) + '%';
+                    marker.title = model;
+                    
+                    container.appendChild(img);
+                    container.appendChild(marker);
+                };
+                
+                modal.style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error loading floorplan:', error);
+                alert('Failed to load floorplan.');
+            }
+        }
+        
+        // Close floorplan modal
+        function closeFloorplanModal() {
+            const modal = document.getElementById('floorplanModal');
+            modal.style.display = 'none';
+            
+            // Clean up any extra elements added for edit mode
+            const modalContent = modal.querySelector('.floorplan-modal-content');
+            const buttonContainer = modalContent.querySelector('div[style*="margin-top: 15px"]');
+            
+            if (buttonContainer) buttonContainer.remove();
+            
+            // Reset container click handler
+            const container = document.getElementById('floorplanContainer');
+            container.onclick = null;
+            container.style.cursor = 'default';
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('floorplanModal').onclick = function(e) {
+            if (e.target === this) {
+                closeFloorplanModal();
+            }
+        };
+        
+        // Location editor function with floorplan modal
+        async function openLocationEditor(model, currentLocation, callback) {
+            // First check if floorplan exists
+            try {
+                const response = await fetch(`/api/store/${storeId}/floorplan`);
+                if (!response.ok) {
+                    alert('No floorplan available for this store.');
+                    return;
+                }
+                
+                const blob = await response.blob();
+                const imageUrl = URL.createObjectURL(blob);
+                
+                // Show modal in edit mode
+                const modal = document.getElementById('floorplanModal');
+                const container = document.getElementById('floorplanContainer');
+                const title = document.getElementById('floorplanModalTitle');
+                
+                title.textContent = `Set Location for ${model}`;
+                
+                // Clear previous content
+                container.innerHTML = '';
+                
+                // Create image
+                const img = document.createElement('img');
+                img.src = imageUrl;
+                
+                let marker = null;
+                let currentCoords = null;
+                
+                // If there's an existing location, show it
+                if (currentLocation && currentLocation.coords && currentLocation.coords.length > 0) {
+                    let x, y;
+                    if (Array.isArray(currentLocation.coords[0])) {
+                        [x, y] = currentLocation.coords[0];
+                    } else if (typeof currentLocation.coords[0] === 'object' && currentLocation.coords[0].x !== undefined) {
+                        x = currentLocation.coords[0].x;
+                        y = currentLocation.coords[0].y;
+                    } else if (currentLocation.coords.length === 2 && typeof currentLocation.coords[0] === 'number') {
+                        [x, y] = currentLocation.coords;
+                    }
+                    
+                    if (x !== undefined && y !== undefined) {
+                        currentCoords = {x, y};
+                    }
+                }
+                
+                img.onload = function() {
+                    container.appendChild(img);
+                    
+                    // Add existing marker if location exists
+                    if (currentCoords) {
+                        marker = document.createElement('div');
+                        marker.className = 'location-marker';
+                        marker.style.left = (currentCoords.x * 100) + '%';
+                        marker.style.top = (currentCoords.y * 100) + '%';
+                        container.appendChild(marker);
+                    }
+                    
+                    // Make container clickable
+                    container.style.cursor = 'crosshair';
+                    container.onclick = function(e) {
+                        const rect = container.getBoundingClientRect();
+                        const imgRect = img.getBoundingClientRect();
                         
-                        // Update UI based on authentication status
-                        if (!isEditable) {
-                            $('#readOnlyMessage').show();
-                            $('#editInstructions').hide();
-                            $('#saveChanges').prop('disabled', true);
+                        // Calculate click position relative to image
+                        const x = (e.clientX - imgRect.left) / imgRect.width;
+                        const y = (e.clientY - imgRect.top) / imgRect.height;
+                        
+                        // Remove old marker if exists
+                        if (marker) {
+                            marker.remove();
                         }
                         
-                        // Load box data next
-                loadBoxData();
-            })
-            .catch(error => {
-                console.error('Error checking pricing mode or editability:', error);
-                showStatus('Failed to check store settings', 'error');
-                // Still load the data even if checks fail
-                loadBoxData();
-            });
-        
-        // Function to load box data
-        function loadBoxData() {
-            window.api.fetchAllBoxes(storeId)
-                .then(response => {
-                    // Process the boxes into the format needed for the table
-                    const processedData = processBoxesData(response.boxes, response.pricing_mode);
-                    initializeDataTable(processedData);
-                })
-                .catch(error => {
-                    console.error('Error loading box data:', error);
-                    showStatus('Failed to load box data', 'error');
-                });
+                        // Add new marker
+                        marker = document.createElement('div');
+                        marker.className = 'location-marker';
+                        marker.style.left = (x * 100) + '%';
+                        marker.style.top = (y * 100) + '%';
+                        container.appendChild(marker);
+                        
+                        currentCoords = {x, y};
+                    };
+                };
+                
+                // Add save/cancel buttons
+                const buttonContainer = document.createElement('div');
+                buttonContainer.style.cssText = 'margin-top: 15px; text-align: center;';
+                
+                const saveBtn = document.createElement('button');
+                saveBtn.textContent = 'Save Location';
+                saveBtn.className = 'btn btn-primary';
+                saveBtn.style.marginRight = '10px';
+                saveBtn.onclick = function() {
+                    if (currentCoords) {
+                        const newLocation = {
+                            label: currentLocation?.label || '',
+                            coords: [currentCoords.x, currentCoords.y]  // Send as flat array, not nested
+                        };
+                        callback(newLocation);
+                        closeFloorplanModal();
+                    } else {
+                        alert('Please click on the floorplan to set a location.');
+                    }
+                };
+                
+                const cancelBtn = document.createElement('button');
+                cancelBtn.textContent = 'Cancel';
+                cancelBtn.className = 'btn';
+                cancelBtn.onclick = closeFloorplanModal;
+                
+                buttonContainer.appendChild(saveBtn);
+                buttonContainer.appendChild(cancelBtn);
+                
+                modal.querySelector('.floorplan-modal-content').appendChild(buttonContainer);
+                
+                modal.style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error loading floorplan:', error);
+                alert('Failed to load floorplan.');
+            }
         }
         
-        // Function to process boxes data into table format
+        // Initialize navigation
+        initAdminNav('app-container', storeId, 'prices');
+        
+        // Update document title to include store ID
+        document.title = `Box Prices - Store ${storeId}`;
+        
+        // Handle print events for better DataTables compatibility
+        window.addEventListener('beforeprint', function() {
+            // Ensure all rows are visible for printing
+            if (priceTable && priceTable.dataTable) {
+                try {
+                    // Temporarily show all rows
+                    priceTable.dataTable.page.len(-1).draw();
+                    
+                    // For view mode, we need to temporarily rebuild the table with admin layout
+                    if (!priceTable.isEditable) {
+                        // Save current table state
+                        window.printState = {
+                            currentData: priceTable.dataTable.rows().data().toArray()
+                        };
+                        
+                        // Destroy current DataTable
+                        priceTable.dataTable.destroy();
+                    
+                    // Rebuild table with admin layout (separate Model/Dimensions columns)
+                    const $table = $('#priceTable');
+                    $table.empty();
+                    
+                    // Build admin-style header
+                    let headerHtml = '<thead>';
+                    
+                    if (priceTable.pricingMode === 'standard') {
+                        // Standard mode - single header row
+                        headerHtml += '<tr>';
+                        headerHtml += '<th>Section</th>';
+                        
+                        if (priceTable.renderer.hasRealModels) {
+                            headerHtml += '<th>Model</th>';
+                        }
+                        headerHtml += '<th>Dimensions</th>';
+                        headerHtml += '<th>Box Price</th>';
+                        headerHtml += '<th><img src="/assets/icons/total.png" width="24" height="24" alt="Basic Total" title="Basic Total"></th>';
+                        headerHtml += '<th><img src="/assets/icons/total.png" width="24" height="24" alt="Standard Total" title="Standard Total"></th>';
+                        headerHtml += '<th><img src="/assets/icons/total.png" width="24" height="24" alt="Fragile Total" title="Fragile Total"></th>';
+                        headerHtml += '<th><img src="/assets/icons/total.png" width="24" height="24" alt="Custom Total" title="Custom Total"></th>';
+                        headerHtml += '</tr>';
+                    } else {
+                        // Itemized mode - two header rows with proper rowspan
+                        headerHtml += '<tr>';
+                        headerHtml += '<th rowspan="2">Section</th>';
+                        
+                        if (priceTable.renderer.hasRealModels) {
+                            headerHtml += '<th rowspan="2">Model</th>';
+                        }
+                        headerHtml += '<th rowspan="2">Dimensions</th>';
+                        headerHtml += '<th rowspan="2">Box Price</th>';
+                        
+                        // Group headers
+                        headerHtml += '<th colspan="3" class="group-header basic-group">Basic Pack</th>';
+                        headerHtml += '<th colspan="3" class="group-header standard-group">Standard Pack</th>';
+                        headerHtml += '<th colspan="3" class="group-header fragile-group">Fragile Pack</th>';
+                        headerHtml += '<th colspan="3" class="group-header custom-group">Custom Pack</th>';
+                        headerHtml += '</tr>';
+                        
+                        // Second row with individual columns
+                        headerHtml += '<tr>';
+                        // Basic group
+                        headerHtml += '<th class="basic-group"><img src="/assets/icons/materials.png" width="24" height="24" alt="Materials" title="Basic Materials"></th>';
+                        headerHtml += '<th class="basic-group"><img src="/assets/icons/services.png" width="24" height="24" alt="Services" title="Basic Services"></th>';
+                        headerHtml += '<th class="basic-group"><img src="/assets/icons/total.png" width="24" height="24" alt="Total" title="Basic Total"></th>';
+                        // Standard group
+                        headerHtml += '<th class="standard-group"><img src="/assets/icons/materials.png" width="24" height="24" alt="Materials" title="Standard Materials"></th>';
+                        headerHtml += '<th class="standard-group"><img src="/assets/icons/services.png" width="24" height="24" alt="Services" title="Standard Services"></th>';
+                        headerHtml += '<th class="standard-group"><img src="/assets/icons/total.png" width="24" height="24" alt="Total" title="Standard Total"></th>';
+                        // Fragile group
+                        headerHtml += '<th class="fragile-group"><img src="/assets/icons/materials.png" width="24" height="24" alt="Materials" title="Fragile Materials"></th>';
+                        headerHtml += '<th class="fragile-group"><img src="/assets/icons/services.png" width="24" height="24" alt="Services" title="Fragile Services"></th>';
+                        headerHtml += '<th class="fragile-group"><img src="/assets/icons/total.png" width="24" height="24" alt="Total" title="Fragile Total"></th>';
+                        // Custom group
+                        headerHtml += '<th class="custom-group"><img src="/assets/icons/materials.png" width="24" height="24" alt="Materials" title="Custom Materials"></th>';
+                        headerHtml += '<th class="custom-group"><img src="/assets/icons/services.png" width="24" height="24" alt="Services" title="Custom Services"></th>';
+                        headerHtml += '<th class="custom-group"><img src="/assets/icons/total.png" width="24" height="24" alt="Total" title="Custom Total"></th>';
+                        headerHtml += '</tr>';
+                    }
+                    
+                    headerHtml += '</thead><tbody></tbody>';
+                    $table.html(headerHtml);
+                    
+                    // Define columns for admin layout
+                    const columns = [
+                        { data: 'section' }
+                    ];
+                    
+                    if (priceTable.renderer.hasRealModels) {
+                        columns.push({ data: 'model' });
+                    }
+                    
+                    columns.push({ data: 'dimensions' });
+                    
+                    if (priceTable.pricingMode === 'standard') {
+                        columns.push(
+                            { data: 'box_price', render: (data) => parseFloat(data).toFixed(2) },
+                            { data: 'basic', render: (data) => parseFloat(data).toFixed(2), className: 'basic-group' },
+                            { data: 'standard', render: (data) => parseFloat(data).toFixed(2), className: 'standard-group' },
+                            { data: 'fragile', render: (data) => parseFloat(data).toFixed(2), className: 'fragile-group' },
+                            { data: 'custom', render: (data) => parseFloat(data).toFixed(2), className: 'custom-group' }
+                        );
+                    } else {
+                        // Itemized columns
+                        columns.push(
+                            { data: 'box_price', render: (data) => parseFloat(data).toFixed(2) },
+                            { data: 'basic_materials', render: (data) => parseFloat(data).toFixed(2), className: 'basic-group' },
+                            { data: 'basic_services', render: (data) => parseFloat(data).toFixed(2), className: 'basic-group' },
+                            { data: 'basic_total', render: (data) => parseFloat(data).toFixed(2), className: 'total-cell basic-group' },
+                            { data: 'standard_materials', render: (data) => parseFloat(data).toFixed(2), className: 'standard-group' },
+                            { data: 'standard_services', render: (data) => parseFloat(data).toFixed(2), className: 'standard-group' },
+                            { data: 'standard_total', render: (data) => parseFloat(data).toFixed(2), className: 'total-cell standard-group' },
+                            { data: 'fragile_materials', render: (data) => parseFloat(data).toFixed(2), className: 'fragile-group' },
+                            { data: 'fragile_services', render: (data) => parseFloat(data).toFixed(2), className: 'fragile-group' },
+                            { data: 'fragile_total', render: (data) => parseFloat(data).toFixed(2), className: 'total-cell fragile-group' },
+                            { data: 'custom_materials', render: (data) => parseFloat(data).toFixed(2), className: 'custom-group' },
+                            { data: 'custom_services', render: (data) => parseFloat(data).toFixed(2), className: 'custom-group' },
+                            { data: 'custom_total', render: (data) => parseFloat(data).toFixed(2), className: 'total-cell custom-group' }
+                        );
+                    }
+                    
+                    // Recreate DataTable with admin layout
+                    priceTable.printDataTable = $table.DataTable({
+                        data: window.printState.currentData,
+                        columns: columns,
+                        paging: false,
+                        searching: false,
+                        info: false,
+                        ordering: false,
+                        createdRow: (row, data, dataIndex) => {
+                            const $row = $(row);
+                            
+                            // Add row coloring
+                            if (data.section === 'CUBE') {
+                                $row.addClass('blue-row');
+                            } else if (data.section === 'SMALL') {
+                                $row.addClass('yellow-row');
+                            } else if (data.section === 'MEDIUM') {
+                                $row.addClass('green-row');
+                            } else if (data.section === 'LARGE') {
+                                $row.addClass('pink-row');
+                            } else if (data.section === 'SPECIALTY') {
+                                $row.addClass('orange-row');
+                            } else if (data.section === 'NORMAL') {
+                                $row.addClass('normal-row');
+                            } else if (data.section === 'CUSTOM') {
+                                $row.addClass('custom-row');
+                            }
+                        }
+                    });
+                    
+                    document.body.classList.add('printing');
+                }
+                } catch (error) {
+                    console.error('Error preparing print view:', error);
+                    // Continue with print even if there's an error
+                }
+            }
+        });
+        
+        window.addEventListener('afterprint', function() {
+            // Restore original table after printing
+            if (priceTable && !priceTable.isEditable && window.printState) {
+                try {
+                    // Destroy print table
+                    if (priceTable.printDataTable) {
+                        priceTable.printDataTable.destroy();
+                        delete priceTable.printDataTable;
+                    }
+                    
+                    // Restore original view mode table
+                    $('#priceTable').empty();
+                    const tableHtml = priceTable.renderer.buildTableStructure(window.printState.currentData);
+                    $('#priceTableContainer').html(tableHtml);
+                    
+                    // Reinitialize with view mode columns
+                    const columns = priceTable.renderer.getColumnDefinitions(window.printState.currentData);
+                    
+                    priceTable.dataTable = $('#priceTable').DataTable({
+                        data: window.printState.currentData,
+                        columns: columns,
+                        paging: true,
+                        pageLength: 100,
+                        searching: true,
+                        info: false,
+                        autoWidth: false,
+                        order: [],
+                        ordering: true,
+                        drawCallback: (settings) => priceTable.onTableDraw(settings),
+                        createdRow: (row, data, dataIndex) => priceTable.renderer.onRowCreated(row, data, dataIndex)
+                    });
+                    
+                    // Restore event handlers
+                    priceTable.renderer.setupEventHandlers();
+                    
+                    // Clean up
+                    delete window.printState;
+                    document.body.classList.remove('printing');
+                    
+                    // Restore filter label
+                    $('.dataTables_filter label').contents().filter(function() {
+                        return this.nodeType === 3;
+                    }).first().replaceWith('Filter:');
+                } catch (error) {
+                    console.error('Error restoring view after print:', error);
+                    // Reload page as fallback
+                    window.location.reload();
+                }
+            } else if (priceTable && priceTable.dataTable) {
+                // Admin mode - just restore pagination
+                priceTable.dataTable.page.len(100).draw();
+                document.body.classList.remove('printing');
+            }
+        });
+        
+        // Check authentication and load data
+        async function initialize() {
+            try {
+                // Check authentication (don't require it for viewing)
+                let authStatus = { isAuthenticated: false, authLevel: null };
+                
+                if (typeof AuthManager !== 'undefined') {
+                    try {
+                        authStatus = await AuthManager.getAuthStatus(storeId);
+                    } catch (error) {
+                        // Auth check failed, continue in read-only mode
+                    }
+                }
+                
+                // Get pricing mode
+                const pricingMode = await window.api.fetchPricingMode(storeId);
+                
+                // Determine if editable
+                const isEditable = authStatus.isAuthenticated && authStatus.authLevel === 'admin';
+                
+                // Update body class for CSS
+                if (isEditable) {
+                    document.body.classList.add('admin-authenticated');
+                }
+                
+                // Update UI messages
+                if (!isEditable) {
+                    $('#editInstructions').hide();
+                    $('#saveChanges').hide();
+                }
+                
+                // Load box data
+                const response = await window.api.fetchAllBoxes(storeId);
+                
+                const processedData = processBoxesData(response.boxes, pricingMode);
+                
+                // Create price table
+                priceTable = new PriceTable('priceTableContainer', {
+                    storeId: storeId,
+                    isEditable: isEditable,
+                    pricingMode: pricingMode,
+                    onSave: saveChanges
+                });
+                
+                await priceTable.initialize(processedData);
+                
+                // Check if floorplan exists for this store
+                try {
+                    const floorplanResponse = await fetch(`/api/store/${storeId}/floorplan`);
+                    window.hasFloorplan = floorplanResponse.ok;
+                } catch (error) {
+                    console.error('Error checking floorplan:', error);
+                    window.hasFloorplan = false;
+                }
+                
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showStatus('Failed to initialize: ' + error.message, 'error');
+            }
+        }
+        
+        // Process boxes data into table format
         function processBoxesData(boxes, mode) {
             const result = [];
             
             for (const box of boxes) {
                 const model = box.model || '';
                 const dimensions = box.dimensions.join('x');
-                const section = getBoxSection(model, box.type);
+                const section = PriceTable.getBoxSection(model, box.type);
                 
                 let boxData;
                 
@@ -893,45 +1083,34 @@
                         model: model,
                         dimensions: dimensions,
                         box_price: prices[0],
+                        basic: prices[0],
                         standard: prices[1],
                         fragile: prices[2],
                         custom: prices[3],
                         location: box.location || '???',
                         pricing_mode: 'standard'
                     };
-                } else { // itemized pricing mode
+                } else {
                     const ip = box['itemized-prices'] || {};
                     const boxPrice = ip['box-price'] || 0;
-                    
-                    // Standard level
-                    const standardMaterials = ip['standard-materials'] || 0;
-                    const standardServices = ip['standard-services'] || 0;
-                    const standardTotal = boxPrice + standardMaterials + standardServices;
-                    
-                    // Fragile level
-                    const fragileMaterials = ip['fragile-materials'] || 0;
-                    const fragileServices = ip['fragile-services'] || 0;
-                    const fragileTotal = boxPrice + fragileMaterials + fragileServices;
-                    
-                    // Custom level
-                    const customMaterials = ip['custom-materials'] || 0;
-                    const customServices = ip['custom-services'] || 0;
-                    const customTotal = boxPrice + customMaterials + customServices;
                     
                     boxData = {
                         section: section,
                         model: model,
                         dimensions: dimensions,
                         box_price: boxPrice,
-                        standard_materials: standardMaterials,
-                        standard_services: standardServices,
-                        standard_total: standardTotal,
-                        fragile_materials: fragileMaterials,
-                        fragile_services: fragileServices,
-                        fragile_total: fragileTotal,
-                        custom_materials: customMaterials,
-                        custom_services: customServices,
-                        custom_total: customTotal,
+                        basic_materials: ip['basic-materials'] || 0,
+                        basic_services: ip['basic-services'] || 0,
+                        basic_total: boxPrice + (ip['basic-materials'] || 0) + (ip['basic-services'] || 0),
+                        standard_materials: ip['standard-materials'] || 0,
+                        standard_services: ip['standard-services'] || 0,
+                        standard_total: boxPrice + (ip['standard-materials'] || 0) + (ip['standard-services'] || 0),
+                        fragile_materials: ip['fragile-materials'] || 0,
+                        fragile_services: ip['fragile-services'] || 0,
+                        fragile_total: boxPrice + (ip['fragile-materials'] || 0) + (ip['fragile-services'] || 0),
+                        custom_materials: ip['custom-materials'] || 0,
+                        custom_services: ip['custom-services'] || 0,
+                        custom_total: boxPrice + (ip['custom-materials'] || 0) + (ip['custom-services'] || 0),
                         location: box.location || '???',
                         pricing_mode: 'itemized'
                     };
@@ -940,10 +1119,23 @@
                 result.push(boxData);
             }
             
-            // Sort by section and then by model
+            // Define section order
+            const sectionOrder = {
+                'CUBE': 1,
+                'SMALL': 2,
+                'MEDIUM': 3,
+                'LARGE': 4,
+                'SPECIALTY': 5,
+                'NORMAL': 6,
+                'CUSTOM': 7,
+                'OTHER': 8
+            };
+            
+            // Sort by section order first, then by model name
             result.sort((a, b) => {
-                if (a.section !== b.section) {
-                    return a.section.localeCompare(b.section);
+                const sectionCompare = (sectionOrder[a.section] || 999) - (sectionOrder[b.section] || 999);
+                if (sectionCompare !== 0) {
+                    return sectionCompare;
                 }
                 return a.model.localeCompare(b.model);
             });
@@ -951,875 +1143,78 @@
             return result;
         }
         
-        // Function to determine box section based on model or box type
-        function getBoxSection(model, boxType) {
-            // First try to categorize based on model if it exists
-            if (model && model !== '') {
-                if (/C-UPS$|C$|Cube$/.test(model)) {
-                    return "CUBE";
-                } else if (/X 4|X 3|X 6|J-11|J-14|J-15|J-16|SHIRTB/.test(model)) {
-                    return "FLAT & SMALL";
-                } else if (/J-20|WREATH|ST-6|MIR-3|MIR-8/.test(model)) {
-                    return "MEDIUM";
-                } else if (/J-64|SUITCASE|VCR|24 X 18 X 18/.test(model)) {
-                    return "LARGE";
-                } else {
-                    return "SPECIALTY";
-                }
-            }
+        // Save changes handler
+        async function saveChanges(changes) {
+            showStatus('Saving changes...', 'loading');
             
-            // If no model or couldn't categorize, use box type
-            if (boxType) {
-                if (boxType === 'NormalBox') {
-                    return "NORMAL";
-                } else if (boxType === 'CustomBox') {
-                    return "CUSTOM";
-                }
-            }
-            
-            // Fallback
-            return "OTHER";
-        }
-        
-        // Function to initialize the DataTable
-        function initializeDataTable(data) {
-            // First, check if a DataTable already exists and destroy it
-            if (priceTable) {
-                priceTable.destroy();
-            }
-            
-            // Clear the table header completely
-            const $tableHeader = $('#priceTableHeader');
-            $tableHeader.empty();
-            
-            // Determine if model and location columns should be shown
-            const firstItem = data[0] || {};
-            
-            // Check if models are auto-generated from dimensions or actually present in the data
-            const hasRealModels = data.some(item => {
-                // If model starts with "Unknown-" it's likely auto-generated
-                return item.model && item.model !== '' && !item.model.startsWith('Unknown-');
-            });
-            
-            const hasLocations = data.some(item => item.location && item.location !== '???');
-            
-            // Base columns - section and dimensions always shown
-            const columns = [
-                { data: 'section' },
-                { data: 'dimensions' }
-            ];
-            
-            // Conditionally add model column only if real (non-auto-generated) models exist
-            if (hasRealModels) {
-                columns.splice(1, 0, { data: 'model' });
-            }
-            
-            // Add appropriate header structure based on pricing mode
-            if (pricingMode === 'standard') {
-                // Standard pricing mode: simple header
-                const headerRow = $('<tr></tr>');
-                
-                // Add basic columns
-                headerRow.append('<th>Section</th>');
-                if (hasRealModels) {
-                    headerRow.append('<th>Model</th>');
-                }
-                headerRow.append('<th>Dimensions</th>');
-                headerRow.append('<th>Box Price</th>');
-                headerRow.append('<th><img src="/assets/icons/total.png" width="24" height="24" alt="Standard Total" title="Standard Total"></th>');
-                headerRow.append('<th><img src="/assets/icons/total.png" width="24" height="24" alt="Fragile Total" title="Fragile Total"></th>');
-                headerRow.append('<th><img src="/assets/icons/total.png" width="24" height="24" alt="Custom Total" title="Custom Total"></th>');
-                if (hasLocations) {
-                    headerRow.append('<th>Location</th>');
-                }
-                // Actions column removed - undo button now in location column
-                
-                $tableHeader.append(headerRow);
-                
-                columns.push(
-                    { 
-                        data: 'box_price',
-                        render: function(data) {
-                            return parseFloat(data).toFixed(2);
-                        },
-                        className: 'editable'
-                    },
-                    { 
-                        data: 'standard',
-                        render: function(data) {
-                            return parseFloat(data).toFixed(2);
-                        },
-                        className: 'editable'
-                    },
-                    { 
-                        data: 'fragile',
-                        render: function(data) {
-                            return parseFloat(data).toFixed(2);
-                        },
-                        className: 'editable'
-                    },
-                    { 
-                        data: 'custom',
-                        render: function(data) {
-                            return parseFloat(data).toFixed(2);
-                        },
-                        className: 'editable'
+            try {
+                // Format changes for API
+                const updates = {};
+                for (const change of changes) {
+                    if (!updates[change.model]) {
+                        updates[change.model] = {};
                     }
-                );
-            } else {
-                // Itemized pricing mode: complex header with groups
-                
-                // First row with group headers
-                const groupHeaderRow = $('<tr></tr>');
-                
-                // Common columns (span 2 rows)
-                groupHeaderRow.append('<th rowspan="2">Section</th>');
-                if (hasRealModels) {
-                    groupHeaderRow.append('<th rowspan="2">Model</th>');
+                    updates[change.model][change.field] = change.newValue;
                 }
-                groupHeaderRow.append('<th rowspan="2">Dimensions</th>');
-                groupHeaderRow.append('<th rowspan="2">Box Price</th>');
                 
-                // Add group headers for each packing level
-                groupHeaderRow.append('<th colspan="3" class="group-header standard-group">Standard Packing</th>');
-                groupHeaderRow.append('<th colspan="3" class="group-header fragile-group">Fragile Packing</th>');
-                groupHeaderRow.append('<th colspan="3" class="group-header custom-group">Custom Packing</th>');
+                // Save via API
+                await window.api.updateBoxPrices(storeId, updates);
                 
-                // Common columns at the end
-                if (hasLocations) {
-                    groupHeaderRow.append('<th rowspan="2">Location</th>');
-                }
-                // Actions column removed - undo button now in location column
+                showStatus('Changes saved successfully!', 'success');
                 
-                // Second row with individual column headers
-                const detailHeaderRow = $('<tr></tr>');
-                
-                // Standard group columns  
-                detailHeaderRow.append('<th class="standard-group"><img src="/assets/icons/materials.png" width="24" height="24" alt="Materials" title="Standard Materials"></th>');
-                detailHeaderRow.append('<th class="standard-group"><img src="/assets/icons/services.png" width="24" height="24" alt="Services" title="Standard Services"></th>');
-                detailHeaderRow.append('<th class="standard-group"><img src="/assets/icons/total.png" width="24" height="24" alt="Total" title="Standard Total"></th>');
-                
-                // Fragile group columns
-                detailHeaderRow.append('<th class="fragile-group"><img src="/assets/icons/materials.png" width="24" height="24" alt="Materials" title="Fragile Materials"></th>');
-                detailHeaderRow.append('<th class="fragile-group"><img src="/assets/icons/services.png" width="24" height="24" alt="Services" title="Fragile Services"></th>');
-                detailHeaderRow.append('<th class="fragile-group"><img src="/assets/icons/total.png" width="24" height="24" alt="Total" title="Fragile Total"></th>');
-                
-                // Custom group columns
-                detailHeaderRow.append('<th class="custom-group"><img src="/assets/icons/materials.png" width="24" height="24" alt="Materials" title="Custom Materials"></th>');
-                detailHeaderRow.append('<th class="custom-group"><img src="/assets/icons/services.png" width="24" height="24" alt="Services" title="Custom Services"></th>');
-                detailHeaderRow.append('<th class="custom-group"><img src="/assets/icons/total.png" width="24" height="24" alt="Total" title="Custom Total"></th>');
-                
-                // Add both rows to the header
-                $tableHeader.append(groupHeaderRow);
-                $tableHeader.append(detailHeaderRow);
-                
-                columns.push(
-                    { 
-                        data: 'box_price',
-                        render: function(data) {
-                            return parseFloat(data).toFixed(2);
-                        },
-                        className: 'editable'
-                    },
-                    // Standard level
-                    { 
-                        data: 'standard_materials',
-                        render: function(data) {
-                            return parseFloat(data).toFixed(2);
-                        },
-                        className: 'editable standard-group'
-                    },
-                    { 
-                        data: 'standard_services',
-                        render: function(data) {
-                            return parseFloat(data).toFixed(2);
-                        },
-                        className: 'editable standard-group'
-                    },
-                    { 
-                        data: 'standard_total',
-                        render: function(data) {
-                            return parseFloat(data).toFixed(2);
-                        },
-                        className: 'total-cell standard-group'
-                    },
-                    // Fragile level
-                    { 
-                        data: 'fragile_materials',
-                        render: function(data) {
-                            return parseFloat(data).toFixed(2);
-                        },
-                        className: 'editable fragile-group'
-                    },
-                    { 
-                        data: 'fragile_services',
-                        render: function(data) {
-                            return parseFloat(data).toFixed(2);
-                        },
-                        className: 'editable fragile-group'
-                    },
-                    { 
-                        data: 'fragile_total',
-                        render: function(data) {
-                            return parseFloat(data).toFixed(2);
-                        },
-                        className: 'total-cell fragile-group'
-                    },
-                    // Custom level
-                    { 
-                        data: 'custom_materials',
-                        render: function(data) {
-                            return parseFloat(data).toFixed(2);
-                        },
-                        className: 'editable custom-group'
-                    },
-                    { 
-                        data: 'custom_services',
-                        render: function(data) {
-                            return parseFloat(data).toFixed(2);
-                        },
-                        className: 'editable custom-group'
-                    },
-                    { 
-                        data: 'custom_total',
-                        render: function(data) {
-                            return parseFloat(data).toFixed(2);
-                        },
-                        className: 'total-cell custom-group'
-                    }
-                );
-            }
-            
-            // Add location column conditionally
-            if (hasLocations) {
-                columns.push({
-                    data: 'location',
-                    render: function(data, type, row) {
-                        // Determine location status
-                        const hasCoords = data && typeof data === 'object' && data.coords && data.coords.length > 0;
-                        
-                        // Get label based on location type
-                        let label = '';
-                        let isTextBasedLocation = false;
-                        
-                        if (typeof data === 'string') {
-                            // Old-style string location
-                            label = data !== '???' ? data : '';
-                            isTextBasedLocation = data !== '???';
-                        } else if (data && typeof data === 'object') {
-                            // New dictionary format
-                            label = data.label || '';
-                            isTextBasedLocation = !hasCoords && label !== '';
+                // Show digest if available
+                setTimeout(async () => {
+                    try {
+                        const digest = await window.api.getLastPriceDigest(storeId);
+                        if (digest) {
+                            showStatus(`Digest saved:\n${digest}`, 'success');
                         }
-                        
-                        const hasChanges = changedData[row.model] !== undefined;
-                        const undoClasses = hasChanges ? 'undo-btn show-undo' : 'undo-btn';
-                        
-                        return `
-                            <div class="location-buttons">
-                                <!-- Eye icon - only active if box has coordinates -->
-                                <button class="location-btn view-location" 
-                                        data-model="${row.model}" 
-                                        ${!hasCoords ? 'disabled' : ''} 
-                                        title="${hasCoords ? 'View location on floorplan' : 'No coordinates set'}"
-                                        style="opacity: ${hasCoords ? '1' : '0.4'}">
-                                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                                        <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
-                                        <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
-                                    </svg>
-                                </button>
-                                
-                                <!-- Pencil icon - always available if store has a floorplan -->
-                                <button class="location-btn edit-location" 
-                                        data-model="${row.model}" 
-                                        title="Edit location"
-                                        ${!window.hasFloorplan ? 'data-no-floorplan="true"' : ''}
-                                        style="opacity: ${window.hasFloorplan ? '1' : '0.4'}">
-                                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                                        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
-                                    </svg>
-                                </button>
-                                
-                                <!-- Undo button - right next to pencil, SUPER visible when changes exist -->
-                                <button class="${undoClasses}" data-model="${row.model}" title="Undo changes for this row">↺</button>
-                                
-                                <!-- Notes icon - only for text-based locations with hover tooltip -->
-                                ${isTextBasedLocation ? `
-                                <button class="location-btn notes-location" 
-                                        data-content="${label}" 
-                                        title="Location notes: ${label}">
-                                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                                        <path d="M5 10.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/>
-                                        <path d="M3 0h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-1h1v1a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v1H1V2a2 2 0 0 1 2-2z"/>
-                                        <path d="M1 5v-.5a.5.5 0 0 1 1 0V5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1zm0 3v-.5a.5.5 0 0 1 1 0V8h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1zm0 3v-.5a.5.5 0 0 1 1 0v.5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1z"/>
-                                    </svg>
-                                </button>` : ''}
-                            </div>
-                        `;
-                    },
-                    className: 'location-cell'
-                });
-            }
-            
-            // Actions column removed - undo button now in location column
-            
-            // Store a deep copy of the original data for undo functionality
-            originalData = JSON.parse(JSON.stringify(data));
-            
-            // Initialize the DataTable with the appropriate columns
-            priceTable = $('#priceTable').DataTable({
-                data: data,
-                columns: columns,
-                paging: false,
-                responsive: true,
-                rowCallback: function(row, data) {
-                    // Apply classes based on section
-                    if (data.section === 'CUBE') {
-                        $(row).addClass('blue-row');
-                    } else if (data.section === 'FLAT & SMALL') {
-                        $(row).addClass('yellow-row');
-                    } else if (data.section === 'MEDIUM') {
-                        $(row).addClass('green-row');
-                    } else if (data.section === 'LARGE') {
-                        $(row).addClass('pink-row');
-                    } else if (data.section === 'SPECIALTY') {
-                        $(row).addClass('orange-row');
-                    } else if (data.section === 'NORMAL') {
-                        $(row).addClass('normal-row');
-                    } else if (data.section === 'CUSTOM') {
-                        $(row).addClass('custom-row');
+                    } catch (e) {
+                        console.log('Could not fetch digest');
                     }
-                }
-            });
-            
-            setupEventHandlers();
+                }, 1000);
+                
+            } catch (error) {
+                console.error('Save error:', error);
+                showStatus('Failed to save changes: ' + error.message, 'error');
+                throw error;
+            }
         }
         
-        // Set up all event handlers
-        function setupEventHandlers() {
-            // Make price cells editable only if authenticated
-            // Handle undo button click
-            $('#priceTable').on('click', '.undo-btn.show-undo', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                const $button = $(this);
-                const $tr = $button.closest('tr');
-                
-                
-                if (!$tr.length) {
-                    console.error('Could not find parent tr');
-                    return;
-                }
-                
+        // Show status message
+        function showStatus(message, type) {
+            const $status = $('#statusMessage');
+            $status.removeClass('success error loading').addClass(type);
+            
+            const htmlMessage = message.replace(/\n/g, '<br>');
+            $status.html(htmlMessage);
+            $status.show();
+            
+            if (type !== 'loading') {
+                setTimeout(() => {
+                    $status.fadeOut();
+                }, type === 'success' && message.includes('Digest saved') ? 10000 : 5000);
+            }
+        }
+        
+        // Save button handler
+        $('#saveChanges').on('click', async () => {
+            if (priceTable && priceTable.changeCount > 0) {
                 try {
-                    const row = priceTable.row($tr);
-                    
-                    if (!row || typeof row.data !== 'function') {
-                        console.error('Could not get valid DataTable row');
-                        return;
-                    }
-                    
-                    const rowData = row.data();
-                
-                if (!rowData) {
-                    console.error('Row data is undefined');
-                    return;
-                }
-                
-                
-                // Remove changes for this row
-                if (changedData[rowData.model]) {
-                    delete changedData[rowData.model];
-                    changeCount--;
-                    
-                    
-                    // Reload original data for this row
-                    const originalRow = originalData.find(r => r.model === rowData.model);
-                    if (originalRow) {
-                        // Restore all original values based on pricing mode
-                        if (pricingMode === 'standard') {
-                            rowData.box_price = originalRow.box_price;
-                            rowData.standard = originalRow.standard;
-                            rowData.fragile = originalRow.fragile;
-                            rowData.custom = originalRow.custom;
-                        } else {
-                            // For itemized pricing, restore all fields
-                            rowData.box_price = originalRow.box_price;
-                            rowData.standard_materials = originalRow.standard_materials;
-                            rowData.standard_services = originalRow.standard_services;
-                            rowData.standard_total = originalRow.standard_total;
-                            rowData.fragile_materials = originalRow.fragile_materials;
-                            rowData.fragile_services = originalRow.fragile_services;
-                            rowData.fragile_total = originalRow.fragile_total;
-                            rowData.custom_materials = originalRow.custom_materials;
-                            rowData.custom_services = originalRow.custom_services;
-                            rowData.custom_total = originalRow.custom_total;
-                        }
-                        
-                        // Update the row data and redraw
-                        row.data(rowData).draw();
-                    }
-                    
-                    updateChangeCounter();
-                }
+                    await priceTable.saveChanges();
                 } catch (error) {
-                    console.error('Error in undo handler:', error);
+                    // Error already handled in saveChanges
                 }
+            }
+        });
+        
+        // Initialize on page load
+        $(document).ready(() => {
+            initialize().catch(error => {
+                console.error('Failed to initialize:', error);
+                showStatus('Failed to load price table: ' + error.message, 'error');
             });
-            
-            $('#priceTable').on('click', 'td.editable', function() {
-                // Skip if not authenticated
-                if (!isEditable) {
-                    showStatus('You must be logged in to edit prices.', 'error');
-                    return;
-                }
-                
-                const cell = $(this);
-                const value = cell.text();
-                const row = priceTable.row(cell.closest('tr')).data();
-                const columnIndex = priceTable.cell(this).index().column;
-                const header = priceTable.column(columnIndex).header();
-                let columnName = header.textContent.toLowerCase().trim();
-                // If no text content, check for img alt text
-                if (!columnName) {
-                    const img = header.querySelector('img');
-                    if (img) {
-                        columnName = img.alt.toLowerCase().trim();
-                    }
-                }
-                
-                // Create input for editing - safer approach to avoid XSS
-                cell.empty();
-                const input = $('<input>', {
-                    type: 'number',
-                    step: '0.01',
-                    min: '0',
-                    placeholder: 'Enter price',
-                    pattern: '[0-9]+(\.[0-9]{1,2})?', // Restrict to valid price format
-                    style: 'width: 100%; box-sizing: border-box; text-align: right; padding-right: 5px;'
-                });
-                input.val(value);
-                cell.append(input);
-                input.focus();
-                input.select();
-                
-                // Handle keyboard navigation
-                input.on('keydown', function(e) {
-                    if (e.key === 'Tab') {
-                        e.preventDefault();
-                        
-                        // Find next editable cell
-                        const allEditableCells = $('#priceTable td.editable');
-                        const currentIndex = allEditableCells.index(cell);
-                        let nextCell;
-                        
-                        if (e.shiftKey) {
-                            // Shift+Tab goes left
-                            nextCell = allEditableCells.eq(currentIndex - 1);
-                        } else {
-                            // Tab goes right
-                            nextCell = allEditableCells.eq(currentIndex + 1);
-                        }
-                        
-                        // If we found a next cell, trigger blur then click it
-                        if (nextCell.length) {
-                            $(this).blur();
-                            setTimeout(() => {
-                                nextCell.click();
-                            }, 10);
-                        } else {
-                            // No next cell, just blur
-                            $(this).blur();
-                        }
-                    } else if (e.key === 'Enter') {
-                        // Enter just completes the edit
-                        e.preventDefault();
-                        $(this).blur();
-                    } else if (e.key === 'Escape') {
-                        // Escape cancels edit
-                        $(this).val(value); // Restore original value
-                        $(this).blur();
-                    }
-                });
-                
-                // Handle input blur (save value)
-                input.on('blur', function() {
-                    const inputValue = $(this).val();
-                    const newValue = parseFloat(inputValue);
-                    const originalValue = parseFloat(value);
-                    
-                    // Check if value is valid (must be a valid number)
-                    if (isNaN(newValue) || inputValue.trim() === '' || /[^0-9.\-]/.test(inputValue)) {
-                        // Simply revert to the original value without marking as changed
-                        cell.text(value); // Use the original string value to maintain exact formatting
-                        showStatus('Invalid input', 'error');
-                        return;
-                    }
-                    
-                    // Check if the value actually changed
-                    if (newValue === originalValue) {
-                        // No actual change, just revert to original value
-                        cell.text(value); // Use the original string value to maintain exact formatting
-                        return;
-                    }
-                    
-                    // Valid number that has changed
-                    cell.text(newValue.toFixed(2));
-                    
-                    // Track the change
-                    if (!changedData[row.model]) {
-                        changedData[row.model] = {};
-                        changeCount++;
-                        
-                        // Show the undo button for this row
-                        const rowElement = cell.closest('tr');
-                        const rowIndex = priceTable.row(rowElement).index();
-                        const rowData = priceTable.row(rowIndex).data();
-                        
-                        // Mark row as having changes in the data
-                        priceTable.row(rowIndex).data(rowData);
-                        
-                        // Force redraw the row to update the undo button
-                        priceTable.row(rowIndex).invalidate().draw(false);
-                    }
-                    
-                    if (pricingMode === 'standard') {
-                        // Determine which price field to update for standard pricing
-                        let priceIndex;
-                        switch(columnName) {
-                            case 'box price': priceIndex = 0; break;
-                            case 'standard': priceIndex = 1; break;
-                            case 'fragile': priceIndex = 2; break;
-                            case 'custom': priceIndex = 3; break;
-                            default: return; // Exit if column not recognized
-                        }
-                        
-                        if (priceIndex !== undefined) {
-                            changedData[row.model][priceIndex] = newValue;
-                        }
-                    } else {
-                        // For itemized pricing, we store the actual field name
-                        let fieldName;
-                        let packingLevel = '';
-                        
-                        switch(columnName) {
-                            case 'box price': 
-                                fieldName = 'box-price'; 
-                                packingLevel = 'all'; // Box price affects all totals
-                                break;
-                            case 'materials': 
-                                if (columnIndex === 4) {
-                                    fieldName = 'standard-materials';
-                                    packingLevel = 'standard';
-                                }
-                                else if (columnIndex === 7) {
-                                    fieldName = 'fragile-materials';
-                                    packingLevel = 'fragile';
-                                }
-                                else if (columnIndex === 10) {
-                                    fieldName = 'custom-materials';
-                                    packingLevel = 'custom';
-                                }
-                                break;
-                            case 'services': 
-                                if (columnIndex === 5) {
-                                    fieldName = 'standard-services';
-                                    packingLevel = 'standard';
-                                }
-                                else if (columnIndex === 8) {
-                                    fieldName = 'fragile-services';
-                                    packingLevel = 'fragile';
-                                }
-                                else if (columnIndex === 11) {
-                                    fieldName = 'custom-services';
-                                    packingLevel = 'custom';
-                                }
-                                break;
-                        }
-                        
-                        if (fieldName) {
-                            changedData[row.model][fieldName] = newValue;
-                            
-                            // Find this row in the table
-                            const rowElement = cell.closest('tr');
-                            const rowIndex = priceTable.row(rowElement).index();
-                            
-                            // Get the current box price
-                            let boxPrice = parseFloat(priceTable.cell(rowIndex, 3).data());
-                            
-                            // Update cell data with new value
-                            priceTable.cell(cell).data(newValue);
-                            
-                            // If box price changed, update it directly
-                            if (fieldName === 'box-price') {
-                                boxPrice = newValue;
-                            }
-                            
-                            // Update totals based on which field changed
-                            if (packingLevel === 'all' || packingLevel === 'standard') {
-                                // Update standard total
-                                const stdMaterials = parseFloat(priceTable.cell(rowIndex, 4).data());
-                                const stdServices = parseFloat(priceTable.cell(rowIndex, 5).data());
-                                const stdTotal = boxPrice + stdMaterials + stdServices;
-                                
-                                // Update the total cell
-                                priceTable.cell(rowIndex, 6).data(parseFloat(stdTotal).toFixed(2));
-                            }
-                            
-                            if (packingLevel === 'all' || packingLevel === 'fragile') {
-                                // Update fragile total
-                                const fragMaterials = parseFloat(priceTable.cell(rowIndex, 7).data());
-                                const fragServices = parseFloat(priceTable.cell(rowIndex, 8).data());
-                                const fragTotal = boxPrice + fragMaterials + fragServices;
-                                
-                                // Update the total cell
-                                priceTable.cell(rowIndex, 9).data(parseFloat(fragTotal).toFixed(2));
-                            }
-                            
-                            if (packingLevel === 'all' || packingLevel === 'custom') {
-                                // Update custom total
-                                const custMaterials = parseFloat(priceTable.cell(rowIndex, 10).data());
-                                const custServices = parseFloat(priceTable.cell(rowIndex, 11).data());
-                                const custTotal = boxPrice + custMaterials + custServices;
-                                
-                                // Update the total cell
-                                priceTable.cell(rowIndex, 12).data(parseFloat(custTotal).toFixed(2));
-                            }
-                            
-                            // Redraw the row to show updated values
-                            priceTable.row(rowIndex).invalidate().draw(false);
-                        }
-                    }
-                    
-                    updateChangeCounter();
-                });
-                
-                // Handle enter key
-                input.on('keypress', function(e) {
-                    if (e.which === 13) {
-                        input.blur();
-                    }
-                });
-                
-                // Handle input events to validate values and prevent NaN
-                input.on('input', function() {
-                    const inputValue = $(this).val();
-                });
-                
-                // Validate input on change
-                input.on('change', function() {
-                    const inputValue = $(this).val();
-                    // If empty or invalid, do not modify the input - blur handler will handle reverting
-                    if (inputValue === '' || isNaN(parseFloat(inputValue)) || /[^0-9.\-]/.test(inputValue)) {
-                        // Don't change the input - let blur handle reverting
-                    }
-                });
-            });
-            
-            // Save changes button handler
-            $('#saveChanges').on('click', function() {
-                // Double-check authentication before saving
-                if (!isEditable) {
-                    showStatus('You must be logged in to edit prices.', 'error');
-                    return;
-                }
-                
-                const locationChangeCount = Object.keys(changedLocations).length;
-                const totalChangeCount = changeCount + locationChangeCount;
-                
-                if (totalChangeCount > 0) {
-                    showStatus('Saving changes...', 'loading');
-                    
-                    // Use the appropriate update function based on pricing mode
-                    const updateFunction = pricingMode === 'standard' 
-                        ? window.api.updateStandardPrices
-                        : window.api.updateItemizedPrices;
-                    
-                    // Save price changes first
-                    const pricePromise = changeCount > 0 ? 
-                        updateFunction(storeId, changedData, csrfToken) : 
-                        Promise.resolve();
-                    
-                    // Save location changes
-                    const locationPromise = locationChangeCount > 0 ?
-                        window.api.updateLocations(storeId, changedLocations, csrfToken) :
-                        Promise.resolve();
-                    
-                    Promise.all([pricePromise, locationPromise])
-                        .then(() => {
-                            showStatus('All changes saved successfully!', 'success');
-                            changedData = {};
-                            changeCount = 0;
-                            changedLocations = {};
-                            updateChangeCounter();
-                            
-                            // Force DataTables to re-render all cells and redraw  
-                            priceTable.rows().invalidate().draw();
-                        })
-                        .catch(error => {
-                            console.error('Error saving changes:', error);
-                            showStatus('Error saving changes: ' + error.message, 'error');
-                        });
-                }
-            });
-            
-            // Print view button handler
-            $('#printView').on('click', function() {
-                // Just trigger the browser's print dialog for this page
-                window.print();
-            });
-            
-            // Initialize floorplan status in the window object so it's accessible globally
-            window.hasFloorplan = false;
-            
-            // Check if store has a floorplan
-            fetch(`/api/store/${storeId}/floorplan`)
-                .then(response => {
-                    window.hasFloorplan = response.ok;
-                    console.log("Store has floorplan:", window.hasFloorplan);
-                    
-                    // Refresh the table to update the location buttons based on floorplan availability
-                    if (priceTable) {
-                        priceTable.rows().invalidate().draw();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error checking floorplan:', error);
-                    window.hasFloorplan = false;
-                });
-            
-            // Location button handlers
-            $(document).on('click', '.view-location', function(e) {
-                e.preventDefault();
-                if ($(this).hasClass('disabled')) return;
-                
-                const model = $(this).data('model');
-                const row = priceTable.row($(this).closest('tr')).data();
-                
-                import('/components/location-modal.js').then(module => {
-                    module.LocationModal.show({
-                        mode: 'view',
-                        storeId: storeId,
-                        boxModel: model,
-                        currentLocation: row.location
-                    });
-                }).catch(error => {
-                    console.error('Error loading location modal:', error);
-                    showStatus('Failed to load location viewer', 'error');
-                });
-            });
-            
-            $(document).on('click', '.edit-location', function(e) {
-                e.preventDefault();
-                
-                // Check if button is disabled or no floorplan is available
-                if ($(this).hasClass('disabled') || $(this).attr('data-no-floorplan') === 'true') {
-                    if (!window.hasFloorplan) {
-                        showStatus('No floorplan available for this store. Please upload a floorplan image first.', 'error');
-                    }
-                    return;
-                }
-                
-                const model = $(this).data('model');
-                const row = priceTable.row($(this).closest('tr')).data();
-                const $tr = $(this).closest('tr');
-                
-                import('/components/location-modal.js').then(module => {
-                    module.LocationModal.show({
-                        mode: 'edit',
-                        storeId: storeId,
-                        boxModel: model,
-                        currentLocation: row.location,
-                        onSave: (location, alreadySaved) => {
-                            // Only track as a change if not already saved to API
-                            if (!alreadySaved) {
-                                // Update the location data
-                                if (!changedLocations[model]) {
-                                    changedLocations[model] = {};
-                                }
-                                changedLocations[model] = location;
-                                
-                                // Enable save button
-                                $('#saveChanges').prop('disabled', false);
-                                updateLocationChangeCounter();
-                            }
-                            
-                            // Always update the row data to reflect changes
-                            row.location = location;
-                            priceTable.row($tr).data(row).draw();
-                            
-                            // Show a status message
-                            if (alreadySaved) {
-                                showStatus('Location saved successfully!', 'success');
-                            }
-                        },
-                        onClear: (alreadySaved) => {
-                            // Only track as a change if not already saved to API
-                            if (!alreadySaved) {
-                                // Clear the location
-                                if (!changedLocations[model]) {
-                                    changedLocations[model] = {};
-                                }
-                                changedLocations[model] = null;
-                                
-                                // Enable save button
-                                $('#saveChanges').prop('disabled', false);
-                                updateLocationChangeCounter();
-                            }
-                            
-                            // Always update the row data to reflect changes
-                            row.location = '???';
-                            priceTable.row($tr).data(row).draw();
-                            
-                            // Show a status message
-                            if (alreadySaved) {
-                                showStatus('Location removed successfully!', 'success');
-                            }
-                        }
-                    });
-                }).catch(error => {
-                    console.error('Error loading location modal:', error);
-                    showStatus('Failed to load location editor', 'error');
-                });
-            });
-            
-            // Add tooltip for notes icon
-            $(document).on('mouseenter', '.notes-location', function() {
-                const content = $(this).data('content');
-                if (!content) return;
-                
-                // Create tooltip element
-                const tooltip = $('<div class="location-note-tooltip"></div>')
-                    .text(content)
-                    .css({
-                        position: 'absolute',
-                        top: $(this).offset().top + $(this).height() + 5,
-                        left: $(this).offset().left,
-                        background: 'white',
-                        border: '1px solid #ccc',
-                        padding: '5px 10px',
-                        borderRadius: '4px',
-                        zIndex: 1000,
-                        boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-                        maxWidth: '250px',
-                        wordWrap: 'break-word'
-                    });
-                
-                $('body').append(tooltip);
-                
-                $(this).data('tooltip', tooltip);
-            });
-            
-            $(document).on('mouseleave', '.notes-location', function() {
-                const tooltip = $(this).data('tooltip');
-                if (tooltip) {
-                    tooltip.remove();
-                    $(this).removeData('tooltip');
-                }
-            });
-        }
-    });
+        });
     </script>
 </body>
 </html>

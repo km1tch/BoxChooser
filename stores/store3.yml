@@ -344,7 +344,7 @@ boxes:
   - type: NormalBox
     supplier: ABC
     model: "MIR-9"
-    dimensions: [36, 36, 36]
+    dimensions: [36, 6, 36]
     prices: [0, 0, 0, 0]
     location: "3"
 

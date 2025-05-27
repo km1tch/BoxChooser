@@ -9,7 +9,7 @@ async function createAdminNav(storeId, activePage = 'prices') {
   nav.className = 'admin-nav';
   
   // Get auth status first to determine what to show
-  let authStatus = { hasAuth: false, isAuthenticated: false };
+  let authStatus = { hasAuth: false, isAuthenticated: false, authLevel: null };
   if (typeof AuthManager !== 'undefined') {
     try {
       authStatus = await AuthManager.getAuthStatus(storeId);
@@ -32,6 +32,14 @@ async function createAdminNav(storeId, activePage = 'prices') {
   storeIdSpan.className = 'store-id';
   storeIdSpan.textContent = `Store #${storeId}`;
   
+  // Add admin indicator if authenticated as admin
+  if (authStatus.isAuthenticated && authStatus.authLevel === 'admin') {
+    const adminIndicator = document.createElement('span');
+    adminIndicator.className = 'admin-mode-indicator';
+    adminIndicator.textContent = 'ADMIN';
+    storeIdSpan.appendChild(adminIndicator);
+  }
+  
   const authDropdown = document.createElement('div');
   authDropdown.className = 'auth-dropdown';
   authDropdown.id = `auth-dropdown-${storeId}-${Date.now()}`;
@@ -52,21 +60,35 @@ async function createAdminNav(storeId, activePage = 'prices') {
   const navItems = document.createElement('ul');
   navItems.className = 'nav-items';
   
-  // Define all possible nav items
-  const allItems = [
+  // Define nav items based on auth level
+  const userItems = [
+    { id: 'wizard', label: 'Wizard', href: `/${storeId}/wizard` },
     { id: 'packing', label: 'Packing', href: `/${storeId}` },
-    { id: 'prices', label: 'Prices', href: `/${storeId}/prices` },
-    { id: 'floorplan', label: 'Floorplan', href: `/${storeId}/floorplan` }
+    { id: 'prices', label: 'Price Table', href: `/${storeId}/prices` }
   ];
   
-  // Filter items based on auth status
+  const adminItems = [
+    { id: 'wizard', label: 'Wizard', href: `/${storeId}/wizard` },
+    { id: 'packing', label: 'Packing', href: `/${storeId}` },
+    { id: 'prices', label: 'Edit Prices', href: `/${storeId}/prices` },
+    { id: 'import', label: 'Import', href: `/${storeId}/import` },
+    { id: 'floorplan', label: 'Floorplan', href: `/${storeId}/floorplan` },
+    { id: 'settings', label: 'Settings', href: `/${storeId}/settings` }
+  ];
+  
+  // Filter items based on auth status and level
   let items;
   if (authStatus.isAuthenticated) {
-    // Authenticated - show all items
-    items = allItems;
+    if (authStatus.authLevel === 'admin') {
+      // Admin - show all items
+      items = adminItems;
+    } else {
+      // User - show limited items
+      items = userItems;
+    }
   } else {
-    // Auth required but not authenticated - show only packing
-    items = allItems.filter(item => item.id === 'packing');
+    // Not authenticated - show no nav items (they should be redirected to login)
+    items = [];
   }
   
   items.forEach(item => {
@@ -110,7 +132,7 @@ async function createAdminNav(storeId, activePage = 'prices') {
       .nav-items {
         display: flex;
         list-style: none;
-        margin: 0 auto 0 40px;
+        margin: 0 0 0 40px;
         padding: 0;
       }
       
@@ -140,14 +162,27 @@ async function createAdminNav(storeId, activePage = 'prices') {
         cursor: pointer;
       }
       
-      .user-info {
-        display: flex;
-        align-items: center;
-      }
-      
       .store-info img {
         height: 30px;
         margin-right: 10px;
+      }
+      
+      .store-id {
+        font-weight: 600;
+        font-size: 16px;
+        color: #2c3e50;
+      }
+      
+      /* Admin indicator - subtle badge next to store name */
+      .admin-mode-indicator {
+        background: #f093fb;
+        color: white;
+        font-size: 10px;
+        font-weight: bold;
+        padding: 2px 6px;
+        border-radius: 3px;
+        margin-left: 8px;
+        letter-spacing: 0.5px;
       }
       
       .auth-dropdown {
@@ -159,11 +194,12 @@ async function createAdminNav(storeId, activePage = 'prices') {
         border-radius: 4px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         padding: 8px;
-        min-width: 120px;
+        min-width: 160px;
         opacity: 0;
         visibility: hidden;
         transition: all 0.2s ease;
         z-index: 1000;
+        margin-top: 5px;
       }
       
       .store-info:hover .auth-dropdown {
@@ -174,62 +210,56 @@ async function createAdminNav(storeId, activePage = 'prices') {
       .auth-dropdown .auth-info {
         display: flex;
         flex-direction: column;
-        gap: 5px;
+        gap: 8px;
       }
       
-      .auth-dropdown .login-button,
-      .auth-dropdown .logout-button {
-        font-size: 12px;
-        padding: 4px 8px;
+      .auth-dropdown .admin-indicator {
+        background: #f093fb;
+        color: white;
+        font-size: 11px;
+        font-weight: bold;
+        padding: 2px 8px;
         border-radius: 3px;
-        background: #007bff;
-        color: white;
-        border: none;
-        cursor: pointer;
-        text-decoration: none;
         text-align: center;
+        letter-spacing: 0.5px;
       }
       
-      .auth-dropdown .login-button:hover,
-      .auth-dropdown .logout-button:hover {
-        background: #0056b3;
+      .auth-dropdown .auth-status {
+        color: #495057;
+        font-size: 14px;
+        font-weight: 500;
       }
       
-      .auth-indicator {
-        background-color: #28a745;
-        color: white;
-        padding: 3px 8px;
+      .auth-dropdown .logout-button {
+        font-size: 14px;
+        padding: 6px 12px;
         border-radius: 4px;
-        font-size: 12px;
-        margin-right: 10px;
+        background: #6c757d;
+        color: white;
+        border: none;
+        cursor: pointer;
+        text-align: center;
+        transition: background 0.2s;
       }
       
-      .auth-dropdown .auth-indicator {
-        background: none !important;
-        color: #28a745 !important;
-        padding: 0 !important;
-        margin: 0 0 5px 0 !important;
-        border-radius: 0 !important;
-        font-weight: bold !important;
+      .auth-dropdown .logout-button:hover {
+        background: #5a6268;
       }
       
-      .login-link, .logout-button {
+      .auth-dropdown .login-link {
+        display: block;
         text-decoration: none;
         background: #007bff;
         color: white;
-        padding: 5px 15px;
+        padding: 6px 12px;
         border-radius: 4px;
-        border: none;
-        cursor: pointer;
         font-size: 14px;
+        text-align: center;
+        transition: background 0.2s;
       }
       
-      .logout-button {
-        background: #6c757d;
-      }
-      
-      .login-link:hover, .logout-button:hover {
-        opacity: 0.9;
+      .auth-dropdown .login-link:hover {
+        background: #0056b3;
       }
       
       .mobile-menu-toggle {

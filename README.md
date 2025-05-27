@@ -98,9 +98,8 @@ Simply run `docker compose up` in the same directory, and it should start the se
 Docker configuration notes:
 
 - The store YAML files (`stores/store*.yml`) are included in the Docker volume mount, so you can edit box configurations without rebuilding
-- Any comments sent to `comments.txt` can be read and deleted from the host system
-
-To disable the comments, remove the `/comments` path from `main.py` and restart the container.
+- The SQLite database is persisted in `./db/packingwebsite.db` for authentication and settings
+- MailHog is included for email testing in development (web UI at `http://localhost:8026`)
 
 ## Pricing Modes
 
@@ -122,32 +121,95 @@ To specify the pricing mode for a store, add the `pricing-mode` field at the top
 pricing-mode: standard # or 'itemized'
 ```
 
+## Authentication & Access Control
+
+The application uses a two-tier authentication system:
+
+- **User Access (PIN)**: 6-digit PIN for read-only access to wizard, packing calculator, and price viewer
+- **Admin Access (Email)**: Email verification for full access including price editing and settings
+
+To set up authentication for a store:
+
+```bash
+./tools/auth create 1 admin@example.com
+```
+
 ## Price Editor
 
-Each store has a price editor accessed via `/{store_id}/price_editor`. The price editor interface will adapt based on the pricing mode:
+Each store has a price editor accessed via `/{store_id}/prices`. The price editor interface will adapt based on the pricing mode:
 
 - **Standard Mode**: Shows a simple table with box price, standard, fragile, and custom prices
 - **Itemized Mode**: Shows a more detailed table breaking down each price into box price, materials, and services
 
-The price editor will only allow updates if the store has `editable: true` set in its YAML file.
+Price editing requires admin authentication.
 
 ## URL Routes and Endpoints
 
-- `/{store_id}` - Access the main packing calculator for a specific store (e.g., `/1` for store 1)
-- `/{store_id}/price_editor` - Access the price editor for a specific store
-- `/api/store/{store_id}/boxes` - API endpoint to get all boxes for a store
-- `/api/store/{store_id}/boxes_with_sections` - API endpoint to get boxes organized by sections
+### Public Routes (require authentication)
+
+- `/{store_id}` - Packing calculator (legacy mode: no auth required)
+- `/{store_id}/wizard` - Box selection wizard (user/admin access)
+- `/{store_id}/prices` - Price viewer/editor (user: read-only, admin: edit)
+- `/{store_id}/import` - Import prices from Excel (admin only)
+- `/{store_id}/floorplan` - Floorplan editor (admin only)
+- `/{store_id}/settings` - Store settings (admin only)
+
+### API Endpoints
+
+- `/api/store/{store_id}/boxes` - Get all boxes for a store
+- `/api/store/{store_id}/boxes_with_sections` - Get boxes organized by sections
 - `/api/store/{store_id}/pricing_mode` - Get the current pricing mode for a store
-- `/api/store/{store_id}/is_editable` - Check if a store's prices can be edited
-- `/api/store/{store_id}/update_prices` - Update prices in standard pricing mode
-- `/api/store/{store_id}/update_itemized_prices` - Update prices in itemized pricing mode
+- `/api/store/{store_id}/update_prices` - Update prices in standard pricing mode (admin only)
+- `/api/store/{store_id}/update_itemized_prices` - Update prices in itemized pricing mode (admin only)
+- `/api/store/{store_id}/import/analyze` - Analyze Excel file for import matching (admin only)
+- `/api/store/{store_id}/import/apply` - Apply import updates from Excel (admin only)
+- `/api/store/{store_id}/packing-rules` - Get/update packing rules (admin only for updates)
+- `/api/store/{store_id}/engine-config` - Get/update recommendation engine config (admin only for updates)
 
-## Comments
+## Excel Import
 
-For simplicity and speed most of the choices here were intentional.
+The application supports importing prices from Excel files. The import system has a three-tier matching strategy:
 
-- FastApi for a super simple backend that lets me save comments. We are now also using it for some CRUD to update prices and to handle multiple stores.
-- Starting to modularize a tiny bit. Still trying to KISS
+1. **Perfect Match**: Uses saved item ID mappings (MPOS_mapping) for exact matching
+2. **Probable Match**: Matches based on dimensions and having all required product categories
+3. **Manual Mapping**: For boxes with no dimension match in the Excel file
+
+### Excel Format Requirements
+
+The Excel file should contain products with dimensions in the format `WxHxD` (e.g., "10x10x48", "17.5x15.125x3.25"). The system will:
+
+- Handle mixed case X (e.g., "16x08X65")
+- Support decimal dimensions
+- Extract and display suffixes (e.g., "275# Box", "Golf club", "DW Box")
+- Ignore alternate depth notations like "(x38)" or "(30,26)" when matching dimensions
+- Categorize products as "box" if they start with dimensions
+- Support both abbreviated and full packing type names (e.g., "Cust"/"Custom", "Frg"/"Fragile", "Std"/"Standard")
+
+### TODO Items
+
+- Remove support for legacy YAML-only access.
+- **URGENT: Remove auto-login hack** - Currently stores with YAML but no auth DB record get automatic user-level access. This is a SECURITY VULNERABILITY added for migration. To remove:
+  1. Search for "FIXME: TEMPORARY HACK" in `routers/auth.py` and remove the auto-login code block
+  2. In `lib/auth_middleware.py`: Remove `optional_bearer_scheme` and change `Depends(optional_bearer_scheme)` back to `Depends(bearer_scheme)`
+  3. In `lib/auth.js`: Remove the warning log for `data._warning`
+  4. All stores MUST have proper auth configured before removing this hack!
+- Move static files to Caddy. Add HTTPS
+- More test coverage
+- Handle special insert items (e.g., "Electronics Insert", "Med Electronics Insert") - need to discuss with store managers about proper categorization and matching strategy
+- Excel import from RAW Dynamics output? (vs the cleaned up/ready for Dynamics import format we use now)
+- Excel output for pricing for Dynamics import
+
+### On the Fence
+
+- Consider removing support for non-itemized pricing
+- Consider moving stuff from YAML into the DB. On the fence...
+
+## Architecture Notes
+
+- FastAPI backend with modular router structure
+- SQLite for auth and configuration storage
+- ES6 modules for frontend code organization
+- test suite using Vitest
 
 # License
 

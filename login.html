@@ -1,157 +1,576 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Store Login</title>
-  <link rel="stylesheet" href="/assets/css/common.css">
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background-color: #f8f9fa;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    }
-    
-    .login-page {
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-    
-    .store-header {
-      background-color: #343a40;
-      color: white;
-      padding: 15px 20px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    
-    .store-logo-title {
-      display: flex;
-      align-items: center;
-    }
-    
-    .store-logo {
-      height: 40px;
-      margin-right: 15px;
-    }
-    
-    .back-link {
-      color: white;
-      text-decoration: none;
-      padding: 5px 10px;
-      border-radius: 4px;
-      border: 1px solid rgba(255,255,255,0.3);
-      transition: all 0.2s;
-    }
-    
-    .back-link:hover {
-      background-color: rgba(255,255,255,0.1);
-    }
-    
-    .login-content {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    
-    .login-card {
-      background-color: white;
-      border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      width: 100%;
-      max-width: 400px;
-      padding: 30px;
-    }
-    
-    .login-title {
-      text-align: center;
-      margin-bottom: 20px;
-      color: #333;
-    }
-    
-    #login-container {
-      width: 100%;
-    }
-    
-    .login-footer {
-      text-align: center;
-      padding: 15px;
-      font-size: 0.9em;
-      color: #6c757d;
-      border-top: 1px solid #dee2e6;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Packing Site</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+        }
+        
+        h1 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+            font-size: 28px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            color: #6c757d;
+            text-align: center;
+            margin: 0 0 30px 0;
+        }
+        
+        /* Mode Toggle */
+        .mode-toggle {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            background: #e9ecef;
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 30px;
+        }
+        
+        .mode-btn {
+            padding: 12px;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6c757d;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .mode-btn.active {
+            background: white;
+            color: #2c3e50;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transform: scale(1.05);
+        }
+        
+        .mode-toggle {
+            position: relative;
+        }
+        
+        .mode-toggle::before {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: calc(50% - 4px);
+            height: calc(100% - 8px);
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 0;
+        }
+        
+        .mode-toggle.admin-active::before {
+            transform: translateX(100%);
+        }
+        
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #495057;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        input.success {
+            border-color: #48bb78;
+        }
+        
+        /* Auth Mode Containers */
+        .auth-container {
+            min-height: 120px;
+            position: relative;
+            perspective: 1000px;
+            transform-style: preserve-3d;
+        }
+        
+        .auth-mode {
+            display: none;
+        }
+        
+        .auth-mode {
+            position: absolute;
+            width: 100%;
+            top: 0;
+            left: 0;
+        }
+        
+        .auth-mode.active {
+            display: block;
+            animation: slideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .auth-mode.slide-left {
+            animation: slideOutLeft 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .auth-mode.slide-right {
+            animation: slideOutRight 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        @keyframes slideIn {
+            from { 
+                opacity: 0; 
+                transform: translateX(100%) scale(0.8) rotateY(-10deg);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateX(0) scale(1) rotateY(0);
+            }
+        }
+        
+        @keyframes slideOutLeft {
+            from { 
+                opacity: 1; 
+                transform: translateX(0) scale(1) rotateY(0);
+            }
+            to { 
+                opacity: 0; 
+                transform: translateX(-100%) scale(0.8) rotateY(10deg);
+            }
+        }
+        
+        @keyframes slideOutRight {
+            from { 
+                opacity: 1; 
+                transform: translateX(0) scale(1) rotateY(0);
+            }
+            to { 
+                opacity: 0; 
+                transform: translateX(100%) scale(0.8) rotateY(-10deg);
+            }
+        }
+        
+        /* Submit Button */
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .submit-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* Messages */
+        .message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .message.error {
+            background: #fed7d7;
+            color: #c53030;
+        }
+        
+        .message.success {
+            background: #c6f6d5;
+            color: #276749;
+        }
+        
+        .message.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            color: #6c757d;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        /* Code Input */
+        .code-input {
+            font-family: monospace;
+            font-size: 24px;
+            text-align: center;
+            letter-spacing: 8px;
+        }
+        
+        .resend-link {
+            text-align: center;
+            margin-top: 12px;
+        }
+        
+        .resend-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .resend-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-  <div class="login-page">
-    <div class="store-header">
-      <div class="store-logo-title">
-        <img src="/assets/icons/logo.png" alt="Store Logo" class="store-logo" onerror="this.style.display='none'">
-        <h2 id="store-title">Store Login</h2>
-      </div>
-      <a href="/" class="back-link" id="back-link">Back to Main</a>
+    <div class="login-card">
+        <h1>Packing Site Login</h1>
+        <p class="subtitle">Access your store's packing tools</p>
+        
+        <div class="message error" id="error-msg"></div>
+        <div class="message success" id="success-msg"></div>
+        
+        <div class="mode-toggle">
+            <button class="mode-btn active" data-mode="pos">Point-of-Sale</button>
+            <button class="mode-btn" data-mode="admin">Back Office Admin</button>
+        </div>
+        
+        <form id="login-form">
+            <div class="form-group">
+                <label for="store">Store Number</label>
+                <input type="text" id="store" required maxlength="4" pattern="\d+">
+            </div>
+            
+            <div class="auth-container">
+                <!-- POS Mode -->
+                <div class="auth-mode active" id="pos-mode">
+                    <div class="form-group">
+                        <label for="pin">6-Digit PIN</label>
+                        <input type="password" id="pin" maxlength="6" pattern="\d{6}">
+                    </div>
+                </div>
+                
+                <!-- Admin Mode -->
+                <div class="auth-mode" id="admin-mode">
+                    <div class="form-group" id="email-step">
+                        <label for="email">Admin Email</label>
+                        <input type="email" id="email">
+                    </div>
+                    
+                    <div class="form-group" id="code-step" style="display: none;">
+                        <label for="code">Verification Code</label>
+                        <input type="text" id="code" class="code-input" maxlength="6" pattern="[A-Z0-9]{6}">
+                        <div class="resend-link">
+                            <a href="#" id="resend-btn">Resend code</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" class="submit-btn" id="submit">Login</button>
+            
+            <div class="loading" id="loading">Processing...</div>
+        </form>
     </div>
     
-    <div class="login-content">
-      <div class="login-card">
-        <h3 class="login-title">Admin Authentication</h3>
-        <div id="login-container"></div>
-      </div>
-    </div>
-    
-    <div class="login-footer">
-      <p>Packing Website &copy; 2025</p>
-    </div>
-  </div>
-  
-  <!-- Include auth library first -->
-  <script src="/lib/auth.js"></script>
-  <script src="/components/login.js"></script>
-  <script>
-    // Get store ID from URL
-    const pathParts = window.location.pathname.split('/');
-    const storeId = pathParts[1];
-    
-    if (storeId) {
-      // Update store title and back link
-      document.getElementById('store-title').textContent = `Store ${storeId} Login`;
-      document.getElementById('back-link').href = `/${storeId}`;
-      document.getElementById('back-link').textContent = `Back to Store ${storeId}`;
-      
-      // Check if already authenticated
-      (async function() {
-        try {
-          const status = await AuthManager.getAuthStatus(storeId);
-          if (status.isAuthenticated) {
-            // Already logged in, redirect to admin
-            window.location.href = `/${storeId}/prices`;
-          } else if (!status.hasAuth) {
-            // Store doesn't have auth configured
-            document.getElementById('login-container').innerHTML = 
-              '<div class="card p-3 bg-light"><p>Authentication is not configured for this store.</p>' +
-              `<a href="/${storeId}" class="btn btn-primary">Return to Store</a></div>`;
-          } else {
-            // Show login form
-            initLoginForm('login-container', storeId);
-          }
-        } catch (error) {
-          console.error('Error checking auth status:', error);
-          document.getElementById('login-container').innerHTML = 
-            '<div class="card p-3 bg-danger text-white"><p>Error checking authentication status.</p>' +
-            `<a href="/${storeId}" class="btn btn-light">Return to Store</a></div>`;
+    <script src="/lib/auth.js"></script>
+    <script>
+        // State
+        let currentMode = 'pos';
+        let currentStep = 'login'; // login, verify
+        let storeId = '';
+        let adminEmail = '';
+        
+        // Elements
+        const form = document.getElementById('login-form');
+        const errorMsg = document.getElementById('error-msg');
+        const successMsg = document.getElementById('success-msg');
+        const submitBtn = document.getElementById('submit');
+        const loading = document.getElementById('loading');
+        
+        // Mode toggle
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const mode = btn.dataset.mode;
+                if (mode === currentMode) return;
+                
+                // Update buttons
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Update mode
+                currentMode = mode;
+                
+                // Add toggle sliding background
+                const toggle = document.querySelector('.mode-toggle');
+                toggle.classList.toggle('admin-active', mode === 'admin');
+                
+                // Animate auth modes with direction
+                const currentActive = document.querySelector('.auth-mode.active');
+                const newActive = document.getElementById(`${mode}-mode`);
+                
+                if (currentActive && currentActive !== newActive) {
+                    // Slide out current
+                    currentActive.classList.remove('active');
+                    currentActive.classList.add(mode === 'admin' ? 'slide-left' : 'slide-right');
+                    
+                    // Slide in new after brief delay
+                    setTimeout(() => {
+                        currentActive.style.display = 'none';
+                        currentActive.classList.remove('slide-left', 'slide-right');
+                        
+                        newActive.style.display = 'block';
+                        setTimeout(() => newActive.classList.add('active'), 10);
+                    }, 300);
+                } else {
+                    // First load
+                    newActive.style.display = 'block';
+                    newActive.classList.add('active');
+                }
+                
+                // Reset admin mode to email step
+                if (mode === 'admin') {
+                    document.getElementById('email-step').style.display = 'block';
+                    document.getElementById('code-step').style.display = 'none';
+                    currentStep = 'login';
+                }
+                
+                // Clear messages
+                hideMessages();
+            });
+        });
+        
+        // PIN auto-submit
+        document.getElementById('pin').addEventListener('input', (e) => {
+            if (e.target.value.length === 6) {
+                e.target.classList.add('success');
+                setTimeout(() => form.requestSubmit(), 200);
+            } else {
+                e.target.classList.remove('success');
+            }
+        });
+        
+        // Code auto-uppercase
+        document.getElementById('code').addEventListener('input', (e) => {
+            e.target.value = e.target.value.toUpperCase();
+        });
+        
+        // Form submit
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideMessages();
+            
+            storeId = document.getElementById('store').value;
+            if (!storeId) {
+                showError('Please enter store number');
+                return;
+            }
+            
+            setLoading(true);
+            
+            try {
+                if (currentMode === 'pos') {
+                    await handlePOSLogin();
+                } else {
+                    await handleAdminLogin();
+                }
+            } catch (error) {
+                showError('Connection error. Please try again.');
+            } finally {
+                setLoading(false);
+            }
+        });
+        
+        // POS Login
+        async function handlePOSLogin() {
+            const pin = document.getElementById('pin').value;
+            if (pin.length !== 6) {
+                showError('Please enter 6-digit PIN');
+                return;
+            }
+            
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ store_id: storeId, pin })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                AuthManager.setToken(storeId, data.access_token);
+                const targetUrl = redirectUrl || `/${storeId}/wizard`;
+                window.location.href = targetUrl.startsWith('/') ? targetUrl : `/${storeId}/${targetUrl}`;
+            } else {
+                showError(data.detail || 'Invalid PIN');
+            }
         }
-      })();
-    } else {
-      document.getElementById('login-container').innerHTML = 
-        '<div class="card p-3 bg-warning"><p>Invalid store ID. Please access this page through a valid store URL.</p>' +
-        '<a href="/" class="btn btn-primary">Go to Homepage</a></div>';
-    }
-  </script>
+        
+        // Admin Login
+        async function handleAdminLogin() {
+            if (currentStep === 'login') {
+                // Send code
+                adminEmail = document.getElementById('email').value;
+                if (!adminEmail) {
+                    showError('Please enter email');
+                    return;
+                }
+                
+                const response = await fetch('/api/auth/send-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ store_id: storeId, email: adminEmail })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showSuccess('Code sent! Check your email.');
+                    document.getElementById('email-step').style.display = 'none';
+                    document.getElementById('code-step').style.display = 'block';
+                    currentStep = 'verify';
+                    submitBtn.textContent = 'Verify';
+                } else {
+                    showError(data.detail || 'Failed to send code');
+                }
+            } else {
+                // Verify code
+                const code = document.getElementById('code').value;
+                if (code.length !== 6) {
+                    showError('Please enter 6-character code');
+                    return;
+                }
+                
+                const response = await fetch('/api/auth/verify-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ store_id: storeId, email: adminEmail, code })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    AuthManager.setToken(storeId, data.access_token);
+                    const targetUrl = redirectUrl || `/${storeId}/settings`;
+                    window.location.href = targetUrl.startsWith('/') ? targetUrl : `/${storeId}/${targetUrl}`;
+                } else {
+                    showError(data.detail || 'Invalid code');
+                }
+            }
+        }
+        
+        // Resend code
+        document.getElementById('resend-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            hideMessages();
+            setLoading(true);
+            
+            try {
+                const response = await fetch('/api/auth/send-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ store_id: storeId, email: adminEmail })
+                });
+                
+                if (response.ok) {
+                    showSuccess('New code sent!');
+                } else {
+                    showError('Failed to resend code');
+                }
+            } catch {
+                showError('Connection error');
+            } finally {
+                setLoading(false);
+            }
+        });
+        
+        // Helpers
+        function showError(msg) {
+            errorMsg.textContent = msg;
+            errorMsg.classList.add('show');
+        }
+        
+        function showSuccess(msg) {
+            successMsg.textContent = msg;
+            successMsg.classList.add('show');
+        }
+        
+        function hideMessages() {
+            errorMsg.classList.remove('show');
+            successMsg.classList.remove('show');
+        }
+        
+        function setLoading(isLoading) {
+            loading.classList.toggle('show', isLoading);
+            submitBtn.disabled = isLoading;
+            submitBtn.style.display = isLoading ? 'none' : 'block';
+        }
+        
+        // Get redirect URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirectUrl = urlParams.get('redirect');
+        
+        // Focus store input
+        document.getElementById('store').focus();
+    </script>
 </body>
 </html>

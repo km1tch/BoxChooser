@@ -3,8 +3,8 @@ Authentication Management Library for Packing Website
 
 This is the CORE authentication library that handles:
 - Database schema and initialization
-- Password generation, hashing, and verification
-- Session management (tokens)
+- PIN and email-based authentication
+- Session management (tokens) with auth levels
 - Audit logging
 
 IMPORTANT: Do not use this module directly for admin tasks. Instead, use the 
@@ -19,29 +19,20 @@ The database is stored at the location specified by SQLITE_DB_PATH environment
 variable, or defaults to: /zpool/dev/PackingWebsite/db/packingwebsite.db
 """
 
-import sqlite3
-import bcrypt
-import secrets
 import json
 import os
-from datetime import datetime, timedelta
-from contextlib import contextmanager
-from typing import Optional, Dict, List
-import subprocess
+import random
+import secrets
+import sqlite3
+import string
 import sys
+from contextlib import contextmanager
+from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Dict, List, Optional, Tuple
 
-# Verify xkcdpass is available at import time
-try:
-    subprocess.run(['xkcdpass', '--help'], capture_output=True, check=True)
-except (subprocess.CalledProcessError, FileNotFoundError):
-    print("\n" + "!" * 60, file=sys.stderr)
-    print("FATAL: xkcdpass is NOT installed!", file=sys.stderr)
-    print("!" * 60, file=sys.stderr)
-    print("Install it immediately:", file=sys.stderr)
-    print("    pip install xkcdpass", file=sys.stderr)
-    print("!" * 60 + "\n", file=sys.stderr)
-    sys.exit(1)
+import bcrypt
+
 
 # Database management
 def get_db_path():
@@ -68,21 +59,37 @@ def get_db():
 def init_db():
     """Initialize the database with required tables"""
     with get_db() as db:
-        # Stores table - one password per store
+        # Stores table - now with email and PIN
         db.execute('''
             CREATE TABLE IF NOT EXISTS store_auth (
                 store_id TEXT PRIMARY KEY,
-                password_hash TEXT NOT NULL,
+                admin_email TEXT NOT NULL,
+                pin_hash TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
         
-        # Sessions table - for web authentication
+        # Email verification codes
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS email_codes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                store_id TEXT NOT NULL,
+                email TEXT NOT NULL,
+                code TEXT NOT NULL,
+                expires_at TIMESTAMP NOT NULL,
+                used BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (store_id) REFERENCES store_auth(store_id)
+            )
+        ''')
+        
+        # Sessions table - now with auth level
         db.execute('''
             CREATE TABLE IF NOT EXISTS sessions (
                 token TEXT PRIMARY KEY,
                 store_id TEXT NOT NULL,
+                auth_level TEXT NOT NULL CHECK (auth_level IN ('user', 'admin')),
                 expires_at TIMESTAMP,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (store_id) REFERENCES store_auth(store_id)
@@ -100,82 +107,113 @@ def init_db():
             )
         ''')
         
+        # Store-specific packing rules
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS store_packing_rules (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                store_id VARCHAR(4) NOT NULL,
+                packing_type VARCHAR(20) NOT NULL CHECK (packing_type IN ('Basic', 'Standard', 'Fragile', 'Custom')),
+                padding_inches INTEGER NOT NULL DEFAULT 0,
+                wizard_description TEXT NOT NULL,
+                label_instructions TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                
+                CONSTRAINT unique_store_packing_rule UNIQUE (store_id, packing_type)
+            )
+        ''')
+        
+        # Index for fast lookups
+        db.execute('''
+            CREATE INDEX IF NOT EXISTS idx_store_packing_lookup 
+            ON store_packing_rules(store_id, packing_type)
+        ''')
+        
+        # Store-specific recommendation engine config
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS store_engine_config (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                store_id VARCHAR(4) NOT NULL UNIQUE,
+                weight_price REAL NOT NULL DEFAULT 0.45,
+                weight_efficiency REAL NOT NULL DEFAULT 0.25,
+                weight_ease REAL NOT NULL DEFAULT 0.30,
+                strategy_normal INTEGER NOT NULL DEFAULT 0,
+                strategy_prescored INTEGER NOT NULL DEFAULT 1,
+                strategy_flattened INTEGER NOT NULL DEFAULT 2,
+                strategy_manual_cut INTEGER NOT NULL DEFAULT 5,
+                strategy_telescoping INTEGER NOT NULL DEFAULT 6,
+                strategy_cheating INTEGER NOT NULL DEFAULT 8,
+                practically_tight_threshold REAL NOT NULL DEFAULT 5,
+                max_recommendations INTEGER NOT NULL DEFAULT 10,
+                extreme_cut_threshold REAL NOT NULL DEFAULT 0.5,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                
+                CONSTRAINT weights_sum CHECK (
+                    ABS(weight_price + weight_efficiency + weight_ease - 1.0) < 0.001
+                ),
+                CONSTRAINT strategy_range CHECK (
+                    strategy_normal >= 0 AND strategy_normal <= 10 AND
+                    strategy_prescored >= 0 AND strategy_prescored <= 10 AND
+                    strategy_flattened >= 0 AND strategy_flattened <= 10 AND
+                    strategy_manual_cut >= 0 AND strategy_manual_cut <= 10 AND
+                    strategy_telescoping >= 0 AND strategy_telescoping <= 10 AND
+                    strategy_cheating >= 0 AND strategy_cheating <= 10
+                ),
+                CONSTRAINT threshold_range CHECK (
+                    extreme_cut_threshold > 0 AND extreme_cut_threshold <= 1
+                )
+            )
+        ''')
+        
         db.commit()
 
-def generate_passphrase(words: int = 3) -> str:
+def generate_pin(length: int = 6) -> str:
     """
-    Generate an XKCD-936 style passphrase using xkcdpass
+    Generate a cryptographically secure PIN
     
     Args:
-        words: Number of words in the passphrase (default: 3)
+        length: Number of digits (default: 6)
     
     Returns:
-        A passphrase like "happy-tiger-blue"
-    
-    Raises:
-        RuntimeError: If xkcdpass is not installed
+        A numeric PIN string
     """
-    try:
-        # Use eff-special wordlist for more common, memorable words
-        result = subprocess.run(
-            ['xkcdpass', '-w', 'eff-special', '-n', str(words), '-d', '-'],
-            capture_output=True,
-            text=True,
-            check=True
-        )
-        return result.stdout.strip()
-    except subprocess.CalledProcessError:
-        # ABSOLUTELY NO FALLBACK - xkcdpass is REQUIRED!
-        raise RuntimeError(
-            "\n" + "=" * 60 + "\n"
-            "CRITICAL ERROR: xkcdpass IS NOT INSTALLED!\n"
-            "=" * 60 + "\n"
-            "This application REQUIRES xkcdpass for secure password generation.\n"
-            "There is NO fallback and NO excuse for not having it installed.\n\n"
-            "Install it NOW:\n"
-            "    pip install xkcdpass\n"
-            "    OR\n"
-            "    docker compose exec web pip install xkcdpass\n\n"
-            "DO NOT attempt to use this authentication system without xkcdpass!\n"
-            "We rely on the EFF wordlists for cryptographically sound passphrases.\n"
-            "=" * 60
-        )
+    # Use secrets for cryptographic randomness
+    return ''.join(secrets.choice(string.digits) for _ in range(length))
 
-def normalize_password(password: str) -> str:
+def generate_email_code(length: int = 6) -> str:
     """
-    Normalize a password for consistent comparison
-    - Convert to lowercase
-    - Keep only a-z characters
-    
-    This allows users to enter passwords in various formats:
-    "Happy-Tiger-Blue", "happy tiger blue", "HAPPY TIGER BLUE" all become "happytigerblue"
+    Generate a 6-character verification code for email
     
     Args:
-        password: The raw password input
+        length: Number of characters (default: 6)
     
     Returns:
-        Normalized password containing only lowercase a-z
+        An alphanumeric code (uppercase)
     """
-    # Convert to lowercase and keep only a-z characters
-    return ''.join(c for c in password.lower() if 'a' <= c <= 'z')
+    # Use uppercase letters and digits for clarity
+    chars = string.ascii_uppercase + string.digits
+    # Avoid confusing characters
+    chars = chars.replace('O', '').replace('0', '').replace('I', '').replace('1', '')
+    return ''.join(secrets.choice(chars) for _ in range(length))
 
-def create_store_auth(store_id: str, password: Optional[str] = None) -> str:
+def create_store_auth(store_id: str, admin_email: str, pin: Optional[str] = None) -> str:
     """
     Create or update authentication for a store
     
     Args:
         store_id: The store identifier (e.g., "1", "2", etc.)
-        password: Optional password. If not provided, generates one
+        admin_email: Email address for admin authentication
+        pin: Optional PIN. If not provided, generates one
     
     Returns:
-        The password (either provided or generated)
+        The PIN (either provided or generated)
     """
-    if password is None:
-        password = generate_passphrase()
+    if pin is None:
+        pin = generate_pin()
     
-    # Normalize the password before hashing
-    normalized = normalize_password(password)
-    password_hash = bcrypt.hashpw(normalized.encode('utf-8'), bcrypt.gensalt())
+    # Hash the PIN
+    pin_hash = bcrypt.hashpw(pin.encode('utf-8'), bcrypt.gensalt())
     
     with get_db() as db:
         # Check if store already has auth
@@ -188,16 +226,16 @@ def create_store_auth(store_id: str, password: Optional[str] = None) -> str:
             # Update existing
             db.execute(
                 """UPDATE store_auth 
-                   SET password_hash = ?, updated_at = CURRENT_TIMESTAMP
+                   SET admin_email = ?, pin_hash = ?, updated_at = CURRENT_TIMESTAMP
                    WHERE store_id = ?""",
-                (password_hash, store_id)
+                (admin_email, pin_hash, store_id)
             )
-            action = "password_updated"
+            action = "auth_updated"
         else:
             # Create new
             db.execute(
-                "INSERT INTO store_auth (store_id, password_hash) VALUES (?, ?)",
-                (store_id, password_hash)
+                "INSERT INTO store_auth (store_id, admin_email, pin_hash) VALUES (?, ?, ?)",
+                (store_id, admin_email, pin_hash)
             )
             action = "store_created"
         
@@ -209,55 +247,147 @@ def create_store_auth(store_id: str, password: Optional[str] = None) -> str:
         
         db.commit()
     
-    return password
+    return pin
 
-def verify_store_password(store_id: str, password: str) -> bool:
+def verify_pin(store_id: str, pin: str) -> bool:
     """
-    Verify a password for a store
+    Verify a PIN for a store
     
     Args:
         store_id: The store identifier
-        password: The password to verify
+        pin: The PIN to verify
     
     Returns:
-        True if password is correct, False otherwise
+        True if PIN is correct, False otherwise
     """
     with get_db() as db:
         result = db.execute(
-            "SELECT password_hash FROM store_auth WHERE store_id = ?",
+            "SELECT pin_hash FROM store_auth WHERE store_id = ?",
             (store_id,)
         ).fetchone()
         
         if not result:
             return False
         
-        # Normalize the password before checking
-        normalized = normalize_password(password)
         is_valid = bcrypt.checkpw(
-            normalized.encode('utf-8'), 
-            result['password_hash']
+            pin.encode('utf-8'), 
+            result['pin_hash']
         )
         
         # Log the attempt
         db.execute(
             "INSERT INTO audit_log (store_id, action, details) VALUES (?, ?, ?)",
-            (store_id, "login_attempt", json.dumps({"success": is_valid}))
+            (store_id, "pin_login_attempt", json.dumps({"success": is_valid}))
         )
         db.commit()
         
         return is_valid
 
-def create_session(store_id: str, hours: int = 24) -> str:
+def create_email_verification_code(store_id: str, email: str) -> str:
+    """
+    Create an email verification code
+    
+    Args:
+        store_id: The store identifier
+        email: Email address to send code to
+    
+    Returns:
+        The verification code
+    """
+    code = generate_email_code()
+    expires_at = datetime.now() + timedelta(minutes=5)
+    
+    with get_db() as db:
+        # Verify this is the correct admin email
+        result = db.execute(
+            "SELECT admin_email FROM store_auth WHERE store_id = ?",
+            (store_id,)
+        ).fetchone()
+        
+        if not result or result['admin_email'].lower() != email.lower():
+            raise ValueError("Invalid email for this store")
+        
+        # Invalidate any existing codes
+        db.execute(
+            "UPDATE email_codes SET used = TRUE WHERE store_id = ? AND email = ? AND used = FALSE",
+            (store_id, email)
+        )
+        
+        # Create new code
+        db.execute(
+            "INSERT INTO email_codes (store_id, email, code, expires_at) VALUES (?, ?, ?, ?)",
+            (store_id, email, code, expires_at)
+        )
+        
+        # Log the action
+        db.execute(
+            "INSERT INTO audit_log (store_id, action, details) VALUES (?, ?, ?)",
+            (store_id, "email_code_sent", json.dumps({"email": email}))
+        )
+        
+        db.commit()
+    
+    return code
+
+def verify_email_code(store_id: str, email: str, code: str) -> bool:
+    """
+    Verify an email code
+    
+    Args:
+        store_id: The store identifier
+        email: Email address
+        code: The code to verify
+    
+    Returns:
+        True if code is valid, False otherwise
+    """
+    with get_db() as db:
+        result = db.execute(
+            """SELECT id FROM email_codes 
+               WHERE store_id = ? AND email = ? AND code = ? 
+               AND expires_at > CURRENT_TIMESTAMP AND used = FALSE""",
+            (store_id, email, code)
+        ).fetchone()
+        
+        if result:
+            # Mark as used
+            db.execute(
+                "UPDATE email_codes SET used = TRUE WHERE id = ?",
+                (result['id'],)
+            )
+            
+            # Log success
+            db.execute(
+                "INSERT INTO audit_log (store_id, action, details) VALUES (?, ?, ?)",
+                (store_id, "email_login_success", json.dumps({"email": email}))
+            )
+            
+            db.commit()
+            return True
+        else:
+            # Log failure
+            db.execute(
+                "INSERT INTO audit_log (store_id, action, details) VALUES (?, ?, ?)",
+                (store_id, "email_login_failed", json.dumps({"email": email}))
+            )
+            db.commit()
+            return False
+
+def create_session(store_id: str, auth_level: str = "user", hours: int = 24) -> str:
     """
     Create a new session token for a store
     
     Args:
         store_id: The store identifier
+        auth_level: Either "user" or "admin"
         hours: How many hours the session should last
     
     Returns:
         The session token
     """
+    if auth_level not in ["user", "admin"]:
+        raise ValueError("auth_level must be 'user' or 'admin'")
+        
     token = secrets.token_urlsafe(32)
     expires_at = datetime.now() + timedelta(hours=hours)
     
@@ -269,39 +399,39 @@ def create_session(store_id: str, hours: int = 24) -> str:
         
         # Create new session
         db.execute(
-            "INSERT INTO sessions (token, store_id, expires_at) VALUES (?, ?, ?)",
-            (token, store_id, expires_at)
+            "INSERT INTO sessions (token, store_id, auth_level, expires_at) VALUES (?, ?, ?, ?)",
+            (token, store_id, auth_level, expires_at)
         )
         
         # Log the session creation
         db.execute(
-            "INSERT INTO audit_log (store_id, action) VALUES (?, ?)",
-            (store_id, "session_created")
+            "INSERT INTO audit_log (store_id, action, details) VALUES (?, ?, ?)",
+            (store_id, "session_created", json.dumps({"auth_level": auth_level}))
         )
         
         db.commit()
     
     return token
 
-def verify_session(token: str) -> Optional[str]:
+def verify_session(token: str) -> Optional[Tuple[str, str]]:
     """
-    Verify a session token and return the store_id if valid
+    Verify a session token and return the store_id and auth_level if valid
     
     Args:
         token: The session token to verify
     
     Returns:
-        The store_id if valid, None otherwise
+        Tuple of (store_id, auth_level) if valid, None otherwise
     """
     with get_db() as db:
         result = db.execute(
-            """SELECT store_id FROM sessions 
+            """SELECT store_id, auth_level FROM sessions 
                WHERE token = ? AND expires_at > CURRENT_TIMESTAMP""",
             (token,)
         ).fetchone()
         
         if result:
-            return result['store_id']
+            return (result['store_id'], result['auth_level'])
         
         return None
 
@@ -374,6 +504,40 @@ def get_audit_log(store_id: Optional[str] = None, limit: int = 100) -> List[Dict
             results = db.execute(query, (limit,)).fetchall()
         
         return [dict(row) for row in results]
+
+def get_store_info(store_id: str) -> Optional[Dict]:
+    """Get store authentication info"""
+    with get_db() as db:
+        result = db.execute(
+            "SELECT admin_email, created_at, updated_at FROM store_auth WHERE store_id = ?",
+            (store_id,)
+        ).fetchone()
+        
+        if result:
+            return dict(result)
+        return None
+
+def regenerate_pin(store_id: str) -> str:
+    """Regenerate PIN for a store"""
+    new_pin = generate_pin()
+    pin_hash = bcrypt.hashpw(new_pin.encode('utf-8'), bcrypt.gensalt())
+    
+    with get_db() as db:
+        db.execute(
+            "UPDATE store_auth SET pin_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE store_id = ?",
+            (pin_hash, store_id)
+        )
+        
+        # Log the action
+        db.execute(
+            "INSERT INTO audit_log (store_id, action) VALUES (?, ?)",
+            (store_id, "pin_regenerated")
+        )
+        
+        db.commit()
+    
+    return new_pin
+
 
 # This module is a library and should not be executed directly.
 # Use tools/manage_auth.py instead for CLI operations.

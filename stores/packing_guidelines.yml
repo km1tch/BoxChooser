@@ -1,0 +1,58 @@
+# Default Packaging Guidelines
+# Simple structure: one rule per packing type
+
+# Recommendation engine configuration
+recommendation_engine:
+  # Scoring weights (must sum to 1.0)
+  weights:
+    price: 0.45        # 45% - Cost optimization
+    efficiency: 0.25   # 25% - Space utilization  
+    ease: 0.30         # 30% - Packing complexity
+  
+  # Strategy preferences (0-10 scale, lower = more preferred)
+  strategy_preferences:
+    normal: 0          # No modifications needed
+    prescored: 1       # Pre-scored cuts (easy)
+    flattened: 2       # Flat pack for thin items
+    manual_cut: 5      # Manual cutting required
+    telescoping: 6     # Multiple boxes needed
+    cheating: 8        # Diagonal packing
+  
+  # Thresholds and limits
+  practically_tight_threshold: 5     # Score difference for "practically tight" boxes
+  max_recommendations: 10            # Maximum recommendations to show
+  extreme_cut_threshold: 0.5         # Min ratio of remaining box after cut (50%)
+
+# Packing type rules
+basic:
+  padding_inches: 0
+  wizard_description: "For non-sensitive items like clothing, toys, books"
+  label_instructions: "- Inflatable void fill as needed"
+
+standard:
+  padding_inches: 1
+  wizard_description: "For electronics, jewelry, and medium-sensitive items"
+  label_instructions: |
+    - Two (2) layers of large bubble or inflatable air cushioning
+    - Inflatable void fill as needed
+    - 1" between item and edge of box
+
+fragile:
+  padding_inches: 2
+  wizard_description: "For china, crystal, art, and sensitive equipment"
+  label_instructions: |
+    - One (1) layer of small bubble or foam wrap
+    - Two (2) layers of large bubble or inflatable air cushioning
+    - Inflatable void fill as needed
+    - Corrugated dividers for layering multiple items
+    - 2" between item and edge of box
+
+custom:
+  padding_inches: 3
+  wizard_description: "Maximum protection for highly sensitive items"
+  label_instructions: |
+    - 1" foam plank on all sides of the box
+    - One (1) layer of small bubble or foam wrap
+    - Two (2) layers of small bubble or foam wrap
+    - Inflatable void fill as needed
+    - 3" between item and edge of box

@@ -16,13 +16,28 @@ export class FloorplanLocationEditor {
         
         this.init();
     }
+    
+    /**
+     * Helper method to make authenticated requests
+     */
+    async authenticatedFetch(url, options = {}) {
+        // Add auth token if available
+        if (typeof AuthManager !== 'undefined') {
+            const token = AuthManager.getToken(this.storeId);
+            if (token) {
+                options.headers = options.headers || {};
+                options.headers['Authorization'] = `Bearer ${token}`;
+            }
+        }
+        return fetch(url, options);
+    }
 
-    init() {
-        this.initViewer();
+    async init() {
+        await this.initViewer();
         this.initUpload();
         this.initModeControls();
         this.initPanels();
-        this.loadData();
+        await this.loadData();
         this.checkFloorplanStatus();
         
         // Start in view mode with unassigned boxes showing
@@ -33,7 +48,7 @@ export class FloorplanLocationEditor {
         }, 500);
     }
 
-    initViewer() {
+    async initViewer() {
         const viewerElement = document.getElementById('floorplan-viewer');
         this.floorplanViewer = new FloorplanViewer(viewerElement, {
             mode: 'view',
@@ -44,6 +59,16 @@ export class FloorplanLocationEditor {
             onMarkerDelete: (marker) => this.handleMarkerDelete(marker),
             onMarkerMove: (markerData) => this.handleMarkerMove(markerData)
         });
+        // The FloorplanViewer constructor calls init() automatically, but it's async
+        // We need to wait for it to complete
+        // Wait a bit longer to ensure the viewer is fully initialized
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // If we have a pending viewer update, do it now
+        if (this.pendingViewerUpdate) {
+            this.updateViewer();
+            this.pendingViewerUpdate = false;
+        }
     }
 
     initUpload() {
@@ -114,33 +139,30 @@ export class FloorplanLocationEditor {
             if (boxesResponse.ok) {
                 const data = await boxesResponse.json();
                 this.boxes = data.boxes || []; // Extract boxes array from YAML data
-            }
-            
-            // Load locations
-            const locationsResponse = await fetch(`/api/store/${this.storeId}/box-locations`);
-            if (locationsResponse.ok) {
-                const locationsArray = await locationsResponse.json();
-                // Convert array to object with indices as keys
+                
+                // Clear locations before repopulating
                 this.locations = {};
-                // Clear locationsByCoords before repopulating
                 this.locationsByCoords = {};
                 
-                locationsArray.forEach((location, index) => {
-                    if (location.coords) {
+                // Build locations from the boxes data directly
+                this.boxes.forEach((box, index) => {
+                    if (box.location && box.location.coords && box.location.coords.length === 2) {
+                        // Store the location
                         this.locations[index] = {
-                            coords: location.coords
+                            coords: box.location.coords
                         };
                         
                         // Update locationsByCoords map
-                        const coordKey = `${location.coords[0]}_${location.coords[1]}`;
+                        const coordKey = `${box.location.coords[0]}_${box.location.coords[1]}`;
                         if (!this.locationsByCoords[coordKey]) {
                             this.locationsByCoords[coordKey] = [];
                         }
-                        this.locationsByCoords[coordKey].push(index);
+                        this.locationsByCoords[coordKey].push(index.toString());
                     }
                 });
                 
-                this.updateViewer();
+                // Update viewer will be called after initialization completes
+                this.pendingViewerUpdate = true;
             }
         } catch (error) {
             console.error('Error loading data:', error);
@@ -243,7 +265,7 @@ export class FloorplanLocationEditor {
             
             // Process box deletion
             
-            const response = await fetch(`/api/store/${this.storeId}/update-locations`, {
+            const response = await this.authenticatedFetch(`/api/store/${this.storeId}/update-locations`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -351,7 +373,7 @@ export class FloorplanLocationEditor {
             
             // Process marker movement
             
-            const response = await fetch(`/api/store/${this.storeId}/update-locations`, {
+            const response = await this.authenticatedFetch(`/api/store/${this.storeId}/update-locations`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -382,7 +404,7 @@ export class FloorplanLocationEditor {
                         };
                         
                         // Add to the new location in locationsByCoords
-                        this.locationsByCoords[newCoordKey].push(boxId);
+                        this.locationsByCoords[newCoordKey].push(boxId.toString());
                     }
                 });
                 
@@ -391,6 +413,13 @@ export class FloorplanLocationEditor {
                 
                 // Re-apply box list filter if active
                 this.refreshBoxListFilter();
+                
+                // Refresh unassigned boxes list if in view mode
+                setTimeout(() => {
+                    if (this.mode === 'view') {
+                        this.showUnassignedInPanel();
+                    }
+                }, 100);
             } else {
                 const errorData = await response.json().catch(() => null);
                 throw new Error(`Failed to move location: ${errorData?.detail || response.statusText}`);
@@ -468,7 +497,7 @@ export class FloorplanLocationEditor {
             
             // Use models as keys for API
             
-            const response = await fetch(`/api/store/${this.storeId}/update-locations`, {
+            const response = await this.authenticatedFetch(`/api/store/${this.storeId}/update-locations`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -677,7 +706,7 @@ export class FloorplanLocationEditor {
             
             // Process marker merging
             
-            const response = await fetch(`/api/store/${this.storeId}/update-locations`, {
+            const response = await this.authenticatedFetch(`/api/store/${this.storeId}/update-locations`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -713,7 +742,7 @@ export class FloorplanLocationEditor {
                 
                 // 3. Add all source boxes to destination location
                 sourceBoxes.forEach(boxId => {
-                    this.locationsByCoords[destCoordKey].push(boxId);
+                    this.locationsByCoords[destCoordKey].push(boxId.toString());
                 });
                 
                 // Show success message
@@ -824,10 +853,12 @@ export class FloorplanLocationEditor {
                 return;
             }
             
-            // Check if the box has a valid location (null if not)
+            // Check if the box has a valid location
             const hasValidLocation = this.hasValidLocation(index);
             const locationId = this.getLocationForBox(index);
-            const isAssigned = hasValidLocation && locationId !== null;
+            // Use the more reliable method to check if box is actually in a location
+            const isInMapping = this.isBoxInLocationMapping(index);
+            const isAssigned = hasValidLocation && isInMapping;
             
             // Skip assigned boxes if filter is on
             if (onlyUnassigned && isAssigned) return;
@@ -992,7 +1023,7 @@ export class FloorplanLocationEditor {
             // Generate CSRF token
             const csrfToken = Math.random().toString(36).substr(2) + Date.now().toString(36);
             
-            const response = await fetch(`/api/store/${this.storeId}/update-locations`, {
+            const response = await this.authenticatedFetch(`/api/store/${this.storeId}/update-locations`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1155,7 +1186,21 @@ export class FloorplanLocationEditor {
             return { index, model };
         });
         
-        // Set up the changes object with model keys, not indices
+        // Find ALL boxes currently at this location (before the update)
+        const coordKey = `${this.selectedLocation.coords[0]}_${this.selectedLocation.coords[1]}`;
+        const currentBoxesAtLocation = this.locationsByCoords[coordKey] || [];
+        
+        // First, add all boxes that were at this location with empty coords to remove them
+        currentBoxesAtLocation.forEach(boxId => {
+            const boxIndex = parseInt(boxId, 10);
+            const boxInfo = modelMapping.find(m => m.index === boxIndex);
+            if (boxInfo && !selectedBoxes.includes(boxIndex)) {
+                // This box was at the location but is no longer selected, so remove it
+                changes[boxInfo.model] = {};
+            }
+        });
+        
+        // Then, set up the changes for selected boxes
         selectedBoxes.forEach(boxIndex => {
             const boxInfo = modelMapping.find(m => m.index === boxIndex);
             if (boxInfo) {
@@ -1171,7 +1216,7 @@ export class FloorplanLocationEditor {
             
             // Send changes to API
             
-            const response = await fetch(`/api/store/${this.storeId}/update-locations`, {
+            const response = await this.authenticatedFetch(`/api/store/${this.storeId}/update-locations`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1183,7 +1228,20 @@ export class FloorplanLocationEditor {
             });
             
             if (response.ok) {
-                // First, remove boxes from their old locations in locationsByCoords
+                // First, handle boxes that were removed from this location
+                currentBoxesAtLocation.forEach(boxId => {
+                    const boxIndex = parseInt(boxId, 10);
+                    if (!selectedBoxes.includes(boxIndex)) {
+                        // This box was removed from the location
+                        delete this.locations[boxIndex];
+                    }
+                });
+                
+                // Clear the current location in locationsByCoords (we'll rebuild it)
+                const coordKey = `${this.selectedLocation.coords[0]}_${this.selectedLocation.coords[1]}`;
+                delete this.locationsByCoords[coordKey];
+                
+                // Remove selected boxes from their old locations in locationsByCoords
                 selectedBoxes.forEach(boxIndex => {
                     const oldLocation = this.locations[boxIndex];
                     if (oldLocation && oldLocation.coords) {
@@ -1202,33 +1260,32 @@ export class FloorplanLocationEditor {
                     }
                 });
                 
-                // Now update locations and locationsByCoords with new location
-                const newCoordKey = `${this.selectedLocation.coords[0]}_${this.selectedLocation.coords[1]}`;
-                
-                // Ensure the destination exists in locationsByCoords
-                if (!this.locationsByCoords[newCoordKey]) {
-                    this.locationsByCoords[newCoordKey] = [];
-                }
-                
-                // Update local locations data and add to the new location in locationsByCoords
-                selectedBoxes.forEach(boxIndex => {
-                    this.locations[boxIndex] = {
-                        coords: this.selectedLocation.coords
-                    };
+                // Rebuild the location with only selected boxes
+                if (selectedBoxes.length > 0) {
+                    this.locationsByCoords[coordKey] = [];
                     
-                    // Add to the new location in locationsByCoords if not already there
-                    if (!this.locationsByCoords[newCoordKey].includes(boxIndex.toString())) {
-                        this.locationsByCoords[newCoordKey].push(boxIndex.toString());
-                    }
-                });
+                    // Update local locations data and add to the location in locationsByCoords
+                    selectedBoxes.forEach(boxIndex => {
+                        this.locations[boxIndex] = {
+                            coords: this.selectedLocation.coords
+                        };
+                        
+                        // Add to the location in locationsByCoords
+                        this.locationsByCoords[coordKey].push(boxIndex.toString());
+                    });
+                }
                 
                 this.closeBoxSelector(); // This will clear the temp marker
                 this.updateViewer(); // This will redraw all markers including the new one
                 
-                // If we're in view mode after closing, refresh the unassigned boxes list
+                // Always refresh the unassigned boxes list after updating locations
+                // This ensures the list is updated whether we're in view or edit mode
                 setTimeout(() => {
                     if (this.mode === 'view') {
                         this.showUnassignedInPanel();
+                    } else {
+                        // In edit mode, just refresh the box list to update statuses
+                        this.refreshBoxListFilter();
                     }
                 }, 100);
                 
@@ -1260,6 +1317,20 @@ export class FloorplanLocationEditor {
                location.coords.length === 2 && 
                !isNaN(location.coords[0]) && 
                !isNaN(location.coords[1]);
+    }
+    
+    /**
+     * Checks if a box is actually present in the locationsByCoords mapping
+     * This is more reliable than just checking this.locations
+     */
+    isBoxInLocationMapping(boxIndex) {
+        const boxIdStr = boxIndex.toString();
+        for (const coordKey in this.locationsByCoords) {
+            if (this.locationsByCoords[coordKey].includes(boxIdStr)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     showLocationBoxes(location) {
@@ -1864,6 +1935,12 @@ export class FloorplanLocationEditor {
             const noFloorplanMsg = document.getElementById('no-floorplan-message');
             const modeControls = document.getElementById('mode-controls');
             
+            // Check if elements exist before using them
+            if (!viewerElement || !noFloorplanMsg || !modeControls) {
+                console.warn('Required DOM elements not found, deferring floorplan status check');
+                return;
+            }
+            
             if (hasFloorplan) {
                 viewerElement.classList.add('has-floorplan');
                 noFloorplanMsg.style.display = 'none';
@@ -1881,7 +1958,9 @@ export class FloorplanLocationEditor {
                 
                 // Close panel if no floorplan
                 const panel = document.getElementById('box-selector-panel');
-                panel.classList.remove('open');
+                if (panel) {
+                    panel.classList.remove('open');
+                }
             }
         } catch (error) {
             console.error('Error checking floorplan status:', error);

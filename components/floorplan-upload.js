@@ -153,8 +153,18 @@ export class FloorplanUpload {
         formData.append('file', this.selectedFile);
         
         try {
+            // Add auth token if available
+            const headers = {};
+            if (typeof AuthManager !== 'undefined') {
+                const token = AuthManager.getToken(this.storeId);
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+            }
+            
             const response = await fetch(`/api/store/${this.storeId}/floorplan`, {
                 method: 'POST',
+                headers: headers,
                 body: formData
             });
             
