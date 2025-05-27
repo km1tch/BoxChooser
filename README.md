@@ -188,11 +188,11 @@ The Excel file should contain products with dimensions in the format `WxHxD` (e.
 
 ### TODO Items
 
-- Add HTTPS to Caddy
 - More test coverage
 - Handle special insert items (e.g., "Electronics Insert", "Med Electronics Insert") - need to discuss with store managers about proper categorization and matching strategy
 - Excel import from RAW Dynamics output? (vs the cleaned up/ready for Dynamics import format we use now)
 - Excel output for pricing for Dynamics import
+- Implement rate limiting and brute force protection for authentication endpoints
 
 ### On the Fence
 
@@ -202,6 +202,7 @@ The Excel file should contain products with dimensions in the format `WxHxD` (e.
 ## Architecture Notes
 
 - FastAPI backend with modular router structure
+- Caddy for static files and HTTPS
 - SQLite for auth and configuration storage
 - ES6 modules for frontend code organization
 - test suite using Vitest

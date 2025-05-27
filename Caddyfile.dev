@@ -2,7 +2,7 @@
 	# Enable compression
 	encode gzip
 
-	# Security headers
+	# Basic security headers for development
 	header {
 		X-Content-Type-Options "nosniff"
 		X-Frame-Options "DENY"
@@ -13,6 +13,23 @@
 
 	# API routes - proxy to FastAPI backend
 	handle /api/* {
+		# Wide open CORS for development
+		header {
+			Access-Control-Allow-Origin "*"
+			Access-Control-Allow-Credentials "true"
+			Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+			Access-Control-Allow-Headers "Authorization, Content-Type, X-Requested-With"
+			Access-Control-Max-Age "86400"
+		}
+		
+		# Handle preflight requests
+		@options {
+			method OPTIONS
+		}
+		handle @options {
+			respond 204
+		}
+		
 		reverse_proxy backend:8000
 	}
 
@@ -50,7 +67,7 @@
 		file_server
 	}
 
-	# Simple page routes (no more store ID patterns!)
+	# Simple page routes
 	handle /login {
 		rewrite * /login.html
 		file_server

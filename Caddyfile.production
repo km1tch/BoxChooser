@@ -1,0 +1,175 @@
+# Production Caddyfile with environment variables
+
+# Global options
+{
+	# Email for Let's Encrypt notifications
+	email {$ACME_EMAIL:admin@yourdomain.com}
+}
+
+{$SITE_URL} {
+	# TLS configuration - Caddy will auto-provision Let's Encrypt certificates
+	# For staging/testing, uncomment the next line:
+	# tls {$ACME_EMAIL:admin@yourdomain.com} {
+	#     ca https://acme-staging-v02.api.letsencrypt.org/directory
+	# }
+
+	# Enable compression
+	encode gzip
+
+	# Comprehensive security headers for production
+	header {
+		# Prevent MIME type sniffing
+		X-Content-Type-Options "nosniff"
+		
+		# Prevent clickjacking
+		X-Frame-Options "DENY"
+		
+		# Enable XSS protection
+		X-XSS-Protection "1; mode=block"
+		
+		# Control referrer information
+		Referrer-Policy "strict-origin-when-cross-origin"
+		
+		# Content Security Policy
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'"
+		
+		# Permissions Policy
+		Permissions-Policy "geolocation=(), microphone=(), camera=()"
+		
+		# Remove server header
+		-Server
+		
+		# Strict Transport Security (HSTS)
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+	}
+
+	# API routes with strict CORS
+	@api {
+		path /api/*
+	}
+	
+	handle @api {
+		header {
+			# Strict CORS for production
+			Access-Control-Allow-Origin "{$ALLOWED_ORIGINS}"
+			Access-Control-Allow-Credentials "true"
+			Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+			Access-Control-Allow-Headers "Authorization, Content-Type, X-Requested-With"
+			Access-Control-Max-Age "86400"
+		}
+		
+		# Handle preflight requests
+		@options {
+			method OPTIONS
+		}
+		handle @options {
+			respond 204
+		}
+		
+		# Proxy to backend
+		reverse_proxy backend:8000 {
+			# Add timeout settings for production
+			transport http {
+				read_timeout 30s
+				write_timeout 30s
+			}
+		}
+	}
+
+	# Health check endpoint
+	handle /health {
+		reverse_proxy backend:8000
+	}
+
+	# Serve static files
+	root * /srv/frontend
+
+	# JavaScript files with proper MIME type and caching
+	handle /js/*.js {
+		header Content-Type "application/javascript"
+		header Cache-Control "public, max-age=86400"
+		file_server
+	}
+
+	# CSS files with caching
+	handle /assets/css/*.css {
+		header Content-Type "text/css"
+		header Cache-Control "public, max-age=86400"
+		file_server
+	}
+
+	# Favicon
+	handle /favicon.ico {
+		rewrite * /assets/favicon.ico
+		header Cache-Control "public, max-age=604800"
+		file_server
+	}
+
+	# Cache static assets aggressively
+	handle /assets/* {
+		header Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
+
+	# HTML pages (no caching for dynamic content)
+	handle /login {
+		rewrite * /login.html
+		header Cache-Control "no-cache, no-store, must-revalidate"
+		file_server
+	}
+
+	handle /wizard {
+		rewrite * /wizard.html
+		header Cache-Control "no-cache, no-store, must-revalidate"
+		file_server
+	}
+
+	handle /prices {
+		rewrite * /prices.html
+		header Cache-Control "no-cache, no-store, must-revalidate"
+		file_server
+	}
+
+	handle /import {
+		rewrite * /import.html
+		header Cache-Control "no-cache, no-store, must-revalidate"
+		file_server
+	}
+
+	handle /floorplan {
+		rewrite * /floorplan.html
+		header Cache-Control "no-cache, no-store, must-revalidate"
+		file_server
+	}
+
+	handle /settings {
+		rewrite * /settings.html
+		header Cache-Control "no-cache, no-store, must-revalidate"
+		file_server
+	}
+
+	# Root serves index.html
+	handle / {
+		rewrite * /index.html
+		header Cache-Control "no-cache, no-store, must-revalidate"
+		file_server
+	}
+
+	# Default file server
+	handle {
+		file_server
+	}
+
+	# Enable access logs for production monitoring
+	log {
+		output file /data/access.log {
+			roll_size 100mb
+			roll_keep 10
+		}
+	}
+}
+
+# HTTP to HTTPS redirect
+:80 {
+	redir https://{host}{uri} permanent
+}

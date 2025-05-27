@@ -4,11 +4,15 @@ services:
     container_name: packingsite_caddy
     ports:
       - "5893:80"
+      - "5443:443"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./Caddyfile.dev:/etc/caddy/Caddyfile:ro
       - ./frontend:/srv/frontend:ro
       - caddy_data:/data
       - caddy_config:/config
+    environment:
+      - SITE_URL=${SITE_URL:-https://localhost}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-https://localhost}
     depends_on:
       - backend
     restart: unless-stopped
@@ -23,6 +27,12 @@ services:
       - ./db:/db
     environment:
       - SQLITE_DB_PATH=/db/packingwebsite.db
+      # Security
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
+      - SESSION_LIFETIME_HOURS=${SESSION_LIFETIME_HOURS:-8}
+      - MAX_LOGIN_ATTEMPTS=${MAX_LOGIN_ATTEMPTS:-5}
+      - RATE_LIMIT_PER_MINUTE=${RATE_LIMIT_PER_MINUTE:-10}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-https://localhost}
       # SMTP email configuration (defaults to MailHog in dev)
       - SMTP_HOST=${SMTP_HOST:-mailhog}
       - SMTP_PORT=${SMTP_PORT:-1025}
