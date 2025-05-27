@@ -326,8 +326,11 @@ class PriceTableEdit {
         });
         
         // Undo button handler
-        $table.on('click', '.undo-btn.show-undo', (e) => {
-            this.handleUndo(e);
+        $table.on('click', '.undo-btn', (e) => {
+            // Only handle if button has show-undo class
+            if ($(e.currentTarget).hasClass('show-undo')) {
+                this.handleUndo(e);
+            }
         });
         
         // View location button handler
@@ -395,18 +398,34 @@ class PriceTableEdit {
         };
         
         // Handle input events
-        $input.on('blur', () => this.saveEdit());
+        $input.on('blur', (e) => {
+            // Check if blur is caused by clicking an undo button
+            const relatedTarget = e.relatedTarget || document.activeElement;
+            if (relatedTarget && $(relatedTarget).hasClass('undo-btn')) {
+                // Cancel the edit instead of saving
+                this.cancelEdit();
+                return;
+            }
+            this.saveEdit();
+        });
         $input.on('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 this.saveEdit();
             } else if (e.key === 'Tab') {
                 e.preventDefault();
+                
+                // Store references before saveEdit clears currentEditCell
+                const $currentCell = this.currentEditCell.cell;
+                const $row = $currentCell.closest('tr');
+                
+                // Remove blur handler to prevent double-save
+                $input.off('blur');
+                
+                // Save the current edit
                 this.saveEdit();
                 
                 // Find next/previous editable cell
-                const $currentCell = this.currentEditCell.cell;
-                const $row = $currentCell.closest('tr');
                 const $editableCells = $row.find('td.editable');
                 const currentIndex = $editableCells.index($currentCell);
                 
@@ -471,6 +490,13 @@ class PriceTableEdit {
         // Update row and redraw cell
         row.data(rowData).draw(false);
         
+        // Re-apply show-undo class after redraw if there are changes
+        if (newValue !== originalValue) {
+            setTimeout(() => {
+                $(`.undo-btn[data-model="${rowData.model}"]`).addClass('show-undo');
+            }, 0);
+        }
+        
         this.currentEditCell = null;
     }
     
@@ -488,6 +514,7 @@ class PriceTableEdit {
     handleUndo(e) {
         e.preventDefault();
         e.stopPropagation();
+        e.stopImmediatePropagation(); // Stop any other handlers
         
         const $button = $(e.currentTarget);
         const model = $button.data('model');
@@ -497,6 +524,10 @@ class PriceTableEdit {
         
         // Remove changes for this row
         if (this.priceTable.changedData[model]) {
+            // Delete the change record first
+            delete this.priceTable.changedData[model];
+            this.priceTable.updateChangeCounter();
+            
             // Restore original values
             const originalRow = this.priceTable.originalData.find(r => r.model === model);
             if (originalRow) {
@@ -504,11 +535,10 @@ class PriceTableEdit {
                 row.data(rowData).draw(false);
             }
             
-            delete this.priceTable.changedData[model];
-            this.priceTable.updateChangeCounter();
-            
-            // Hide the undo button
-            $button.removeClass('show-undo');
+            // Ensure the undo button is hidden after the redraw completes
+            setTimeout(() => {
+                $(`.undo-btn[data-model="${model}"]`).removeClass('show-undo');
+            }, 0);
         }
     }
     

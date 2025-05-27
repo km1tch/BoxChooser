@@ -193,12 +193,17 @@
     <script src="/js/components/import.js"></script>
     <script>
         // Initialize page
-        const storeId = window.location.pathname.match(/^\/(\d+)\//)?.[1];
-        if (storeId) {
+        document.addEventListener('DOMContentLoaded', async function() {
+            const storeId = AuthManager.getCurrentStoreId();
+            if (!storeId) {
+                window.location.href = '/login.html';
+                return;
+            }
+            
             document.getElementById('store-id').textContent = storeId;
-            initAdminNav('app-container', storeId, 'import');
+            await initAdminNav('app-container', storeId, 'import');
             initializeImport(storeId);
-        }
+        });
     </script>
 </body>
 </html>

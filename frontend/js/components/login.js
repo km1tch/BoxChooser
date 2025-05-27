@@ -136,57 +136,43 @@ async function handleLogin(event, storeId) {
   statusMessage.style.display = "none";
 
   try {
-    // Use AuthManager for login
-    if (typeof AuthManager !== "undefined") {
-      const result = await AuthManager.login(storeId, password);
+    // Call login API directly
+    const response = await fetch(`/api/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        store_id: storeId,
+        pin: password
+      }),
+    });
 
-      if (result.success) {
-        // Show success message before redirect
-        statusMessage.textContent = "Login successful. Redirecting...";
-        statusMessage.className =
-          "mt-3 p-2 rounded text-center bg-success text-white";
-        statusMessage.style.display = "block";
+    const data = await response.json();
 
-        // Wait a moment to show the success message, then redirect
-        setTimeout(() => {
-          window.location.href = `/${storeId}/prices`;
-        }, 500);
-      } else {
-        throw new Error(result.error || "Invalid login credentials");
-      }
-    } else {
-      // Fallback to direct API call if AuthManager not available
-      const response = await fetch(`/api/store/${storeId}/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          password,
-          remember_me: rememberMe,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.detail || "Login failed");
-      }
-
-      // Store the token
-      localStorage.setItem(`store_${storeId}_token`, data.token);
-
-      // Show success message before redirect
-      statusMessage.textContent = "Login successful. Redirecting...";
-      statusMessage.className =
-        "mt-3 p-2 rounded text-center bg-success text-white";
-      statusMessage.style.display = "block";
-
-      // Wait a moment to show the success message, then redirect
-      setTimeout(() => {
-        window.location.href = `/${storeId}/prices`;
-      }, 500);
+    if (!response.ok) {
+      throw new Error(data.detail || "Login failed");
     }
+
+    // Store the token
+    if (typeof AuthManager !== "undefined") {
+      AuthManager.setToken(storeId, data.token);
+      AuthManager.setCurrentStoreId(storeId);
+    } else {
+      localStorage.setItem(`store_${storeId}_token`, data.token);
+      localStorage.setItem('current_store_id', storeId);
+    }
+
+    // Show success message before redirect
+    statusMessage.textContent = "Login successful. Redirecting...";
+    statusMessage.className =
+      "mt-3 p-2 rounded text-center bg-success text-white";
+    statusMessage.style.display = "block";
+
+    // Wait a moment to show the success message, then redirect
+    setTimeout(() => {
+      window.location.href = `/prices`;
+    }, 500);
   } catch (error) {
     statusMessage.textContent =
       error.message || "An error occurred during login";

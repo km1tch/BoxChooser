@@ -62,18 +62,18 @@ async function createAdminNav(storeId, activePage = 'prices') {
   
   // Define nav items based on auth level
   const userItems = [
-    { id: 'wizard', label: 'Wizard', href: `/${storeId}/wizard` },
-    { id: 'packing', label: 'Packing', href: `/${storeId}` },
-    { id: 'prices', label: 'Price Table', href: `/${storeId}/prices` }
+    { id: 'wizard', label: 'Wizard', href: '/wizard' },
+    { id: 'packing', label: 'Packing', href: '/' },
+    { id: 'prices', label: 'Price Table', href: '/prices' }
   ];
   
   const adminItems = [
-    { id: 'wizard', label: 'Wizard', href: `/${storeId}/wizard` },
-    { id: 'packing', label: 'Packing', href: `/${storeId}` },
-    { id: 'prices', label: 'Edit Prices', href: `/${storeId}/prices` },
-    { id: 'import', label: 'Import', href: `/${storeId}/import` },
-    { id: 'floorplan', label: 'Floorplan', href: `/${storeId}/floorplan` },
-    { id: 'settings', label: 'Settings', href: `/${storeId}/settings` }
+    { id: 'wizard', label: 'Wizard', href: '/wizard' },
+    { id: 'packing', label: 'Packing', href: '/' },
+    { id: 'prices', label: 'Edit Prices', href: '/prices' },
+    { id: 'import', label: 'Import', href: '/import' },
+    { id: 'floorplan', label: 'Floorplan', href: '/floorplan' },
+    { id: 'settings', label: 'Settings', href: '/settings' }
   ];
   
   // Filter items based on auth status and level

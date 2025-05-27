@@ -390,9 +390,11 @@ function gen_chart() {
 // Load boxes from API - now uses the loadBoxes function from packing.js
 async function load_boxes() {
     try {
-        // Extract store ID from URL path
-        const pathParts = window.location.pathname.split('/');
-        const storeId = pathParts[1] || '1'; // Default to store1 if not specified
+        // Get store ID from auth context
+        const storeId = AuthManager.getCurrentStoreId();
+        if (!storeId) {
+            throw new Error("No store selected. Please login first.");
+        }
 
         // Use the loadBoxes function from packing.js
         return await window.loadBoxes(storeId);
@@ -438,9 +440,8 @@ async function initialize() {
         errorDiv.appendChild(errorMessage);
 
         const errorHelp = document.createElement("p");
-        // Extract store ID from URL path
-        const pathParts = window.location.pathname.split('/');
-        const storeId = pathParts[1] || '1'; // Default to store1 if not specified
+        // Get store ID from auth context
+        const storeId = AuthManager.getCurrentStoreId() || 'unknown';
 
         errorHelp.innerHTML = `<b>Troubleshooting tips:</b>
         <ul>

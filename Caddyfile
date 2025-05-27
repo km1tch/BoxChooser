@@ -11,7 +11,7 @@
 		-Server
 	}
 
-	# API routes - proxy to FastAPI backend (must come before file_server)
+	# API routes - proxy to FastAPI backend
 	handle /api/* {
 		reverse_proxy backend:8000
 	}
@@ -50,31 +50,38 @@
 		file_server
 	}
 
-	# Handle specific routes
+	# Simple page routes (no more store ID patterns!)
 	handle /login {
 		rewrite * /login.html
 		file_server
 	}
 
-	# Store-specific routes with named pages
-	@store_pages {
-		path_regexp store ^/(\d+)/(wizard|prices|floorplan|import|settings)$
-	}
-	handle @store_pages {
-		rewrite * /{http.regexp.store.2}.html
+	handle /wizard {
+		rewrite * /wizard.html
 		file_server
 	}
 
-	# Store root pages (e.g., /1, /2, etc.)
-	@store_root {
-		path_regexp ^/\d+/?$
-	}
-	handle @store_root {
-		rewrite * /index.html
+	handle /prices {
+		rewrite * /prices.html
 		file_server
 	}
 
-	# Root redirect
+	handle /import {
+		rewrite * /import.html
+		file_server
+	}
+
+	handle /floorplan {
+		rewrite * /floorplan.html
+		file_server
+	}
+
+	handle /settings {
+		rewrite * /settings.html
+		file_server
+	}
+
+	# Root serves index.html
 	handle / {
 		rewrite * /index.html
 		file_server

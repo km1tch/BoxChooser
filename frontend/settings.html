@@ -1041,11 +1041,12 @@
 
       // Initialize on page load
       document.addEventListener("DOMContentLoaded", async function () {
-        // Get store ID from URL
-        const path = window.location.pathname;
-        const match = path.match(/^\/(\d{1,4})\//);
-        storeId = match ? match[1] : "1";
-
+        // Get store ID from AuthManager
+        storeId = AuthManager.getCurrentStoreId();
+        if (!storeId) {
+          window.location.href = '/login.html';
+          return;
+        }
         // Initialize navigation
         if (typeof initAdminNav !== "undefined") {
           await initAdminNav("nav-container", storeId, "settings");

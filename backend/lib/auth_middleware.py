@@ -11,12 +11,6 @@ from backend.lib import auth_manager
 # Bearer token security scheme
 bearer_scheme = HTTPBearer()
 
-# FIXME: TEMPORARY HACK - Remove when removing auto-login hack
-# Optional bearer scheme that doesn't fail on missing auth
-# This is only needed to support the auto-login hack in routers/auth.py
-# When removing the hack, change this back to: HTTPBearer()
-optional_bearer_scheme = HTTPBearer(auto_error=False)
-
 def _get_current_auth_impl(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)
 ) -> Tuple[str, str]:
@@ -165,8 +159,7 @@ def get_optional_auth() -> Optional[Tuple[str, str]]:
     """
     def _get_optional_auth(
         request: Request,
-        # FIXME: Change back to bearer_scheme when removing auto-login hack
-        credentials: Optional[HTTPAuthorizationCredentials] = Depends(optional_bearer_scheme)
+        credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False))
     ) -> Optional[Tuple[str, str]]:
         if not credentials:
             return None

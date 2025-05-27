@@ -32,10 +32,12 @@
         <script>
             // Initialize wizard when DOM is ready
             document.addEventListener('DOMContentLoaded', async function() {
-                // Get store ID from path
-                const path = window.location.pathname;
-                const match = path.match(/^\/(\d{1,4})\//);
-                const storeId = match ? match[1] : '1';
+                // Get store ID from AuthManager
+                const storeId = AuthManager.getCurrentStoreId();
+                if (!storeId) {
+                    window.location.href = '/login.html';
+                    return;
+                }
                 
                 // Initialize navigation
                 if (typeof initAdminNav !== 'undefined') {
@@ -86,9 +88,11 @@
             async function showBoxLocation(boxModel, recId) {
                 try {
                     // Get the store ID
-                    const path = window.location.pathname;
-                    const match = path.match(/^\/(\d{1,4})\//);
-                    const storeId = match ? match[1] : '1';
+                    const storeId = AuthManager.getCurrentStoreId();
+                    if (!storeId) {
+                        alert('Please log in to view box locations');
+                        return;
+                    }
                     
                     // Get the store's box data to find location
                     const response = await fetch(`/api/store/${storeId}/boxes`);
@@ -193,9 +197,11 @@
                 const data = JSON.parse(card.dataset.recommendation);
                 
                 // Get store ID
-                const path = window.location.pathname;
-                const match = path.match(/^\/(\d{1,4})\//);
-                const storeId = match ? match[1] : '1';
+                const storeId = AuthManager.getCurrentStoreId();
+                if (!storeId) {
+                    alert('Please log in to print recommendations');
+                    return;
+                }
                 
                 try {
                     // Fetch packing rules to get instructions

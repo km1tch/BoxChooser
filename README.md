@@ -136,7 +136,7 @@ To set up authentication for a store:
 
 ## Price Editor
 
-Each store has a price editor accessed via `/{store_id}/prices`. The price editor interface will adapt based on the pricing mode:
+The price editor is accessed via `/prices` after logging in. The price editor interface will adapt based on the pricing mode:
 
 - **Standard Mode**: Shows a simple table with box price, standard, fragile, and custom prices
 - **Itemized Mode**: Shows a more detailed table breaking down each price into box price, materials, and services
@@ -147,12 +147,13 @@ Price editing requires admin authentication.
 
 ### Public Routes (require authentication)
 
-- `/{store_id}` - Packing calculator (legacy mode: no auth required)
-- `/{store_id}/wizard` - Box selection wizard (user/admin access)
-- `/{store_id}/prices` - Price viewer/editor (user: read-only, admin: edit)
-- `/{store_id}/import` - Import prices from Excel (admin only)
-- `/{store_id}/floorplan` - Floorplan editor (admin only)
-- `/{store_id}/settings` - Store settings (admin only)
+- `/` - Home page (redirects to login)
+- `/login` - Login page
+- `/wizard` - Box selection wizard (user/admin access)
+- `/prices` - Price viewer/editor (user: read-only, admin: edit)
+- `/import` - Import prices from Excel (admin only)
+- `/floorplan` - Floorplan editor (admin only)
+- `/settings` - Store settings (admin only)
 
 ### API Endpoints
 
@@ -187,13 +188,7 @@ The Excel file should contain products with dimensions in the format `WxHxD` (e.
 
 ### TODO Items
 
-- Remove support for legacy YAML-only access.
-- **URGENT: Remove auto-login hack** - Currently stores with YAML but no auth DB record get automatic user-level access. This is a SECURITY VULNERABILITY added for migration. To remove:
-  1. Search for "FIXME: TEMPORARY HACK" in `routers/auth.py` and remove the auto-login code block
-  2. In `lib/auth_middleware.py`: Remove `optional_bearer_scheme` and change `Depends(optional_bearer_scheme)` back to `Depends(bearer_scheme)`
-  3. In `lib/auth.js`: Remove the warning log for `data._warning`
-  4. All stores MUST have proper auth configured before removing this hack!
-- Move static files to Caddy. Add HTTPS
+- Add HTTPS to Caddy
 - More test coverage
 - Handle special insert items (e.g., "Electronics Insert", "Med Electronics Insert") - need to discuss with store managers about proper categorization and matching strategy
 - Excel import from RAW Dynamics output? (vs the cleaned up/ready for Dynamics import format we use now)

@@ -25,6 +25,7 @@ async def get_floorplan(store_id: str = Path(..., regex=r"^\d{1,4}$")):
     floorplan_dir = "floorplans"
     extensions = ['.png', '.jpg', '.jpeg', '.svg']
     
+    
     for ext in extensions:
         # Check for simplified naming convention
         patterns = [

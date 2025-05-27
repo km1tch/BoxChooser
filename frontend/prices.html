@@ -201,12 +201,14 @@
             cursor: pointer;
             opacity: 0;
             transition: opacity 0.2s;
+            pointer-events: none; /* Disable clicks when hidden */
         }
         .undo-btn:hover {
             background: #5a6268;
         }
         .undo-btn.show-undo {
             opacity: 1 !important;
+            pointer-events: auto; /* Enable clicks when visible */
         }
         
         /* Total cells */
@@ -558,9 +560,14 @@
     <script src="/js/components/price-table-edit.js"></script>
     
     <script>
-        // Get store ID from URL
-        const storeId = window.location.pathname.split('/')[1];
+        // Get store ID from auth context
+        const storeId = AuthManager.getCurrentStoreId();
         let priceTable = null;
+        
+        // Redirect to login if no store selected
+        if (!storeId) {
+            window.location.href = '/login';
+        }
         
         // Generate a CSRF token for this session
         const csrfToken = Math.random().toString(36).substring(2, 15) +

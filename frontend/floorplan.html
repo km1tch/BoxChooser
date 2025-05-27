@@ -532,46 +532,48 @@
     <script src="/js/components/navigation.js"></script>
     
     <script type="module">
+        // Imports must be at the top of the module
         import { FloorplanUpload } from '/js/components/floorplan-upload.js';
         import { FloorplanViewer } from '/js/components/floorplan-viewer.js';
         import { FloorplanLocationEditor } from '/js/components/floorplan-location-editor.js';
         
-        // Extract store ID from URL
-        const storeId = window.location.pathname.split('/')[1];
+        // Initialize the floorplan page
+        async function initializeFloorplan() {
+            // Get store ID from auth context
+            const storeId = AuthManager.getCurrentStoreId();
+            
+            // Redirect to login if no store selected
+            if (!storeId) {
+                window.location.href = '/login';
+                return;
+            }
         
-        // Update page title and links
-        document.getElementById('page-title').textContent = `Floorplan Editor - Store ${storeId}`;
-        document.getElementById('back-link').href = `/${storeId}`;
-        document.getElementById('back-link').textContent = `Back to Store ${storeId} Main Page`;
-        
-        // Initialize the navigation bar
-        await window.initAdminNav('app-container', storeId, 'floorplan');
-        
-        // Check if authentication is required
-        if (typeof AuthManager !== 'undefined') {
-            AuthManager.requireAuth(storeId).then(isAuthenticated => {
-                if (!isAuthenticated) {
-                    // If authentication fails, AuthManager will handle the redirect
-                    return;
-                }
-                // If authenticated or no auth required, continue with app initialization
-                console.log('Authentication check passed, continuing with app initialization');
-            }).catch(error => {
-                console.error('Authentication error:', error);
+            // Update page title and links
+            document.getElementById('page-title').textContent = `Floorplan Editor - Store ${storeId}`;
+            document.getElementById('back-link').href = '/';
+            document.getElementById('back-link').textContent = 'Back to Main Page';
+            
+            // Initialize the navigation bar
+            await window.initAdminNav('app-container', storeId, 'floorplan');
+            
+            // Check if authentication is required
+            await AuthManager.requireAuth(storeId);
+            
+            // Initialize location editor (which manages viewer, upload, and modes)
+            const locationEditor = new FloorplanLocationEditor(storeId);
+            
+            // Upload toggle
+            const uploadToggle = document.getElementById('upload-toggle');
+            const uploadContent = document.getElementById('upload-content');
+            
+            uploadToggle.addEventListener('click', () => {
+                uploadToggle.classList.toggle('expanded');
+                uploadContent.classList.toggle('expanded');
             });
         }
         
-        // Initialize location editor (which manages viewer, upload, and modes)
-        const locationEditor = new FloorplanLocationEditor(storeId);
-        
-        // Upload toggle
-        const uploadToggle = document.getElementById('upload-toggle');
-        const uploadContent = document.getElementById('upload-content');
-        
-        uploadToggle.addEventListener('click', () => {
-            uploadToggle.classList.toggle('expanded');
-            uploadContent.classList.toggle('expanded');
-        });
+        // Call the initialization function when the page loads
+        initializeFloorplan();
     </script>
 </body>
 </html>

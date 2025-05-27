@@ -58,11 +58,6 @@ const AuthManager = (function() {
       
       const data = await response.json();
       
-      // FIXME: Log warning if auto-login hack is active
-      if (data._warning) {
-        console.warn(data._warning);
-      }
-      
       return data;
     } catch (error) {
       console.error('Error checking auth status:', error);
@@ -135,8 +130,8 @@ const AuthManager = (function() {
     // Always remove token locally
     removeToken(storeId);
     
-    // Redirect to store page
-    window.location.href = `/${storeId}`;
+    // Redirect to home page (clean URL without store ID)
+    window.location.href = '/';
   }
   
   /**
@@ -158,7 +153,7 @@ const AuthManager = (function() {
     if (adminRequired && status.authLevel !== 'admin') {
       // User trying to access admin page
       alert('Admin access required');
-      window.location.href = `/${storeId}/wizard`;
+      window.location.href = `/wizard`;
       return;
     }
   }
@@ -200,6 +195,49 @@ const AuthManager = (function() {
     }
   }
   
+  /**
+   * Get the current store ID from context
+   * @returns {string|null}
+   */
+  function getCurrentStoreId() {
+    // First check if we have a current store in localStorage
+    const currentStore = localStorage.getItem('current_store_id');
+    if (currentStore) return currentStore;
+    
+    // Otherwise try to extract from URL (for backwards compatibility)
+    const pathParts = window.location.pathname.split('/');
+    const storeId = pathParts[1];
+    if (storeId && /^\d+$/.test(storeId)) {
+      // Set it as current for future use
+      setCurrentStoreId(storeId);
+      return storeId;
+    }
+    
+    // Finally, check if we have any token and use that store
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('store_') && key.endsWith('_token')) {
+        const match = key.match(/store_(\d+)_token/);
+        if (match) {
+          const storeId = match[1];
+          setCurrentStoreId(storeId);
+          return storeId;
+        }
+      }
+    }
+    
+    return null;
+  }
+  
+  /**
+   * Set the current store ID
+   * @param {string} storeId 
+   */
+  function setCurrentStoreId(storeId) {
+    localStorage.setItem('current_store_id', storeId);
+  }
+  
+  
   // Public API
   return {
     getToken,
@@ -209,7 +247,9 @@ const AuthManager = (function() {
     makeAuthenticatedRequest,
     logout,
     requireAuth,
-    initAuthUI
+    initAuthUI,
+    getCurrentStoreId,
+    setCurrentStoreId
   };
   
 })();

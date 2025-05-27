@@ -89,7 +89,7 @@ async function handleFile(file) {
         const token = AuthManager.getToken(currentStoreId);
         if (!token) {
             alert('Please log in to use the import feature.');
-            window.location.href = `/${currentStoreId}/login?redirect=/${currentStoreId}/import`;
+            window.location.href = `/login?redirect=/import`;
             return;
         }
         
@@ -104,7 +104,7 @@ async function handleFile(file) {
         if (!response.ok) {
             if (response.status === 401) {
                 alert('Your session has expired. Please log in again.');
-                window.location.href = `/${currentStoreId}/login?redirect=/${currentStoreId}/import`;
+                window.location.href = `/login?redirect=/import`;
                 return;
             }
             throw new Error(`Analysis failed: ${response.statusText}`);
@@ -1618,7 +1618,7 @@ async function applyImportChanges() {
         const token = AuthManager.getToken(currentStoreId);
         if (!token) {
             alert('Please log in to apply import changes.');
-            window.location.href = `/${currentStoreId}/login?redirect=/${currentStoreId}/import`;
+            window.location.href = `/login?redirect=/import`;
             return;
         }
         
@@ -1635,7 +1635,7 @@ async function applyImportChanges() {
         if (!response.ok) {
             if (response.status === 401) {
                 alert('Your session has expired. Please log in again.');
-                window.location.href = `/${currentStoreId}/login?redirect=/${currentStoreId}/import`;
+                window.location.href = `/login?redirect=/import`;
                 return;
             }
             throw new Error(`Update failed: ${response.statusText}`);
@@ -1645,7 +1645,7 @@ async function applyImportChanges() {
         alert(`Successfully updated ${result.updated_count} boxes!`);
         
         // Redirect to price editor or reload
-        window.location.href = `/${currentStoreId}/prices`;
+        window.location.href = `/prices`;
         
     } catch (error) {
         console.error('Error applying updates:', error);

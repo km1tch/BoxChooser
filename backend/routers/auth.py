@@ -118,23 +118,6 @@ async def auth_status(
         auth_store_id, auth_level = auth_info
         is_authenticated = (auth_store_id == store_id)
     
-    # FIXME: TEMPORARY HACK - Remove this auto-login behavior ASAP!
-    # CODE SMELL: This is a security vulnerability for migration purposes only
-    # If not authenticated, no auth in DB, but YAML exists - fake authentication
-    if not is_authenticated and not has_auth:
-        yaml_file = f"stores/store{store_id}.yml"
-        if os.path.exists(yaml_file):
-            # WARNING: This bypasses all security! Remove once all stores have proper auth
-            # We can't create a real session without DB records, so we fake being authenticated
-            # The client will think they're logged in but have no real token
-            print(f"HACK: Auto-login activated for store {store_id} - YAML exists, no auth")
-            return {
-                "hasAuth": True,          # HACK: Lie about having auth configured
-                "isAuthenticated": True,  # HACK: Lie about being authenticated
-                "authLevel": "user",      # HACK: Fake user-level access
-                "_warning": "AUTO-LOGIN HACK ACTIVE - SECURITY BYPASSED FOR YAML-ONLY STORES"
-            }
-    
     return {
         "hasAuth": has_auth,
         "isAuthenticated": is_authenticated,
@@ -279,3 +262,4 @@ async def check_has_auth(store_id: str = Path(..., regex=r"^\d{1,4}$")):
     has_auth = store_has_auth(store_id)
     
     return {"hasAuth": has_auth}
+

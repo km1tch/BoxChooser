@@ -27,18 +27,20 @@
         <script>
             // Initialize navigation for the main packing page
             document.addEventListener('DOMContentLoaded', async function() {
-                const pathParts = window.location.pathname.split('/');
-                const storeId = pathParts[1];
+                // Get store ID from auth context
+                const storeId = AuthManager.getCurrentStoreId();
                 
-                if (storeId && /^\d+$/.test(storeId)) {
-                    // Initialize the navigation bar
-                    await initAdminNav('app-container', storeId, 'packing');
-                    
-                    // Check authentication (user or admin)
-                    if (typeof AuthManager !== 'undefined') {
-                        await AuthManager.requireAuth(storeId, false);
-                    }
+                if (!storeId) {
+                    // Redirect to login if no store selected
+                    window.location.href = '/login';
+                    return;
                 }
+                
+                // Initialize the navigation bar
+                await initAdminNav('app-container', storeId, 'packing');
+                
+                // Check authentication (user or admin)
+                await AuthManager.requireAuth(storeId, false);
             });
         </script>
         <script src="/js/index.js" defer></script>
