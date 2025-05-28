@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/store/{store_id}", tags=["import-export"])
 
 @router.get("/export_prices")
 async def export_prices(
-    store_id: str = Path(..., regex=r"^\d{1,4}$"),
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),
     auth_store_id: str = Depends(get_current_store)
 ):
     """Export prices to Excel"""
@@ -27,7 +27,7 @@ async def export_prices(
 
 @router.post("/import_prices")
 async def import_prices(
-    store_id: str = Path(..., regex=r"^\d{1,4}$"),
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),
     file: UploadFile = File(...),
     auth_store_id: str = Depends(get_current_store)
 ):
@@ -39,7 +39,7 @@ async def import_prices(
 
 @router.post("/import/analyze")
 async def analyze_import(
-    store_id: str = Path(..., regex=r"^\d{1,4}$"),
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),
     file: UploadFile = File(...),
     auth_store_id: str = Depends(get_current_store)
 ):
@@ -51,7 +51,7 @@ async def analyze_import(
 
 @router.post("/import/apply")
 async def apply_import(
-    store_id: str = Path(..., regex=r"^\d{1,4}$"),
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),
     updates: Dict[str, Any] = Body(...),
     auth_store_id: str = Depends(get_current_store)
 ):
@@ -65,7 +65,7 @@ async def apply_import(
 
 @router.get("/import/excel-items")
 async def get_excel_items(
-    store_id: str = Path(..., regex=r"^\d{1,4}$"),
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),
     dimension_filter: Optional[str] = None
 ):
     """

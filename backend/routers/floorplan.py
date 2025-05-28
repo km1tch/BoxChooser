@@ -13,7 +13,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 from PIL import Image
 
-from backend.lib.auth_middleware import get_current_store
+from backend.lib.auth_middleware import get_current_store, get_current_auth_with_demo
 from backend.lib.yaml_helpers import load_store_yaml, save_store_yaml
 
 
@@ -21,12 +21,21 @@ router = APIRouter(prefix="/api/store/{store_id}", tags=["floorplan"])
 
 
 @router.get("/floorplan", response_class=FileResponse)
-async def get_floorplan(store_id: str = Path(..., regex=r"^\d{1,4}$")):
+async def get_floorplan(store_id: str = Path(..., regex=r"^\d{1,6}$")):  # Allow 6 digits for demo
     """Get the floorplan image for a store"""
     # Check for existing floorplan files in expected formats
     floorplan_dir = "floorplans"
     extensions = ['.png', '.jpg', '.jpeg']
     
+    # Special handling for demo store
+    if store_id == "999999":
+        demo_path = os.path.join(floorplan_dir, "demo_floor.png")
+        if os.path.exists(demo_path):
+            return FileResponse(
+                demo_path,
+                media_type="image/png",
+                headers={"Cache-Control": "max-age=3600"}
+            )
     
     for ext in extensions:
         # Check for simplified naming convention
@@ -51,11 +60,28 @@ async def get_floorplan(store_id: str = Path(..., regex=r"^\d{1,4}$")):
 
 @router.post("/floorplan")
 async def upload_floorplan(
-    store_id: str = Path(..., regex=r"^\d{1,4}$"),
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),  # Allow 6 digits for demo store
     file: UploadFile = File(...),
-    auth_store_id: str = Depends(get_current_store)
+    auth_info: dict = get_current_auth_with_demo()
 ):
     """Upload a new floorplan for a store - converts all bitmap formats to PNG"""
+    # Check if authenticated
+    if not auth_info:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    
+    # Check if demo mode
+    if auth_info.get('is_demo', False):
+        raise HTTPException(
+            status_code=403,
+            detail="Floorplan upload is not allowed in demo mode"
+        )
+    
+    # Verify store access
+    if auth_info['store_id'] != store_id:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Not authorized to access store {store_id}"
+        )
     # Validate file type - accept common image formats
     allowed_types = [
         "image/png", "image/jpeg", "image/jpg", "image/gif", 
@@ -138,7 +164,7 @@ async def upload_floorplan(
 
 
 @router.get("/box-locations", response_class=JSONResponse)
-async def get_box_locations(store_id: str = Path(..., regex=r"^\d{1,4}$")):
+async def get_box_locations(store_id: str = Path(..., regex=r"^\d{1,6}$")):  # Allow 6 digits for demo
     """Get all box locations for mapping"""
     data = load_store_yaml(store_id)
     
@@ -180,18 +206,27 @@ class LocationUpdateRequest(BaseModel):
 
 @router.post("/update-locations", response_class=JSONResponse)
 async def update_locations(
-    store_id: str = Path(..., regex=r"^\d{1,4}$"),
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),  # Allow 6 digits for demo
     update_data: LocationUpdateRequest = Body(...),
-    auth_store_id: str = Depends(get_current_store)
+    auth_info: dict = get_current_auth_with_demo()
 ):
     """Update box locations in bulk - clears all boxes at updated coordinates first"""
+    # Check if authenticated
+    if not auth_info:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    
+    # Verify store access
+    if auth_info['store_id'] != store_id:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Not authorized to access store {store_id}"
+        )
+    
     # Validate CSRF token
     if not update_data.csrf_token or len(update_data.csrf_token) < 10:
         raise HTTPException(status_code=403, detail="Invalid CSRF token")
     
     data = load_store_yaml(store_id)
-    
-    # Authentication check is handled by the auth_store_id dependency
     
     # First pass: collect all coordinates being updated
     coords_being_updated = set()

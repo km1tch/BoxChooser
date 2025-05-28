@@ -148,9 +148,15 @@
 		file_server
 	}
 
-	# Root serves landing.html (loading page)
+	handle /packing {
+		rewrite * /packing.html
+		header Cache-Control "no-cache, no-store, must-revalidate"
+		file_server
+	}
+
+	# Root serves index.html (which redirects to wizard)
 	handle / {
-		rewrite * /landing.html
+		rewrite * /index.html
 		header Cache-Control "no-cache, no-store, must-revalidate"
 		file_server
 	}

@@ -323,9 +323,9 @@ class Box {
  */
 async function loadBoxes(storeId = '1') {
     try {
-        // Make sure storeId is a number between 1-9999
-        if (!/^\d{1,4}$/.test(storeId)) {
-            throw new Error(`Invalid store ID: ${storeId}. Must be a number between 1-9999.`);
+        // Make sure storeId is a number between 1-9999 or demo store 999999
+        if (!/^\d{1,6}$/.test(storeId)) {
+            throw new Error(`Invalid store ID: ${storeId}. Must be a number between 1-9999 or 999999 for demo.`);
         }
 
         const response = await fetch(`/api/store/${storeId}/boxes`)

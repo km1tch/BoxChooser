@@ -884,11 +884,12 @@ export class FloorplanLocationEditor {
             const isInMapping = this.isBoxInLocationMapping(index);
             const isAssigned = hasValidLocation && isInMapping;
             
-            // Skip assigned boxes if filter is on
-            if (onlyUnassigned && isAssigned) return;
-            
             // Check if this box is currently at the selected location
             const isAtSelectedLocation = this.selectedLocation && locationId === this.selectedLocation.id;
+            
+            // Skip boxes assigned to other locations if filter is on
+            // Show: boxes at current location OR boxes not on floorplan
+            if (onlyUnassigned && isAssigned && !isAtSelectedLocation) return;
             
             const boxItem = document.createElement('div');
             boxItem.className = 'box-item';
@@ -1511,7 +1512,7 @@ export class FloorplanLocationEditor {
             
             const label = document.createElement('label');
             label.htmlFor = 'hide-assigned';
-            label.textContent = ' Hide Assigned';
+            label.textContent = 'Hide Assigned Elsewhere';
             
             checkboxGroup.appendChild(checkbox);
             checkboxGroup.appendChild(label);

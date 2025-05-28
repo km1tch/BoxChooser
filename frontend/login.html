@@ -25,8 +25,9 @@
             border-radius: 12px;
             box-shadow: 0 2px 20px rgba(0,0,0,0.1);
             width: 100%;
-            max-width: 400px;
+            max-width: 500px;
             padding: 40px;
+            overflow: hidden;
         }
         
         h1 {
@@ -42,18 +43,36 @@
             margin: 0 0 30px 0;
         }
         
-        /* Mode Toggle */
-        .mode-toggle {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0;
+        /* Tab Navigation */
+        .tab-nav {
+            display: flex;
             background: #e9ecef;
             border-radius: 8px;
             padding: 4px;
             margin-bottom: 30px;
+            position: relative;
         }
         
-        .mode-btn {
+        .tab-nav::before {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: calc(33.33% - 4px);
+            height: calc(100% - 8px);
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            transition: transform 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+            z-index: 0;
+        }
+        
+        .tab-nav.tab-1::before { transform: translateX(0); }
+        .tab-nav.tab-2::before { transform: translateX(calc(100% + 4px)); }
+        .tab-nav.tab-3::before { transform: translateX(calc(200% + 8px)); }
+        
+        .tab-btn {
+            flex: 1;
             padding: 12px;
             border: none;
             background: transparent;
@@ -62,38 +81,51 @@
             color: #6c757d;
             cursor: pointer;
             border-radius: 6px;
-            transition: all 0.2s;
+            transition: color 0.2s;
             position: relative;
             z-index: 1;
         }
         
-        .mode-btn.active {
-            background: white;
+        .tab-btn.active {
             color: #2c3e50;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            transform: scale(1.05);
         }
         
-        .mode-toggle {
+        /* Content Area with Fixed Height */
+        .content-wrapper {
+            height: 250px; /* Fixed height for all modes */
             position: relative;
+            overflow: hidden;
         }
         
-        .mode-toggle::before {
-            content: '';
+        .tab-content {
             position: absolute;
-            top: 4px;
-            left: 4px;
-            width: calc(50% - 4px);
-            height: calc(100% - 8px);
-            background: white;
-            border-radius: 6px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            z-index: 0;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transform: translateX(50px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            pointer-events: none; /* Prevent clicks on hidden tabs */
         }
         
-        .mode-toggle.admin-active::before {
-            transform: translateX(100%);
+        .tab-content.active {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto; /* Re-enable clicks on active tab */
+        }
+        
+        .tab-content.slide-out-left {
+            opacity: 0;
+            transform: translateX(-50px);
+        }
+        
+        .tab-content.slide-out-right {
+            opacity: 0;
+            transform: translateX(50px);
         }
         
         /* Form Elements */
@@ -123,81 +155,10 @@
             border-color: #667eea;
         }
         
-        input.success {
-            border-color: #48bb78;
-        }
-        
-        /* Auth Mode Containers */
-        .auth-container {
-            min-height: 120px;
-            position: relative;
-            perspective: 1000px;
-            transform-style: preserve-3d;
-        }
-        
-        .auth-mode {
-            display: none;
-        }
-        
-        .auth-mode {
-            position: absolute;
-            width: 100%;
-            top: 0;
-            left: 0;
-        }
-        
-        .auth-mode.active {
-            display: block;
-            animation: slideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        
-        .auth-mode.slide-left {
-            animation: slideOutLeft 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        
-        .auth-mode.slide-right {
-            animation: slideOutRight 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        
-        @keyframes slideIn {
-            from { 
-                opacity: 0; 
-                transform: translateX(100%) scale(0.8) rotateY(-10deg);
-            }
-            to { 
-                opacity: 1; 
-                transform: translateX(0) scale(1) rotateY(0);
-            }
-        }
-        
-        @keyframes slideOutLeft {
-            from { 
-                opacity: 1; 
-                transform: translateX(0) scale(1) rotateY(0);
-            }
-            to { 
-                opacity: 0; 
-                transform: translateX(-100%) scale(0.8) rotateY(10deg);
-            }
-        }
-        
-        @keyframes slideOutRight {
-            from { 
-                opacity: 1; 
-                transform: translateX(0) scale(1) rotateY(0);
-            }
-            to { 
-                opacity: 0; 
-                transform: translateX(100%) scale(0.8) rotateY(-10deg);
-            }
-        }
-        
-        /* Submit Button */
-        .submit-btn {
+        /* Buttons */
+        .btn {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
             border: none;
             border-radius: 8px;
             font-size: 16px;
@@ -206,15 +167,44 @@
             transition: transform 0.2s, box-shadow 0.2s;
         }
         
-        .submit-btn:hover {
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
         
-        .submit-btn:disabled {
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        .btn:disabled {
             background: #cbd5e0;
             cursor: not-allowed;
             transform: none;
+        }
+        
+        /* Demo Mode Specific */
+        .demo-content {
+            text-align: center;
+            padding: 20px 0;
+        }
+        
+        .demo-content p {
+            margin-bottom: 20px;
+            color: #6c757d;
+        }
+        
+        .demo-content .btn {
+            margin-bottom: 10px;
         }
         
         /* Messages */
@@ -238,12 +228,6 @@
         
         .message.show {
             display: block;
-            animation: slideDown 0.3s ease;
-        }
-        
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
         }
         
         /* Loading */
@@ -251,33 +235,11 @@
             display: none;
             text-align: center;
             color: #6c757d;
+            padding: 20px;
         }
         
         .loading.show {
             display: block;
-        }
-        
-        /* Code Input */
-        .code-input {
-            font-family: monospace;
-            font-size: 24px;
-            text-align: center;
-            letter-spacing: 8px;
-        }
-        
-        .resend-link {
-            text-align: center;
-            margin-top: 12px;
-        }
-        
-        .resend-link a {
-            color: #667eea;
-            text-decoration: none;
-            font-size: 14px;
-        }
-        
-        .resend-link a:hover {
-            text-decoration: underline;
         }
     </style>
 </head>
@@ -289,149 +251,167 @@
         <div class="message error" id="error-msg"></div>
         <div class="message success" id="success-msg"></div>
         
-        <div class="mode-toggle">
-            <button class="mode-btn active" data-mode="pos">Point-of-Sale</button>
-            <button class="mode-btn" data-mode="admin">Back Office Admin</button>
+        <div class="tab-nav tab-1" id="tabNav">
+            <button class="tab-btn active" data-tab="1">Point-of-Sale</button>
+            <button class="tab-btn" data-tab="2">Back Office Admin</button>
+            <button class="tab-btn" data-tab="3">Demo</button>
         </div>
         
-        <form id="login-form">
-            <div class="form-group">
-                <label for="store">Store Number</label>
-                <input type="text" id="store" required maxlength="4" pattern="\d+">
-            </div>
-            
-            <div class="auth-container">
-                <!-- POS Mode -->
-                <div class="auth-mode active" id="pos-mode">
+        <div class="content-wrapper">
+            <!-- POS Mode -->
+            <div class="tab-content active" id="tab-1">
+                <form id="pos-form">
+                    <div class="form-group">
+                        <label for="pos-store">Store Number</label>
+                        <input type="text" id="pos-store" required maxlength="6" pattern="\d+">
+                    </div>
                     <div class="form-group">
                         <label for="pin">6-Digit PIN</label>
                         <input type="password" id="pin" maxlength="6" pattern="\d{6}">
                     </div>
-                </div>
-                
-                <!-- Admin Mode -->
-                <div class="auth-mode" id="admin-mode">
-                    <div class="form-group" id="email-step">
-                        <label for="email">Admin Email</label>
-                        <input type="email" id="email">
-                    </div>
-                    
-                    <div class="form-group" id="code-step" style="display: none;">
-                        <label for="code">Verification Code</label>
-                        <input type="text" id="code" class="code-input" maxlength="6" pattern="[A-Z0-9]{6}">
-                        <div class="resend-link">
-                            <a href="#" id="resend-btn">Resend code</a>
-                        </div>
-                    </div>
-                </div>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </form>
             </div>
             
-            <button type="submit" class="submit-btn" id="submit">Login</button>
+            <!-- Admin Mode -->
+            <div class="tab-content" id="tab-2">
+                <form id="admin-form">
+                    <div id="email-step">
+                        <div class="form-group">
+                            <label for="admin-store">Store Number</label>
+                            <input type="text" id="admin-store" required maxlength="6" pattern="\d+">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Admin Email</label>
+                            <input type="email" id="email" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Send Code</button>
+                    </div>
+                    
+                    <div id="code-step" style="display: none;">
+                        <div class="form-group">
+                            <label for="code">Verification Code</label>
+                            <input type="text" id="code" maxlength="6" pattern="[A-Z0-9]{6}" style="font-family: monospace; font-size: 24px; text-align: center; letter-spacing: 8px;">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Verify</button>
+                        <div style="text-align: center; margin-top: 12px;">
+                            <a href="#" id="resend-btn" style="color: #667eea; text-decoration: none; font-size: 14px;">Resend code</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
             
-            <div class="loading" id="loading">Processing...</div>
-        </form>
+            <!-- Demo Mode -->
+            <div class="tab-content" id="tab-3">
+                <div class="demo-content">
+                    <p>Try out the packing tools with sample data</p>
+                    <button type="button" class="btn btn-primary" id="demo-user-btn">Login as Demo User</button>
+                    <button type="button" class="btn btn-primary" id="demo-admin-btn">Login as Demo Admin</button>
+                    <button type="button" class="btn btn-danger" id="demo-reset-btn">Reset Demo Environment</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="loading" id="loading">Processing...</div>
     </div>
     
     <script src="/js/lib/auth.js"></script>
     <script>
+        console.log('Login page initializing...');
+        
         // State
-        let currentMode = 'pos';
-        let currentStep = 'login'; // login, verify
-        let storeId = '';
+        let currentTab = 1;
+        let adminStep = 'email';
         let adminEmail = '';
+        let storeId = '';
         
         // Elements
-        const form = document.getElementById('login-form');
+        const tabNav = document.getElementById('tabNav');
         const errorMsg = document.getElementById('error-msg');
         const successMsg = document.getElementById('success-msg');
-        const submitBtn = document.getElementById('submit');
         const loading = document.getElementById('loading');
         
-        // Mode toggle
-        document.querySelectorAll('.mode-btn').forEach(btn => {
+        console.log('Initial state:', { currentTab, adminStep });
+        
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach((btn, index) => {
+            console.log(`Adding click handler to tab button ${index}:`, btn);
             btn.addEventListener('click', () => {
-                const mode = btn.dataset.mode;
-                if (mode === currentMode) return;
+                const newTab = parseInt(btn.dataset.tab);
+                console.log(`Tab clicked: ${currentTab} -> ${newTab}`);
+                if (newTab === currentTab) return;
                 
-                // Update buttons
-                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                // Update active states
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 
-                // Update mode
-                currentMode = mode;
+                // Update tab nav indicator
+                tabNav.className = `tab-nav tab-${newTab}`;
                 
-                // Add toggle sliding background
-                const toggle = document.querySelector('.mode-toggle');
-                toggle.classList.toggle('admin-active', mode === 'admin');
+                // Animate content
+                const currentContent = document.getElementById(`tab-${currentTab}`);
+                const newContent = document.getElementById(`tab-${newTab}`);
                 
-                // Animate auth modes with direction
-                const currentActive = document.querySelector('.auth-mode.active');
-                const newActive = document.getElementById(`${mode}-mode`);
+                // Determine direction
+                const direction = newTab > currentTab ? 'left' : 'right';
                 
-                if (currentActive && currentActive !== newActive) {
-                    // Slide out current
-                    currentActive.classList.remove('active');
-                    currentActive.classList.add(mode === 'admin' ? 'slide-left' : 'slide-right');
-                    
-                    // Slide in new after brief delay
-                    setTimeout(() => {
-                        currentActive.style.display = 'none';
-                        currentActive.classList.remove('slide-left', 'slide-right');
-                        
-                        newActive.style.display = 'block';
-                        setTimeout(() => newActive.classList.add('active'), 10);
-                    }, 300);
-                } else {
-                    // First load
-                    newActive.style.display = 'block';
-                    newActive.classList.add('active');
-                }
+                // Slide out current
+                currentContent.classList.remove('active');
+                currentContent.classList.add(`slide-out-${direction}`);
                 
-                // Reset admin mode to email step
-                if (mode === 'admin') {
-                    document.getElementById('email-step').style.display = 'block';
-                    document.getElementById('code-step').style.display = 'none';
-                    currentStep = 'login';
-                }
+                // Slide in new
+                setTimeout(() => {
+                    currentContent.classList.remove(`slide-out-${direction}`);
+                    newContent.classList.add('active');
+                }, 200);
                 
-                // Clear messages
+                currentTab = newTab;
                 hideMessages();
             });
         });
         
-        // PIN auto-submit
+        // Auto-submit PIN
         document.getElementById('pin').addEventListener('input', (e) => {
             if (e.target.value.length === 6) {
-                e.target.classList.add('success');
-                setTimeout(() => form.requestSubmit(), 200);
-            } else {
-                e.target.classList.remove('success');
+                document.getElementById('pos-form').requestSubmit();
             }
         });
         
-        // Code auto-uppercase
+        // Auto-uppercase code
         document.getElementById('code').addEventListener('input', (e) => {
             e.target.value = e.target.value.toUpperCase();
         });
         
-        // Form submit
-        form.addEventListener('submit', async (e) => {
+        // POS form
+        document.getElementById('pos-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             hideMessages();
             
-            storeId = document.getElementById('store').value;
-            if (!storeId) {
-                showError('Please enter store number');
+            const storeId = document.getElementById('pos-store').value;
+            const pin = document.getElementById('pin').value;
+            
+            if (!storeId || pin.length !== 6) {
+                showError('Please enter store number and 6-digit PIN');
                 return;
             }
             
             setLoading(true);
             
             try {
-                if (currentMode === 'pos') {
-                    await handlePOSLogin();
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ store_id: storeId, pin })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    AuthManager.setToken(storeId, data.access_token);
+                    AuthManager.setCurrentStoreId(storeId);
+                    window.location.href = '/wizard';
                 } else {
-                    await handleAdminLogin();
+                    showError(data.detail || 'Invalid PIN');
                 }
             } catch (error) {
                 showError('Connection error. Please try again.');
@@ -440,88 +420,89 @@
             }
         });
         
-        // POS Login
-        async function handlePOSLogin() {
-            const pin = document.getElementById('pin').value;
-            if (pin.length !== 6) {
-                showError('Please enter 6-digit PIN');
-                return;
-            }
+        // Admin form
+        const adminForm = document.getElementById('admin-form');
+        console.log('Admin form element:', adminForm);
+        adminForm.addEventListener('submit', async (e) => {
+            console.log('Admin form submitted, adminStep:', adminStep);
+            e.preventDefault();
+            hideMessages();
             
-            const response = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ store_id: storeId, pin })
-            });
-            
-            const data = await response.json();
-            
-            if (response.ok) {
-                AuthManager.setToken(storeId, data.access_token);
-                AuthManager.setCurrentStoreId(storeId);
-                const targetUrl = redirectUrl || '/wizard';
-                window.location.href = targetUrl;
-            } else {
-                showError(data.detail || 'Invalid PIN');
-            }
-        }
-        
-        // Admin Login
-        async function handleAdminLogin() {
-            if (currentStep === 'login') {
-                // Send code
+            if (adminStep === 'email') {
+                storeId = document.getElementById('admin-store').value;
                 adminEmail = document.getElementById('email').value;
-                if (!adminEmail) {
-                    showError('Please enter email');
+                
+                if (!storeId || !adminEmail) {
+                    console.log('Validation failed:', { storeId, adminEmail });
+                    showError('Please enter store number and email');
                     return;
                 }
                 
-                const response = await fetch('/api/auth/send-code', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ store_id: storeId, email: adminEmail })
-                });
+                console.log('Sending code to:', { storeId, adminEmail });
+                setLoading(true);
                 
-                const data = await response.json();
-                
-                if (response.ok) {
-                    showSuccess('Code sent! Check your email.');
-                    document.getElementById('email-step').style.display = 'none';
-                    document.getElementById('code-step').style.display = 'block';
-                    currentStep = 'verify';
-                    submitBtn.textContent = 'Verify';
-                } else {
-                    showError(data.detail || 'Failed to send code');
+                try {
+                    const response = await fetch('/api/auth/send-code', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ store_id: storeId, email: adminEmail })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        showSuccess('Code sent! Check your email.');
+                        document.getElementById('email-step').style.display = 'none';
+                        document.getElementById('code-step').style.display = 'block';
+                        adminStep = 'code';
+                    } else {
+                        showError(data.detail || 'Failed to send code');
+                    }
+                } catch (error) {
+                    showError('Connection error. Please try again.');
+                } finally {
+                    setLoading(false);
                 }
             } else {
                 // Verify code
                 const code = document.getElementById('code').value;
+                
                 if (code.length !== 6) {
                     showError('Please enter 6-character code');
                     return;
                 }
                 
-                const response = await fetch('/api/auth/verify-code', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ store_id: storeId, email: adminEmail, code })
-                });
+                setLoading(true);
                 
-                const data = await response.json();
-                
-                if (response.ok) {
-                    AuthManager.setToken(storeId, data.access_token);
-                    AuthManager.setCurrentStoreId(storeId);
-                    const targetUrl = redirectUrl || '/settings';
-                    window.location.href = targetUrl;
-                } else {
-                    showError(data.detail || 'Invalid code');
+                try {
+                    const response = await fetch('/api/auth/verify-code', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ store_id: storeId, email: adminEmail, code })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        AuthManager.setToken(storeId, data.access_token);
+                        AuthManager.setCurrentStoreId(storeId);
+                        window.location.href = '/settings';
+                    } else {
+                        showError(data.detail || 'Invalid code');
+                    }
+                } catch (error) {
+                    showError('Connection error. Please try again.');
+                } finally {
+                    setLoading(false);
                 }
             }
-        }
+        });
         
         // Resend code
-        document.getElementById('resend-btn').addEventListener('click', async (e) => {
+        const resendBtn = document.getElementById('resend-btn');
+        console.log('Resend button:', resendBtn);
+        resendBtn.addEventListener('click', async (e) => {
+            console.log('Resend code clicked');
             e.preventDefault();
             hideMessages();
             setLoading(true);
@@ -545,6 +526,82 @@
             }
         });
         
+        // Demo buttons
+        const demoUserBtn = document.getElementById('demo-user-btn');
+        const demoAdminBtn = document.getElementById('demo-admin-btn');
+        const demoResetBtn = document.getElementById('demo-reset-btn');
+        
+        console.log('Demo buttons:', { demoUserBtn, demoAdminBtn, demoResetBtn });
+        
+        if (demoUserBtn) {
+            console.log('Adding demo user button handler');
+            demoUserBtn.addEventListener('click', () => demoLogin('user'));
+        }
+        if (demoAdminBtn) {
+            console.log('Adding demo admin button handler');
+            demoAdminBtn.addEventListener('click', () => demoLogin('admin'));
+        }
+        if (demoResetBtn) {
+            console.log('Adding demo reset button handler');
+            demoResetBtn.addEventListener('click', async (e) => {
+                console.log('Demo reset button clicked!', e);
+                console.log('Event target:', e.target);
+                console.log('Event currentTarget:', e.currentTarget);
+                e.preventDefault();
+                e.stopPropagation();
+                if (!confirm('Reset demo environment to default state?')) return;
+                
+                setLoading(true);
+                hideMessages();
+                
+                try {
+                    const response = await fetch('/api/auth/demo/reset', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    if (response.ok) {
+                        showSuccess('Demo environment reset successfully!');
+                    } else {
+                        const data = await response.json();
+                        showError(data.detail || 'Failed to reset demo environment');
+                    }
+                } catch (error) {
+                    showError('Connection error. Please try again.');
+                } finally {
+                    setLoading(false);
+                }
+            });
+        }
+        
+        async function demoLogin(authLevel) {
+            setLoading(true);
+            hideMessages();
+            
+            try {
+                const response = await fetch('/api/auth/demo/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ auth_level: authLevel })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    AuthManager.setToken('999999', data.access_token);
+                    AuthManager.setCurrentStoreId('999999');
+                    window.location.href = authLevel === 'admin' ? '/settings' : '/wizard';
+                } else {
+                    showError(data.detail || `Failed to login as demo ${authLevel}`);
+                }
+            } catch (error) {
+                showError('Connection error. Please try again.');
+            } finally {
+                setLoading(false);
+            }
+        }
+        
+        
         // Helpers
         function showError(msg) {
             errorMsg.textContent = msg;
@@ -563,16 +620,30 @@
         
         function setLoading(isLoading) {
             loading.classList.toggle('show', isLoading);
-            submitBtn.disabled = isLoading;
-            submitBtn.style.display = isLoading ? 'none' : 'block';
+            document.querySelectorAll('button').forEach(btn => {
+                btn.disabled = isLoading;
+            });
         }
         
-        // Get redirect URL
+        // Check for redirect parameter
         const urlParams = new URLSearchParams(window.location.search);
         const redirectUrl = urlParams.get('redirect');
         
-        // Focus store input
-        document.getElementById('store').focus();
+        // Add global click listener to debug
+        document.addEventListener('click', (e) => {
+            console.log('Global click detected:', {
+                target: e.target,
+                targetId: e.target.id,
+                targetClass: e.target.className,
+                targetTag: e.target.tagName,
+                currentTarget: e.currentTarget
+            });
+        }, true);
+        
+        // Focus first input
+        document.getElementById('pos-store').focus();
+        
+        console.log('Login page initialization complete');
     </script>
 </body>
 </html>

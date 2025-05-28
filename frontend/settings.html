@@ -432,6 +432,11 @@
         margin-top: 5px;
       }
 
+      .help-text strong {
+        color: #333;
+        font-weight: 600;
+      }
+
       /* Modal styles */
       .modal {
         display: none;
@@ -656,8 +661,8 @@
         <div class="engine-section">
           <h3>Strategy Preferences</h3>
           <p class="help-text">
-            Lower values mean more preferred. Scale: 0 (most preferred) to 10
-            (avoid if possible).
+            <strong>Lower values mean more preferred. Scale: 0 (most preferred) to 10
+            (avoid if possible).</strong>
           </p>
 
           <div class="strategy-grid">
@@ -1038,6 +1043,7 @@
       let allRules = [];
       let customRules = [];
       let editingRule = null;
+      let isDemo = false;
 
       // Initialize on page load
       document.addEventListener("DOMContentLoaded", async function () {
@@ -1057,16 +1063,27 @@
         // We need admin access for settings
         await AuthManager.requireAuth(storeId, true);
 
+        // Check if demo mode and hide logins tab
+        const authStatus = await AuthManager.getAuthStatus(storeId);
+        isDemo = authStatus.isDemo || false;
+        if (isDemo) {
+          // Hide logins tab
+          const loginsTab = document.querySelector('[onclick="switchTab(\'logins\')"]');
+          if (loginsTab) {
+            loginsTab.style.display = 'none';
+          }
+        }
+
         // Load rules
         await loadRules();
         
-        // Load login info
-        await loadLoginInfo();
+        // Load engine config (this will fetch from DB or use defaults)
+        await loadEngineConfig();
         
-        // Initialize displays that were in the second DOMContentLoaded
-        updateStrategyDisplays();
-        // Initialize three-segment slider with defaults
-        initializeThreeSegmentSlider(0.45, 0.25, 0.3);
+        // Load login info (only if not demo)
+        if (!authStatus.isDemo) {
+          await loadLoginInfo();
+        }
       });
 
 
@@ -1311,6 +1328,11 @@
             loadEngineConfig();
           }
         } else if (tabName === "logins") {
+          // Prevent access to logins tab in demo mode
+          if (isDemo) {
+            console.log("Logins tab is not available in demo mode");
+            return;
+          }
           document.getElementById("loginsTab").classList.add("active");
           // Refresh login info when switching to logins tab
           loadLoginInfo();

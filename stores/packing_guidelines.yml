@@ -5,23 +5,23 @@
 recommendation_engine:
   # Scoring weights (must sum to 1.0)
   weights:
-    price: 0.45        # 45% - Cost optimization
-    efficiency: 0.25   # 25% - Space utilization  
-    ease: 0.30         # 30% - Packing complexity
-  
+    price: 0.45 # 45% - Cost optimization
+    efficiency: 0.50 # 50% - Space utilization
+    ease: 0.05 #  5% - Packing complexity
+
   # Strategy preferences (0-10 scale, lower = more preferred)
   strategy_preferences:
-    normal: 0          # No modifications needed
-    prescored: 1       # Pre-scored cuts (easy)
-    flattened: 2       # Flat pack for thin items
-    manual_cut: 5      # Manual cutting required
-    telescoping: 6     # Multiple boxes needed
-    cheating: 8        # Diagonal packing
-  
+    normal: 0 # No modifications needed
+    prescored: 0 # Pre-scored cuts (easy)
+    flattened: 2 # Flat pack for thin items
+    manual_cut: 9 # Manual cutting required
+    telescoping: 6 # Multiple boxes needed
+    cheating: 5 # Diagonal packing
+
   # Thresholds and limits
-  practically_tight_threshold: 5     # Score difference for "practically tight" boxes
-  max_recommendations: 10            # Maximum recommendations to show
-  extreme_cut_threshold: 0.5         # Min ratio of remaining box after cut (50%)
+  practically_tight_threshold: 5 # Score difference for "practically tight" boxes
+  max_recommendations: 10 # Maximum recommendations to show
+  extreme_cut_threshold: 0.5 # Min ratio of remaining box after cut (50%)
 
 # Packing type rules
 basic:

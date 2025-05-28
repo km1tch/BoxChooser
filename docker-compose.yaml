@@ -25,6 +25,7 @@ services:
       - ./stores:/code/stores
       - ./floorplans:/code/floorplans
       - ./db:/db
+      - ./tools:/code/tools
     environment:
       - SQLITE_DB_PATH=/db/packingwebsite.db
       # Security

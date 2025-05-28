@@ -166,6 +166,30 @@ def init_db():
             )
         ''')
         
+        # Create demo store auth if it doesn't exist
+        existing_demo = db.execute(
+            "SELECT store_id FROM store_auth WHERE store_id = ?",
+            ("999999",)
+        ).fetchone()
+        
+        if not existing_demo:
+            # Create demo store with a fixed PIN for demo purposes
+            demo_pin = "123456"
+            demo_pin_hash = bcrypt.hashpw(demo_pin.encode('utf-8'), bcrypt.gensalt())
+            
+            db.execute(
+                "INSERT INTO store_auth (store_id, admin_email, pin_hash) VALUES (?, ?, ?)",
+                ("999999", "demo@example.com", demo_pin_hash)
+            )
+            
+            # Log the creation
+            db.execute(
+                "INSERT INTO audit_log (store_id, action, details) VALUES (?, ?, ?)",
+                ("999999", "DEMO_CREATED", "Demo store authentication created during DB initialization")
+            )
+            
+            print("✓ Demo store (999999) created with PIN: 123456")
+        
         db.commit()
 
 def generate_pin(length: int = 6) -> str:
@@ -432,6 +456,32 @@ def verify_session(token: str) -> Optional[Tuple[str, str]]:
         
         if result:
             return (result['store_id'], result['auth_level'])
+        
+        return None
+
+def get_session_info(token: str) -> Optional[dict]:
+    """
+    Get full session information including is_demo flag
+    
+    Args:
+        token: The session token
+    
+    Returns:
+        Dict with session info if valid, None otherwise
+    """
+    with get_db() as db:
+        result = db.execute(
+            """SELECT store_id, auth_level FROM sessions 
+               WHERE token = ? AND expires_at > CURRENT_TIMESTAMP""",
+            (token,)
+        ).fetchone()
+        
+        if result:
+            return {
+                'store_id': result['store_id'],
+                'auth_level': result['auth_level'],
+                'is_demo': result['store_id'] == '999999'  # Demo store ID
+            }
         
         return None
 

@@ -12,6 +12,7 @@ from fastapi import HTTPException
 
 def load_store_yaml(store_id: str) -> dict:
     """Load and validate store YAML configuration"""
+    # Demo store uses the same naming pattern as regular stores
     yaml_file = f"stores/store{store_id}.yml"
 
     if not os.path.exists(yaml_file):
@@ -37,6 +38,7 @@ def load_store_yaml(store_id: str) -> dict:
 
 def save_store_yaml(store_id: str, data: dict) -> bool:
     """Save store data to YAML file with custom formatting"""
+    # Demo store uses the same naming pattern as regular stores
     yaml_file = f"stores/store{store_id}.yml"
 
     try:

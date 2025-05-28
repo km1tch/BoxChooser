@@ -20,7 +20,7 @@ router = APIRouter(prefix="/api/store/{store_id}", tags=["boxes"])
 
 
 @router.get("/pricing_mode", response_class=JSONResponse)
-async def get_pricing_mode(store_id: str = Path(..., regex=r"^\d{1,4}$")):
+async def get_pricing_mode(store_id: str = Path(..., regex=r"^\d{1,6}$")):
     """Get the pricing mode for a store"""
     data = load_store_yaml(store_id)
     pricing_mode = data.get("pricing-mode", "standard")
@@ -28,7 +28,7 @@ async def get_pricing_mode(store_id: str = Path(..., regex=r"^\d{1,4}$")):
 
 
 @router.get("/boxes", response_class=JSONResponse)
-async def get_boxes(store_id: str = Path(..., regex=r"^\d{1,4}$")):
+async def get_boxes(store_id: str = Path(..., regex=r"^\d{1,6}$")):
     """Get all boxes for a store with validation"""
     yaml_file = f"stores/store{store_id}.yml"
 
@@ -64,7 +64,7 @@ async def get_boxes(store_id: str = Path(..., regex=r"^\d{1,4}$")):
 
 
 @router.get("/boxes_with_sections", response_class=JSONResponse)
-async def get_boxes_with_sections(store_id: str = Path(..., regex=r"^\d{1,4}$")):
+async def get_boxes_with_sections(store_id: str = Path(..., regex=r"^\d{1,6}$")):
     """Get boxes formatted for the editor with sections"""
     data = load_store_yaml(store_id)
     result = []
@@ -140,7 +140,7 @@ async def get_boxes_with_sections(store_id: str = Path(..., regex=r"^\d{1,4}$"))
 
 
 @router.get("/all_boxes", response_class=JSONResponse)
-async def get_all_boxes(store_id: str = Path(..., regex=r"^\d{1,4}$")):
+async def get_all_boxes(store_id: str = Path(..., regex=r"^\d{1,6}$")):
     """Get all boxes at once (bulk endpoint)"""
     data = load_store_yaml(store_id)
     
@@ -154,7 +154,7 @@ async def get_all_boxes(store_id: str = Path(..., regex=r"^\d{1,4}$")):
 
 @router.get("/box/{model}", response_class=JSONResponse)
 async def get_box_by_model(
-    store_id: str = Path(..., regex=r"^\d{1,4}$"),
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),
     model: str = Path(...)):
     """Get a single box by model"""
     
@@ -197,7 +197,7 @@ class ItemizedPriceUpdateRequest(BaseModel):
 @router.post("/update_prices", response_class=JSONResponse)
 @require_auth(admin=True)
 async def update_prices(
-    store_id: str = Path(..., regex=r"^\d{1,4}$"),
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),
     update_data: PriceUpdateRequest = Body(...),
     current_store_id: str = None,
     auth_level: str = None):
@@ -253,7 +253,7 @@ async def update_prices(
 @router.post("/update_itemized_prices", response_class=JSONResponse)
 @require_auth(admin=True)
 async def update_itemized_prices(
-    store_id: str = Path(..., regex=r"^\d{1,4}$"),
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),
     update_data: ItemizedPriceUpdateRequest = Body(...),
     current_store_id: str = None,
     auth_level: str = None):

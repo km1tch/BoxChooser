@@ -1,59 +1,52 @@
 """
-Default packing rules and recommendation engine config based on packing_guidelines.yml
+Default packing rules and recommendation engine config loaded from packing_guidelines.yml
 """
 
-# Default recommendation engine configuration
-DEFAULT_ENGINE_CONFIG = {
-    'weights': {
-        'price': 0.45,
-        'efficiency': 0.25,
-        'ease': 0.30
-    },
-    'strategy_preferences': {
-        'normal': 0,
-        'prescored': 1,
-        'flattened': 2,
-        'manual_cut': 5,
-        'telescoping': 6,
-        'cheating': 8
-    },
-    'max_recommendations': 10,
-    'extreme_cut_threshold': 0.5
-}
+import os
+import yaml
+import sys
 
-# Default packing rules - one per packing type
-DEFAULT_RULES = {
-    'Basic': {
-        'padding_inches': 0,
-        'wizard_description': 'For non-sensitive items like clothing, toys, books',
-        'label_instructions': '- Inflatable void fill as needed'
-    },
-    'Standard': {
-        'padding_inches': 1,
-        'wizard_description': 'For electronics, jewelry, and medium-sensitive items',
-        'label_instructions': '''- Two (2) layers of large bubble or inflatable air cushioning
-- Inflatable void fill as needed
-- 1" between item and edge of box'''
-    },
-    'Fragile': {
-        'padding_inches': 2,
-        'wizard_description': 'For china, crystal, art, and sensitive equipment',
-        'label_instructions': '''- One (1) layer of small bubble or foam wrap
-- Two (2) layers of large bubble or inflatable air cushioning
-- Inflatable void fill as needed
-- Corrugated dividers for layering multiple items
-- 2" between item and edge of box'''
-    },
-    'Custom': {
-        'padding_inches': 3,
-        'wizard_description': 'Maximum protection for highly sensitive items',
-        'label_instructions': '''- 1" foam plank on all sides of the box
-- One (1) layer of small bubble or foam wrap
-- Two (2) layers of small bubble or foam wrap
-- Inflatable void fill as needed
-- 3" between item and edge of box'''
-    }
-}
+# Load defaults from packing_guidelines.yml - REQUIRED
+_guidelines_path = os.path.join(os.path.dirname(__file__), '..', '..', 'stores', 'packing_guidelines.yml')
+
+try:
+    with open(_guidelines_path, 'r') as f:
+        _guidelines_data = yaml.safe_load(f)
+except Exception as e:
+    print(f"FATAL: Could not load required packing_guidelines.yml: {e}", file=sys.stderr)
+    sys.exit(1)
+
+# Validate required sections exist
+if 'recommendation_engine' not in _guidelines_data:
+    print("FATAL: packing_guidelines.yml missing 'recommendation_engine' section", file=sys.stderr)
+    sys.exit(1)
+
+DEFAULT_ENGINE_CONFIG = _guidelines_data['recommendation_engine']
+
+# Validate engine config has required fields
+required_engine_fields = ['weights', 'strategy_preferences', 'practically_tight_threshold', 
+                         'max_recommendations', 'extreme_cut_threshold']
+for field in required_engine_fields:
+    if field not in DEFAULT_ENGINE_CONFIG:
+        print(f"FATAL: packing_guidelines.yml missing 'recommendation_engine.{field}'", file=sys.stderr)
+        sys.exit(1)
+
+# Build DEFAULT_RULES from the YAML
+DEFAULT_RULES = {}
+for packing_type in ['basic', 'standard', 'fragile', 'custom']:
+    if packing_type not in _guidelines_data:
+        print(f"FATAL: packing_guidelines.yml missing '{packing_type}' section", file=sys.stderr)
+        sys.exit(1)
+    
+    rule = _guidelines_data[packing_type]
+    required_rule_fields = ['padding_inches', 'wizard_description', 'label_instructions']
+    for field in required_rule_fields:
+        if field not in rule:
+            print(f"FATAL: packing_guidelines.yml missing '{packing_type}.{field}'", file=sys.stderr)
+            sys.exit(1)
+    
+    # Capitalize the packing type for consistency with existing code
+    DEFAULT_RULES[packing_type.capitalize()] = rule
 
 def get_default_rule(packing_type: str) -> dict:
     """

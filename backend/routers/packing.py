@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api/store/{store_id}", tags=["packing"])
 
 
 @router.get("/packing-rules", response_class=JSONResponse)
-async def get_packing_rules(store_id: str = Path(..., regex=r"^\d{1,4}$")):
+async def get_packing_rules(store_id: str = Path(..., regex=r"^\d{1,6}$")):
     """Get all packing rules for a store (custom + defaults)"""
     
     custom_rules = []
@@ -65,7 +65,7 @@ async def get_packing_rules(store_id: str = Path(..., regex=r"^\d{1,4}$")):
 
 @router.post("/packing-rules", response_class=JSONResponse)
 async def update_packing_rules(
-    store_id: str = Path(..., regex=r"^\d{1,4}$"),
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),
     request: PackingRulesUpdateRequest = Body(...),
     auth_info: Tuple[str, str] = get_current_auth()
 ):
@@ -121,7 +121,7 @@ async def update_packing_rules(
 
 @router.delete("/packing-rules", response_class=JSONResponse)
 async def reset_packing_rules(
-    store_id: str = Path(..., regex=r"^\d{1,4}$"),
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),
     auth_info: Tuple[str, str] = get_current_auth()
 ):
     """Reset all packing rules to defaults"""
@@ -150,7 +150,7 @@ async def reset_packing_rules(
 
 @router.get("/packing-requirements", response_class=JSONResponse)
 async def get_packing_requirements(
-    store_id: str = Path(..., regex=r"^\d{1,4}$"),
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),
     type: str = Query(..., description="Packing type (Basic, Standard, Fragile, Custom)")
 ):
     """Get specific packing requirements for given type"""
@@ -181,7 +181,7 @@ async def get_packing_requirements(
 
 
 @router.get("/engine-config", response_class=JSONResponse)
-async def get_engine_config(store_id: str = Path(..., regex=r"^\d{1,4}$")):
+async def get_engine_config(store_id: str = Path(..., regex=r"^\d{1,6}$")):
     """Get recommendation engine configuration for a store"""
     
     # Check for custom config
@@ -223,7 +223,7 @@ async def get_engine_config(store_id: str = Path(..., regex=r"^\d{1,4}$")):
 
 @router.post("/engine-config", response_class=JSONResponse)
 async def update_engine_config(
-    store_id: str = Path(..., regex=r"^\d{1,4}$"),
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),
     request: EngineConfigUpdateRequest = Body(...),
     auth_info: Tuple[str, str] = get_current_auth()
 ):
@@ -299,7 +299,7 @@ async def update_engine_config(
 
 @router.delete("/engine-config", response_class=JSONResponse)
 async def reset_engine_config(
-    store_id: str = Path(..., regex=r"^\d{1,4}$"),
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),
     auth_info: Tuple[str, str] = get_current_auth()
 ):
     """Reset engine configuration to defaults"""
@@ -327,7 +327,7 @@ async def reset_engine_config(
 
 
 @router.get("/packing-config", response_class=JSONResponse)
-async def get_packing_config(store_id: str = Path(..., regex=r"^\d{1,4}$")):
+async def get_packing_config(store_id: str = Path(..., regex=r"^\d{1,6}$")):
     """Get combined packing rules and engine config for a store"""
     
     # Get packing rules

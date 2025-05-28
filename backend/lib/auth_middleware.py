@@ -38,6 +38,30 @@ def get_current_auth():
     """
     return Depends(_get_current_auth_impl)
 
+def get_current_auth_with_demo():
+    """
+    Verify Bearer token and return full session info including is_demo
+    
+    Raises:
+        HTTPException: If token is invalid or expired
+    """
+    def _get_current_auth_with_demo_impl(
+        credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)
+    ) -> dict:
+        token = credentials.credentials
+        result = auth_manager.get_session_info(token)
+        
+        if not result:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired token",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        return result
+    
+    return Depends(_get_current_auth_with_demo_impl)
+
 def get_current_store(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)
 ) -> str:
@@ -171,5 +195,24 @@ def get_optional_auth() -> Optional[Tuple[str, str]]:
             return None
     
     return Depends(_get_optional_auth)
+
+def get_optional_auth_with_demo() -> Optional[dict]:
+    """
+    Get full session info including is_demo flag if authenticated, None otherwise
+    """
+    def _get_optional_auth_with_demo(
+        request: Request,
+        credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False))
+    ) -> Optional[dict]:
+        if not credentials:
+            return None
+        
+        try:
+            token = credentials.credentials
+            return auth_manager.get_session_info(token)
+        except:
+            return None
+    
+    return Depends(_get_optional_auth_with_demo)
 
 

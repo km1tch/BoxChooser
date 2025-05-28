@@ -431,30 +431,58 @@
     margin: 20px 0;
 }
 
-/* Print styles */
+/* Print styles - Monochrome for Zebra thermal printers */
 @media print {
+    /* Force pure black and white */
+    * {
+        color: #000 !important;
+        background-color: #fff !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
     .print-label {
         padding: 20px;
-        font-family: Arial, sans-serif;
+        /* Use same font stack as site for consistency */
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        line-height: 1.4;
+        letter-spacing: 0.05em; /* Slight spacing helps thermal printing */
     }
     
     .print-label h2 {
         margin-bottom: 20px;
-        color: #333;
+        color: #000 !important;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 18pt; /* Clear size for thermal printing */
     }
     
     .print-section {
         margin-bottom: 15px;
         display: flex;
         justify-content: space-between;
+        border-bottom: 2px solid #000;
+        padding-bottom: 5px;
     }
     
     .print-section .label {
         font-weight: bold;
-        color: #555;
+        color: #000 !important;
+        text-transform: uppercase;
+        font-size: 12pt; /* Consistent sizing */
     }
     
     .print-section .value {
-        color: #333;
+        color: #000 !important;
+        font-weight: normal;
+        font-size: 12pt; /* Consistent sizing */
+    }
+    
+    /* Remove any shadows, gradients, or other effects */
+    .print-label * {
+        box-shadow: none !important;
+        text-shadow: none !important;
+        background-image: none !important;
+        filter: none !important;
     }
 }

@@ -1,12 +1,15 @@
 import os
 import re
+import shutil
+from datetime import datetime, timezone
 from typing import Optional, Tuple
 
+import yaml
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Header
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from backend.lib.auth_middleware import get_current_store, get_optional_auth, get_current_auth
+from backend.lib.auth_middleware import get_current_store, get_optional_auth, get_current_auth, get_optional_auth_with_demo
 from backend.lib.auth_manager import (
     verify_pin, create_session, delete_session,
     hasAuth as store_has_auth, get_db, get_store_info,
@@ -104,7 +107,7 @@ async def logout(
 @router.get("/status")
 async def auth_status(
     store_id: str = Query(...),
-    auth_info: Optional[Tuple[str, str]] = get_optional_auth()
+    auth_info: Optional[dict] = get_optional_auth_with_demo()
 ):
     """Check authentication status for a store"""
     # Check if store has auth configured
@@ -113,15 +116,19 @@ async def auth_status(
     # Check if authenticated
     is_authenticated = False
     auth_level = None
+    is_demo = False
     
     if auth_info:
-        auth_store_id, auth_level = auth_info
+        auth_store_id = auth_info['store_id']
+        auth_level = auth_info['auth_level']
+        is_demo = auth_info.get('is_demo', False)
         is_authenticated = (auth_store_id == store_id)
     
     return {
         "hasAuth": has_auth,
         "isAuthenticated": is_authenticated,
-        "authLevel": auth_level if is_authenticated else None
+        "authLevel": auth_level if is_authenticated else None,
+        "isDemo": is_demo if is_authenticated else False
     }
 
 
@@ -131,7 +138,7 @@ router_store = APIRouter(prefix="/api/store/{store_id}", tags=["store-auth"])
 
 @router_store.get("/pin")
 async def get_pin_info(
-    store_id: str = Path(..., regex=r"^\d{1,4}$"),
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),
     auth_info: Tuple[str, str] = get_current_auth()
 ):
     """Get PIN info (admin only)"""
@@ -158,7 +165,7 @@ async def get_pin_info(
 
 @router_store.post("/regenerate-pin")
 async def regenerate_pin_endpoint(
-    store_id: str = Path(..., regex=r"^\d{1,4}$"),
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),
     auth_info: Tuple[str, str] = get_current_auth()
 ):
     """Regenerate PIN for a store (admin only)"""
@@ -185,7 +192,7 @@ async def regenerate_pin_endpoint(
 
 @router_store.get("/info")
 async def get_store_info_endpoint(
-    store_id: str = Path(..., regex=r"^\d{1,4}$"),
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),
     auth_info: Tuple[str, str] = get_current_auth()
 ):
     """Get store info including admin email (admin only)"""
@@ -213,7 +220,7 @@ async def get_store_info_endpoint(
 
 @router_store.put("/admin-email")
 async def update_admin_email(
-    store_id: str = Path(..., regex=r"^\d{1,4}$"),
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),
     request: UpdateEmailRequest = Body(...),
     auth_info: Tuple[str, str] = get_current_auth()
 ):
@@ -251,7 +258,7 @@ async def update_admin_email(
 
 
 @router_store.get("/has-auth")
-async def check_has_auth(store_id: str = Path(..., regex=r"^\d{1,4}$")):
+async def check_has_auth(store_id: str = Path(..., regex=r"^\d{1,6}$")):
     """Check if store has authentication enabled"""
     # Check if the store's YAML file exists
     yaml_file = f"stores/store{store_id}.yml"
@@ -262,4 +269,110 @@ async def check_has_auth(store_id: str = Path(..., regex=r"^\d{1,4}$")):
     has_auth = store_has_auth(store_id)
     
     return {"hasAuth": has_auth}
+
+
+# Demo mode models
+class DemoLoginRequest(BaseModel):
+    auth_level: str  # "user" or "admin"
+
+
+# Demo mode endpoints
+@router.post("/demo/login", response_model=TokenResponse)
+async def demo_login(request: DemoLoginRequest):
+    """Login to demo mode"""
+    if request.auth_level not in ["user", "admin"]:
+        raise HTTPException(status_code=400, detail="Invalid auth level")
+    
+    demo_store_path = "stores/store999999.yml"
+    demo_template_path = "stores/demo_store.yml"
+    needs_reset = False
+    
+    # Check if demo store needs reset
+    if not os.path.exists(demo_store_path):
+        # Case A: store999999.yml missing
+        needs_reset = True
+    else:
+        # Read the YAML to check demo_last_reset
+        try:
+            with open(demo_store_path, 'r') as f:
+                data = yaml.safe_load(f)
+            
+            if 'demo_last_reset' not in data:
+                # Case B: demo_last_reset is unset
+                needs_reset = True
+            else:
+                # Case C: Check if last reset was > 1 hour ago
+                last_reset_str = data.get('demo_last_reset')
+                try:
+                    last_reset = datetime.fromisoformat(last_reset_str.replace('Z', '+00:00'))
+                    time_since_reset = datetime.now(timezone.utc) - last_reset
+                    if time_since_reset.total_seconds() > 3600:  # 1 hour in seconds
+                        needs_reset = True
+                except (ValueError, AttributeError):
+                    # Invalid timestamp format, reset needed
+                    needs_reset = True
+        except Exception:
+            # Error reading file, reset needed
+            needs_reset = True
+    
+    # Perform reset if needed
+    if needs_reset:
+        # Call the reset logic inline to avoid circular dependency
+        if not os.path.exists(demo_template_path):
+            raise HTTPException(status_code=500, detail="Demo template not found")
+        
+        # Clear database customizations for demo store
+        with get_db() as db:
+            db.execute('DELETE FROM store_packing_rules WHERE store_id = ?', ("999999",))
+            db.execute('DELETE FROM store_engine_config WHERE store_id = ?', ("999999",))
+            db.commit()
+        
+        # Reset YAML by copying template
+        shutil.copy2(demo_template_path, demo_store_path)
+        
+        # Add reset timestamp
+        with open(demo_store_path, 'r') as f:
+            data = yaml.safe_load(f)
+        data['demo_last_reset'] = datetime.now(timezone.utc).isoformat()
+        with open(demo_store_path, 'w') as f:
+            yaml.dump(data, f, sort_keys=False)
+    
+    # Create demo session
+    token = create_session("999999", auth_level=request.auth_level)
+    
+    return TokenResponse(access_token=token)
+
+
+@router.post("/demo/reset")
+async def demo_reset():
+    """Reset demo environment"""
+    demo_path = "stores/store999999.yml"
+    demo_template_path = "stores/demo_store.yml"
+    demo_store_id = "999999"
+    
+    if not os.path.exists(demo_template_path):
+        raise HTTPException(status_code=500, detail="Demo template not found")
+    
+    # Clear database customizations for demo store
+    with get_db() as db:
+        # Clear custom packing rules
+        db.execute('DELETE FROM store_packing_rules WHERE store_id = ?', (demo_store_id,))
+        
+        # Clear custom engine config
+        db.execute('DELETE FROM store_engine_config WHERE store_id = ?', (demo_store_id,))
+        
+        db.commit()
+    
+    # Reset YAML by copying template
+    shutil.copy2(demo_template_path, demo_path)
+    
+    # Add reset timestamp
+    with open(demo_path, 'r') as f:
+        data = yaml.safe_load(f)
+    data['demo_last_reset'] = datetime.now(timezone.utc).isoformat()
+    with open(demo_path, 'w') as f:
+        yaml.dump(data, f, sort_keys=False)
+    
+    return {"message": "Demo environment reset successfully"}
+
 

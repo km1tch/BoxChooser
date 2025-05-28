@@ -32,12 +32,22 @@ async function createAdminNav(storeId, activePage = 'prices') {
   storeIdSpan.className = 'store-id';
   storeIdSpan.textContent = `Store #${storeId}`;
   
-  // Add admin indicator if authenticated as admin
-  if (authStatus.isAuthenticated && authStatus.authLevel === 'admin') {
-    const adminIndicator = document.createElement('span');
-    adminIndicator.className = 'admin-mode-indicator';
-    adminIndicator.textContent = 'ADMIN';
-    storeIdSpan.appendChild(adminIndicator);
+  // Add auth mode indicator
+  if (authStatus.isAuthenticated) {
+    const indicator = document.createElement('span');
+    indicator.className = 'admin-mode-indicator';
+    
+    if (authStatus.isDemo) {
+      indicator.textContent = authStatus.authLevel === 'admin' ? 'DEMO ADMIN' : 'DEMO';
+      indicator.style.background = '#17a2b8'; // Teal for demo
+    } else if (authStatus.authLevel === 'admin') {
+      indicator.textContent = 'ADMIN';
+      indicator.style.background = '#f093fb'; // Purple for admin
+    }
+    
+    if (indicator.textContent) {
+      storeIdSpan.appendChild(indicator);
+    }
   }
   
   const authDropdown = document.createElement('div');
@@ -63,13 +73,13 @@ async function createAdminNav(storeId, activePage = 'prices') {
   // Define nav items based on auth level
   const userItems = [
     { id: 'wizard', label: 'Wizard', href: '/wizard' },
-    { id: 'packing', label: 'Packing', href: '/' },
+    { id: 'packing', label: 'Packing', href: '/packing' },
     { id: 'prices', label: 'Price Table', href: '/prices' }
   ];
   
   const adminItems = [
     { id: 'wizard', label: 'Wizard', href: '/wizard' },
-    { id: 'packing', label: 'Packing', href: '/' },
+    { id: 'packing', label: 'Packing', href: '/packing' },
     { id: 'prices', label: 'Edit Prices', href: '/prices' },
     { id: 'import', label: 'Import', href: '/import' },
     { id: 'floorplan', label: 'Floorplan', href: '/floorplan' },
