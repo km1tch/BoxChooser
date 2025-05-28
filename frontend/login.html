@@ -458,8 +458,9 @@
             
             if (response.ok) {
                 AuthManager.setToken(storeId, data.access_token);
-                const targetUrl = redirectUrl || `/${storeId}/wizard`;
-                window.location.href = targetUrl.startsWith('/') ? targetUrl : `/${storeId}/${targetUrl}`;
+                AuthManager.setCurrentStoreId(storeId);
+                const targetUrl = redirectUrl || '/wizard';
+                window.location.href = targetUrl;
             } else {
                 showError(data.detail || 'Invalid PIN');
             }
@@ -510,8 +511,9 @@
                 
                 if (response.ok) {
                     AuthManager.setToken(storeId, data.access_token);
-                    const targetUrl = redirectUrl || `/${storeId}/settings`;
-                    window.location.href = targetUrl.startsWith('/') ? targetUrl : `/${storeId}/${targetUrl}`;
+                    AuthManager.setCurrentStoreId(storeId);
+                    const targetUrl = redirectUrl || '/settings';
+                    window.location.href = targetUrl;
                 } else {
                     showError(data.detail || 'Invalid code');
                 }

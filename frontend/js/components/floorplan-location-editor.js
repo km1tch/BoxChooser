@@ -1946,6 +1946,26 @@ export class FloorplanLocationEditor {
                 noFloorplanMsg.style.display = 'none';
                 modeControls.classList.remove('disabled');
                 
+                // Show all floorplan controls
+                const toggleSwitch = document.getElementById('mode-toggle-switch');
+                if (toggleSwitch) {
+                    toggleSwitch.style.display = '';
+                }
+                const viewLabel = document.getElementById('view-label');
+                if (viewLabel) {
+                    viewLabel.style.display = '';
+                }
+                const editLabel = document.getElementById('edit-label');
+                if (editLabel) {
+                    editLabel.style.display = '';
+                }
+                
+                // Show move/delete/merge buttons
+                const actionControls = document.querySelector('.location-action-controls');
+                if (actionControls) {
+                    actionControls.style.display = '';
+                }
+                
                 // Show unassigned boxes if in view mode
                 if (this.mode === 'view') {
                     this.showUnassignedInPanel();
@@ -1956,7 +1976,28 @@ export class FloorplanLocationEditor {
                 modeControls.classList.add('disabled');
                 this.setMode('view'); // Force view mode when no floorplan
                 
-                // Close panel if no floorplan
+                // Hide/disable all floorplan-specific controls
+                // Hide the view/edit toggle switch
+                const toggleSwitch = document.getElementById('mode-toggle-switch');
+                if (toggleSwitch) {
+                    toggleSwitch.style.display = 'none';
+                }
+                const viewLabel = document.getElementById('view-label');
+                if (viewLabel) {
+                    viewLabel.style.display = 'none';
+                }
+                const editLabel = document.getElementById('edit-label');
+                if (editLabel) {
+                    editLabel.style.display = 'none';
+                }
+                
+                // Hide move/delete/merge buttons
+                const actionControls = document.querySelector('.location-action-controls');
+                if (actionControls) {
+                    actionControls.style.display = 'none';
+                }
+                
+                // Close panel if no floorplan (hides unassigned pane)
                 const panel = document.getElementById('box-selector-panel');
                 if (panel) {
                     panel.classList.remove('open');

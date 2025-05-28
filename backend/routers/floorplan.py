@@ -5,11 +5,13 @@ Handles uploading floorplans and managing box locations on the floorplan.
 
 import os
 from typing import Dict, Union, Any
+from io import BytesIO
 
 import aiofiles
 from fastapi import APIRouter, Depends, File, HTTPException, Path, UploadFile, Body
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
+from PIL import Image
 
 from backend.lib.auth_middleware import get_current_store
 from backend.lib.yaml_helpers import load_store_yaml, save_store_yaml
@@ -23,7 +25,7 @@ async def get_floorplan(store_id: str = Path(..., regex=r"^\d{1,4}$")):
     """Get the floorplan image for a store"""
     # Check for existing floorplan files in expected formats
     floorplan_dir = "floorplans"
-    extensions = ['.png', '.jpg', '.jpeg', '.svg']
+    extensions = ['.png', '.jpg', '.jpeg']
     
     
     for ext in extensions:
@@ -39,7 +41,7 @@ async def get_floorplan(store_id: str = Path(..., regex=r"^\d{1,4}$")):
             if os.path.exists(file_path):
                 return FileResponse(
                     file_path,
-                    media_type=f"image/{ext[1:]}" if ext != '.svg' else "image/svg+xml",
+                    media_type=f"image/{ext[1:]}",
                     headers={"Cache-Control": "max-age=3600"}
                 )
     
@@ -53,13 +55,16 @@ async def upload_floorplan(
     file: UploadFile = File(...),
     auth_store_id: str = Depends(get_current_store)
 ):
-    """Upload a new floorplan for a store"""
-    # Validate file type
-    allowed_types = ["image/png", "image/jpeg", "image/jpg", "image/svg+xml"]
+    """Upload a new floorplan for a store - converts all bitmap formats to PNG"""
+    # Validate file type - accept common image formats
+    allowed_types = [
+        "image/png", "image/jpeg", "image/jpg", "image/gif", 
+        "image/bmp", "image/tiff", "image/webp"
+    ]
     if file.content_type not in allowed_types:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid file type. Allowed types: {', '.join(allowed_types)}"
+            detail=f"Invalid file type. Allowed types: PNG, JPEG, GIF, BMP, TIFF, WebP"
         )
     
     # Check file size (5MB limit)
@@ -71,29 +76,42 @@ async def upload_floorplan(
             detail=f"File too large. Maximum size: 5MB, uploaded: {len(contents) / 1024 / 1024:.2f}MB"
         )
     
-    # Determine file extension
-    extension = ""
-    if file.content_type == "image/png":
-        extension = ".png"
-    elif file.content_type in ["image/jpeg", "image/jpg"]:
-        extension = ".jpg"
-    elif file.content_type == "image/svg+xml":
-        extension = ".svg"
-    
     # Remove any existing floorplans for this store
-    floorplan_dir = "assets/floorplans"
+    floorplan_dir = "floorplans"
     existing_files = os.listdir(floorplan_dir)
     for existing_file in existing_files:
         if existing_file.startswith(f"store{store_id}"):
             os.remove(os.path.join(floorplan_dir, existing_file))
     
-    # Save the new floorplan with simplified naming
-    filename = f"store{store_id}_floor{extension}"
-    file_path = os.path.join(floorplan_dir, filename)
-    
-    # Save file asynchronously
-    async with aiofiles.open(file_path, 'wb') as f:
-        await f.write(contents)
+    # Convert all formats to PNG
+    try:
+        # Open image with Pillow
+        image = Image.open(BytesIO(contents))
+        
+        # Always convert to RGB (no transparency needed)
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
+        
+        # Save as PNG
+        filename = f"store{store_id}_floor.png"
+        file_path = os.path.join(floorplan_dir, filename)
+        
+        # Save with reasonable compression
+        output = BytesIO()
+        image.save(output, format='PNG', optimize=True)
+        png_contents = output.getvalue()
+        
+        async with aiofiles.open(file_path, 'wb') as f:
+            await f.write(png_contents)
+            
+        final_size = len(png_contents)
+        final_type = "image/png"
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Failed to process image: {str(e)}"
+        )
     
     # Clear all location coordinates for this store
     data = load_store_yaml(store_id)
@@ -112,8 +130,9 @@ async def upload_floorplan(
     return {
         "message": f"Floorplan uploaded successfully for store {store_id}",
         "filename": filename,
-        "size": len(contents),
-        "content_type": file.content_type,
+        "size": final_size,
+        "original_type": file.content_type,
+        "saved_type": final_type,
         "locations_cleared": locations_cleared
     }
 

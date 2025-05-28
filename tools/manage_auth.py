@@ -27,7 +27,7 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from lib.auth_manager import (
+from backend.lib.auth_manager import (
     init_db, create_store_auth, list_stores, 
     get_audit_log, verify_pin, hasAuth,
     get_store_info, regenerate_pin

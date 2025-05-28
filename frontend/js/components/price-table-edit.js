@@ -15,7 +15,8 @@ class PriceTableEdit {
         this.hasRealModels = data.some(item => 
             item.model && item.model !== '' && !item.model.startsWith('Unknown-')
         );
-        this.hasLocations = data.some(item => item.location && item.location !== '???');
+        // Only show locations column if floorplan exists AND there are locations
+        this.hasLocations = window.hasFloorplan && data.some(item => item.location && item.location !== '???');
         
         let html = '<table id="priceTable" class="display price-table editable-mode" style="width:100%">';
         

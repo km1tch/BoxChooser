@@ -5,7 +5,7 @@ export class FloorplanUpload {
         this.storeId = storeId;
         this.options = {
             maxSize: 5 * 1024 * 1024, // 5MB
-            allowedTypes: ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'],
+            allowedTypes: ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/bmp', 'image/tiff', 'image/webp'],
             onUploadSuccess: () => {},
             onUploadError: () => {},
             ...options
@@ -28,7 +28,7 @@ export class FloorplanUpload {
                     </svg>
                     <h3>Upload Store Floorplan</h3>
                     <p>Drag and drop an image here, or click to select</p>
-                    <p class="file-types">PNG, JPG, or SVG (max 5MB)</p>
+                    <p class="file-types">PNG, JPEG, GIF, BMP, TIFF, or WebP (max 5MB)</p>
                     <input type="file" id="file-input" accept="image/*" style="display: none;">
                 </div>
                 <div class="upload-preview" id="upload-preview" style="display: none;">
@@ -99,7 +99,7 @@ export class FloorplanUpload {
     handleFile(file) {
         // Validate file type
         if (!this.options.allowedTypes.includes(file.type)) {
-            this.showError('Invalid file type. Please upload PNG, JPG, or SVG files.');
+            this.showError('Invalid file type. Please upload PNG, JPEG, GIF, BMP, TIFF, or WebP files.');
             return;
         }
         
@@ -174,7 +174,13 @@ export class FloorplanUpload {
             }
             
             const result = await response.json();
-            this.showStatus('Floorplan uploaded successfully!', 'success');
+            
+            // Show success message with conversion info if applicable
+            let successMessage = 'Floorplan uploaded successfully!';
+            if (result.original_type !== result.saved_type) {
+                successMessage += ` (converted to ${result.saved_type === 'image/png' ? 'PNG' : result.saved_type})`;
+            }
+            this.showStatus(successMessage, 'success');
             
             // Call success callback
             this.options.onUploadSuccess(result);

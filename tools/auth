@@ -8,12 +8,14 @@ if ! command -v docker &> /dev/null; then
   exit 1
 fi
 
-# Try to find the container
-if docker ps | grep -q "packingwebsite-site-1"; then
+# Try to find the container - check for both dev and production container names
+CONTAINER=$(docker ps --format "{{.Names}}" | grep -E "packingwebsite-site-1|packingsite_backend" | head -1)
+
+if [ -n "$CONTAINER" ]; then
   # Container is running, execute the command
-  echo "Running in Docker container..."
-  exec docker exec -it packingwebsite-site-1 python /code/tools/manage_auth.py "$@"
+  echo "Running in Docker container: $CONTAINER"
+  exec docker exec -it "$CONTAINER" python /code/tools/manage_auth.py "$@"
 else
-  echo "Error: Docker container 'packingwebsite-site-1' is not running. Please start the container first."
+  echo "Error: No backend container found. Please start either 'packingwebsite-site-1' (dev) or 'packingsite_backend' (prod) first."
   exit 1
 fi

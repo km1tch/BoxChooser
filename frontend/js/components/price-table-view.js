@@ -14,7 +14,8 @@ class PriceTableView {
         this.hasRealModels = data.some(item => 
             item.model && item.model !== '' && !item.model.startsWith('Unknown-')
         );
-        this.hasLocations = data.some(item => item.location && item.location !== '???');
+        // Only show location eyeballs if floorplan exists AND there are locations
+        this.hasLocations = window.hasFloorplan && data.some(item => item.location && item.location !== '???');
         
         let html = '<table id="priceTable" class="display price-table read-only" style="width:100%">';
         
