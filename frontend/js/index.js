@@ -214,27 +214,6 @@ function gen_html() {
             debugDiv.appendChild(document.createTextNode("Print scale: "))
             debugDiv.appendChild(scaleVal)
 
-            const commentBox = document.createElement("input")
-            commentBox.setAttribute("type", "text")
-            commentBox.setAttribute("placeholder", "Comment")
-            const commentBtn = document.createElement("button")
-            commentBtn.textContent = "Send comment"
-            commentBtn.addEventListener("click", () => {
-                const comment = commentBox.value
-                commentBox.value = ""
-                if (comment) {
-                    fetch("/comments", {
-                        method: "POST",
-                        body: JSON.stringify({text: comment}),
-                        headers: {
-                            "Content-Type": "application/json"
-                        }
-                    })
-                }
-            })
-            debugDiv.appendChild(commentBox)
-            debugDiv.appendChild(commentBtn)
-
             infoDiv.appendChild(debugDiv)
         }
     })

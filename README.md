@@ -44,7 +44,6 @@ Shows some extra things for debugging/settings
 
 - Dump State: Logs the current state object into the console.
 - Print Scale: Changes the size of the text in the print menu. Font size is currently based on screen size.
-- Comment: Sends a message to the backend on any isuses or comments. Intended to let the maintainer know whether there are any mistakes (prices or boxes info) and correct them when possible.
 
 ## Customize it
 

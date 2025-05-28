@@ -4,7 +4,6 @@ import yaml
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 
-from backend.models.price import Comment
 
 router = APIRouter(tags=["general"])
 
@@ -20,10 +19,3 @@ async def get_packing_guidelines():
         guidelines = yaml.safe_load(f)
     
     return guidelines
-
-
-@router.post("/comments")
-async def save_comment(comment: Comment):
-    """Save a comment"""
-    with open("comments.txt", "a") as f:
-        f.write(comment.text + "\n")

@@ -10,7 +10,3 @@ class PriceUpdateRequest(BaseModel):
 class ItemizedPriceUpdateRequest(BaseModel):
     changes: Dict[str, Dict[str, float]]
     csrf_token: str
-
-
-class Comment(BaseModel):
-    text: str

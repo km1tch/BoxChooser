@@ -167,30 +167,6 @@ async function updateItemizedPrices(storeId, changes, csrfToken) {
 }
 
 /**
- * Submits a user comment
- * @param {string} commentText - The comment text
- * @returns {Promise<void>}
- */
-async function submitComment(commentText) {
-  try {
-    const response = await fetch("/comments", {
-      method: "POST",
-      body: JSON.stringify({text: commentText}),
-      headers: {
-        "Content-Type": "application/json"
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to submit comment: ${response.status}`);
-    }
-  } catch (error) {
-    console.error("Error submitting comment:", error);
-    throw error;
-  }
-}
-
-/**
  * Updates box locations
  * @param {string} storeId - The store ID
  * @param {Object} changes - The location changes
@@ -242,7 +218,6 @@ if (typeof window !== 'undefined') {
     fetchAllBoxes,
     updateStandardPrices,
     updateItemizedPrices,
-    submitComment,
     updateLocations
   };
 }
