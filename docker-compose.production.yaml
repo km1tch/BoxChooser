@@ -24,11 +24,11 @@ services:
     build: .
     container_name: packingsite_backend
     volumes:
-      - ./backend:/code/backend:ro  # Read-only in production
-      - ./stores:/code/stores:ro    # Read-only in production
-      - ./floorplans:/code/floorplans:rw  # Read-write for uploads
-      - ./db:/db:rw                 # Read-write for database
-      - ./tools:/code/tools:ro      # Read-only for auth management
+      - ./backend:/code/backend:ro # Read-only in production
+      - ./stores:/code/stores:rw
+      - ./floorplans:/code/floorplans:rw # Read-write for uploads
+      - ./db:/db:rw # Read-write for database
+      - ./tools:/code/tools:ro # Read-only for auth management
     environment:
       - SQLITE_DB_PATH=/db/packingwebsite.db
       # Security

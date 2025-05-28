@@ -33,19 +33,24 @@ export class FloorplanLocationEditor {
     }
 
     async init() {
-        await this.initViewer();
-        this.initUpload();
-        this.initModeControls();
-        this.initPanels();
-        await this.loadData();
-        this.checkFloorplanStatus();
+        // Check floorplan status first before initializing components
+        await this.checkFloorplanStatus();
         
-        // Start in view mode with unassigned boxes showing
-        setTimeout(() => {
-            if (this.mode === 'view') {
-                this.showUnassignedInPanel();
-            }
-        }, 500);
+        // Only initialize viewer and controls if we have a floorplan
+        if (this.hasFloorplan) {
+            await this.initViewer();
+            this.initUpload();
+            this.initModeControls();
+            this.initPanels();
+            await this.loadData();
+            
+            // Show unassigned boxes in view mode
+            setTimeout(() => {
+                if (this.mode === 'view') {
+                    this.showUnassignedInPanel();
+                }
+            }, 500);
+        }
     }
 
     async initViewer() {
@@ -64,32 +69,42 @@ export class FloorplanLocationEditor {
         // Wait a bit longer to ensure the viewer is fully initialized
         await new Promise(resolve => setTimeout(resolve, 200));
         
-        // If we have a pending viewer update, do it now
-        if (this.pendingViewerUpdate) {
-            this.updateViewer();
-            this.pendingViewerUpdate = false;
+        // Wait for the floorplan image to load before adding markers
+        if (this.floorplanViewer.image) {
+            await new Promise((resolve) => {
+                if (this.floorplanViewer.image.complete) {
+                    resolve();
+                } else {
+                    this.floorplanViewer.image.addEventListener('load', resolve, { once: true });
+                }
+            });
         }
+        
+        // Now update the viewer with markers
+        this.updateViewer();
     }
 
     initUpload() {
         const uploadContainer = document.getElementById('upload-container');
-        this.floorplanUpload = new FloorplanUpload(uploadContainer, this.storeId, {
-            onUploadSuccess: (result) => {
-                let message = 'Floorplan uploaded successfully!';
-                if (result.locations_cleared > 0) {
-                    message += ` ${result.locations_cleared} location coordinates were cleared.`;
+        if (uploadContainer) {
+            this.floorplanUpload = new FloorplanUpload(uploadContainer, this.storeId, {
+                onUploadSuccess: (result) => {
+                    let message = 'Floorplan uploaded successfully!';
+                    if (result.locations_cleared > 0) {
+                        message += ` ${result.locations_cleared} location coordinates were cleared.`;
+                    }
+                    alert(message);
+                    // Refresh the page to show the new floorplan
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                },
+                onUploadError: (error) => {
+                    console.error('Upload error:', error);
+                    alert('Failed to upload floorplan');
                 }
-                alert(message);
-                // Refresh the page to show the new floorplan
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            },
-            onUploadError: (error) => {
-                console.error('Upload error:', error);
-                alert('Failed to upload floorplan');
-            }
-        });
+            });
+        }
     }
 
     initModeControls() {
@@ -161,8 +176,10 @@ export class FloorplanLocationEditor {
                     }
                 });
                 
-                // Update viewer will be called after initialization completes
-                this.pendingViewerUpdate = true;
+                // Update viewer if it exists
+                if (this.floorplanViewer) {
+                    this.updateViewer();
+                }
             }
         } catch (error) {
             console.error('Error loading data:', error);
@@ -173,8 +190,13 @@ export class FloorplanLocationEditor {
         this.mode = mode;
         const modeIndicator = document.getElementById('mode-indicator');
         
+        // Only proceed with viewer-related operations if viewer exists
+        if (!this.floorplanViewer) {
+            return;
+        }
+        
         if (mode === 'edit') {
-            modeIndicator.classList.add('visible');
+            if (modeIndicator) modeIndicator.classList.add('visible');
             this.floorplanViewer.setMode('edit');
             this.floorplanViewer.options.mode = 'edit'; // Ensure the viewer knows it's in edit mode
             
@@ -186,7 +208,7 @@ export class FloorplanLocationEditor {
             
             // Close any open panel to prepare for edit mode
             const panel = document.getElementById('box-selector-panel');
-            if (panel.classList.contains('open')) {
+            if (panel && panel.classList.contains('open')) {
                 panel.classList.remove('open');
             }
             
@@ -194,7 +216,7 @@ export class FloorplanLocationEditor {
             this.floorplanViewer.clearMarkers('all');
             this.updateViewer();
         } else {
-            modeIndicator.classList.remove('visible');
+            if (modeIndicator) modeIndicator.classList.remove('visible');
             this.floorplanViewer.setMode('view');
             this.floorplanViewer.options.mode = 'view'; // Ensure the viewer knows it's in view mode
             
@@ -212,13 +234,15 @@ export class FloorplanLocationEditor {
             this.updateViewer();
         }
         
-        // Always show action buttons in both modes
-        const actionControls = document.querySelector('.location-action-controls');
-        if (actionControls) {
-            actionControls.style.display = 'flex';
-        } else {
-            // Initialize the buttons if they don't exist yet
-            this.updateModeControls();
+        // Only show action buttons if we have a floorplan
+        if (this.hasFloorplan) {
+            const actionControls = document.querySelector('.location-action-controls');
+            if (actionControls) {
+                actionControls.style.display = 'flex';
+            } else {
+                // Initialize the buttons if they don't exist yet
+                this.updateModeControls();
+            }
         }
     }
     
@@ -1435,17 +1459,21 @@ export class FloorplanLocationEditor {
     
     showUnassignedInPanel() {
         const panel = document.getElementById('box-selector-panel');
+        if (!panel) return; // Exit if panel doesn't exist
+        
         const header = panel.querySelector('.box-selector-header h3');
         const saveButton = document.getElementById('save-location');
         const cancelButton = document.getElementById('cancel-location');
         const searchBox = document.getElementById('box-search');
         
         // Update UI for unassigned view
-        header.textContent = 'Unassigned Boxes';
-        saveButton.style.display = 'none';
-        cancelButton.textContent = 'Close';
-        searchBox.style.display = '';
-        searchBox.value = '';
+        if (header) header.textContent = 'Unassigned Boxes';
+        if (saveButton) saveButton.style.display = 'none';
+        if (cancelButton) cancelButton.textContent = 'Close';
+        if (searchBox) {
+            searchBox.style.display = '';
+            searchBox.value = '';
+        }
         
         // Add filter checkbox for edit mode
         this.addFilterCheckbox();
@@ -1929,82 +1957,66 @@ export class FloorplanLocationEditor {
     async checkFloorplanStatus() {
         try {
             const response = await fetch(`/api/store/${this.storeId}/floorplan`);
-            const hasFloorplan = response.ok;
+            this.hasFloorplan = response.ok;
             
-            const viewerElement = document.getElementById('floorplan-viewer');
-            const noFloorplanMsg = document.getElementById('no-floorplan-message');
-            const modeControls = document.getElementById('mode-controls');
+            const floorplanContent = document.getElementById('floorplan-content');
+            const noFloorplanContent = document.getElementById('no-floorplan-content');
             
-            // Check if elements exist before using them
-            if (!viewerElement || !noFloorplanMsg || !modeControls) {
-                console.warn('Required DOM elements not found, deferring floorplan status check');
-                return;
-            }
-            
-            if (hasFloorplan) {
-                viewerElement.classList.add('has-floorplan');
-                noFloorplanMsg.style.display = 'none';
-                modeControls.classList.remove('disabled');
+            if (this.hasFloorplan) {
+                // Show normal floorplan editor
+                if (floorplanContent) floorplanContent.style.display = 'block';
+                if (noFloorplanContent) noFloorplanContent.style.display = 'none';
                 
-                // Show all floorplan controls
-                const toggleSwitch = document.getElementById('mode-toggle-switch');
-                if (toggleSwitch) {
-                    toggleSwitch.style.display = '';
-                }
-                const viewLabel = document.getElementById('view-label');
-                if (viewLabel) {
-                    viewLabel.style.display = '';
-                }
-                const editLabel = document.getElementById('edit-label');
-                if (editLabel) {
-                    editLabel.style.display = '';
-                }
+                const viewerElement = document.getElementById('floorplan-viewer');
+                const noFloorplanMsg = document.getElementById('no-floorplan-message');
                 
-                // Show move/delete/merge buttons
-                const actionControls = document.querySelector('.location-action-controls');
-                if (actionControls) {
-                    actionControls.style.display = '';
+                if (viewerElement) {
+                    viewerElement.classList.add('has-floorplan');
                 }
-                
-                // Show unassigned boxes if in view mode
-                if (this.mode === 'view') {
-                    this.showUnassignedInPanel();
+                if (noFloorplanMsg) {
+                    noFloorplanMsg.style.display = 'none';
                 }
             } else {
-                viewerElement.classList.remove('has-floorplan');
-                noFloorplanMsg.style.display = 'block';
-                modeControls.classList.add('disabled');
+                // NO FLOORPLAN - show only upload interface
+                if (floorplanContent) floorplanContent.style.display = 'none';
+                if (noFloorplanContent) noFloorplanContent.style.display = 'block';
+                
+                // Initialize upload in the main container
+                const uploadMainContainer = document.getElementById('upload-container-main');
+                if (uploadMainContainer && !this.mainUploader) {
+                    this.mainUploader = new FloorplanUpload(uploadMainContainer, this.storeId, {
+                        onUploadSuccess: (result) => {
+                            let message = 'Floorplan uploaded successfully!';
+                            if (result.locations_cleared > 0) {
+                                message += ` ${result.locations_cleared} location coordinates were cleared.`;
+                            }
+                            alert(message);
+                            // Refresh the page to show the new floorplan
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        },
+                        onUploadError: (error) => {
+                            console.error('Upload error:', error);
+                            alert('Failed to upload floorplan');
+                        }
+                    });
+                }
+                
                 this.setMode('view'); // Force view mode when no floorplan
                 
-                // Hide/disable all floorplan-specific controls
-                // Hide the view/edit toggle switch
-                const toggleSwitch = document.getElementById('mode-toggle-switch');
-                if (toggleSwitch) {
-                    toggleSwitch.style.display = 'none';
-                }
-                const viewLabel = document.getElementById('view-label');
-                if (viewLabel) {
-                    viewLabel.style.display = 'none';
-                }
-                const editLabel = document.getElementById('edit-label');
-                if (editLabel) {
-                    editLabel.style.display = 'none';
-                }
-                
-                // Hide move/delete/merge buttons
-                const actionControls = document.querySelector('.location-action-controls');
-                if (actionControls) {
-                    actionControls.style.display = 'none';
-                }
-                
-                // Close panel if no floorplan (hides unassigned pane)
+                // Close panel if no floorplan
                 const panel = document.getElementById('box-selector-panel');
                 if (panel) {
                     panel.classList.remove('open');
                 }
             }
         } catch (error) {
-            console.error('Error checking floorplan status:', error);
+            // Only log non-TypeError errors (TypeErrors are expected when viewer isn't initialized)
+            if (!(error instanceof TypeError)) {
+                console.error('Error checking floorplan status:', error);
+            }
+            this.hasFloorplan = false;
         }
     }
 }

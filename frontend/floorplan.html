@@ -36,8 +36,7 @@
         }
         
         .mode-controls.disabled {
-            opacity: 0.5;
-            pointer-events: none;
+            display: none !important;
         }
         
         /* Toggle switch */
@@ -97,20 +96,23 @@
         /* No floorplan message */
         .no-floorplan-message {
             text-align: center;
-            padding: 60px 20px;
+            padding: 30px 20px;
             background: #f5f5f5;
             border-radius: 8px;
-            margin: 20px auto;
+            margin: 10px auto;
             max-width: 600px;
         }
         
         .no-floorplan-message h3 {
             color: #666;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
+            font-size: 18px;
         }
         
         .no-floorplan-message p {
             color: #888;
+            margin: 0;
+            font-size: 14px;
         }
         
         /* Floorplan viewer */
@@ -123,7 +125,7 @@
             border: 2px solid #ddd;
             border-radius: 8px;
             overflow: hidden;
-            min-height: 400px;
+            min-height: 200px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -131,6 +133,7 @@
         
         .floorplan-viewer.has-floorplan {
             display: block;
+            min-height: 400px;
         }
         
         .floorplan-container {
@@ -470,38 +473,46 @@
         <div class="container">
             <h1 id="page-title">Floorplan Editor</h1>
             
-            <!-- Mode controls -->
-            <div class="mode-controls" id="mode-controls">
-                <div class="mode-toggle">
-                    <span class="toggle-label active" id="view-label">View</span>
-                    <div class="toggle-switch" id="mode-toggle-switch">
-                        <div class="toggle-slider"></div>
+            <!-- Content wrapper that can be hidden -->
+            <div id="floorplan-content">
+                <!-- Mode controls -->
+                <div class="mode-controls" id="mode-controls">
+                    <div class="mode-toggle">
+                        <span class="toggle-label active" id="view-label">View</span>
+                        <div class="toggle-switch" id="mode-toggle-switch">
+                            <div class="toggle-slider"></div>
+                        </div>
+                        <span class="toggle-label" id="edit-label">Edit</span>
                     </div>
-                    <span class="toggle-label" id="edit-label">Edit</span>
+                    <div class="filter-controls">
+                        <!-- Removed show unassigned button -->
+                    </div>
                 </div>
-                <div class="filter-controls">
-                    <!-- Removed show unassigned button -->
+            
+                <!-- Floorplan viewer -->
+                <div id="floorplan-viewer" class="floorplan-viewer">
+                    <div class="no-floorplan-message" id="no-floorplan-message">
+                        <h3>No Floorplan Available</h3>
+                        <p>Upload a floorplan to start managing box locations</p>
+                    </div>
+                </div>
+                
+                <!-- Upload section (collapsible) -->
+                <div class="upload-section">
+                    <div class="upload-toggle" id="upload-toggle">
+                        <span>Upload New Floorplan</span>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="upload-content" id="upload-content">
+                        <div id="upload-container"></div>
+                    </div>
                 </div>
             </div>
-        
-        <!-- Floorplan viewer -->
-        <div id="floorplan-viewer" class="floorplan-viewer">
-            <div class="no-floorplan-message" id="no-floorplan-message">
-                <h3>No Floorplan Available</h3>
-                <p>Upload a floorplan to start managing box locations</p>
+            
+            <!-- No floorplan upload section - shown when no floorplan exists -->
+            <div id="no-floorplan-content" style="display: none;">
+                <div id="upload-container-main"></div>
             </div>
-        </div>
-        
-        <!-- Upload section (collapsible) -->
-        <div class="upload-section">
-            <div class="upload-toggle" id="upload-toggle">
-                <span>Upload New Floorplan</span>
-                <span class="arrow">▼</span>
-            </div>
-            <div class="upload-content" id="upload-content">
-                <div id="upload-container"></div>
-            </div>
-        </div>
         
         <!-- Box selector panel (slides in from right) -->
         <div class="box-selector-panel" id="box-selector-panel">
@@ -522,10 +533,7 @@
         
         <!-- Mode indicator -->
         <div class="mode-indicator" id="mode-indicator">Edit Mode Active</div>
-        
-        <div style="margin-top: 40px;">
-            <a id="back-link" href="#">Back to Store Main Page</a>
-        </div>
+    </div>
     </div>
     
     <script src="/js/lib/auth.js"></script>
@@ -548,10 +556,8 @@
                 return;
             }
         
-            // Update page title and links
+            // Update page title
             document.getElementById('page-title').textContent = `Floorplan Editor - Store ${storeId}`;
-            document.getElementById('back-link').href = '/';
-            document.getElementById('back-link').textContent = 'Back to Main Page';
             
             // Initialize the navigation bar
             await window.initAdminNav('app-container', storeId, 'floorplan');
@@ -566,10 +572,12 @@
             const uploadToggle = document.getElementById('upload-toggle');
             const uploadContent = document.getElementById('upload-content');
             
-            uploadToggle.addEventListener('click', () => {
-                uploadToggle.classList.toggle('expanded');
-                uploadContent.classList.toggle('expanded');
-            });
+            if (uploadToggle && uploadContent) {
+                uploadToggle.addEventListener('click', () => {
+                    uploadToggle.classList.toggle('expanded');
+                    uploadContent.classList.toggle('expanded');
+                });
+            }
         }
         
         // Call the initialization function when the page loads

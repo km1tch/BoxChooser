@@ -30,6 +30,17 @@ export class FloorplanViewer {
         this.render();
         this.attachEventListeners();
         
+        // Wait for image to be fully loaded if it exists
+        if (this.image && this.imageUrl) {
+            await new Promise((resolve) => {
+                if (this.image.complete) {
+                    resolve();
+                } else {
+                    this.image.addEventListener('load', resolve, { once: true });
+                }
+            });
+        }
+        
         if (this.options.mode === 'multi' && this.options.showAllMarkers) {
             await this.loadAllMarkers();
         }
@@ -39,7 +50,12 @@ export class FloorplanViewer {
         try {
             const response = await fetch(`/api/store/${this.options.storeId}/floorplan`);
             if (!response.ok) {
-                throw new Error('Floorplan not found');
+                // Don't log 404s as errors - they're expected when no floorplan exists
+                if (response.status !== 404) {
+                    console.error('Error loading floorplan: HTTP', response.status);
+                }
+                this.imageUrl = null;
+                return;
             }
             
             const blob = await response.blob();
@@ -101,32 +117,34 @@ export class FloorplanViewer {
         });
         
         // Handle clicks on floorplan
-        this.markerLayer.addEventListener('click', (e) => {
-            const rect = this.markerLayer.getBoundingClientRect();
-            const x = (e.clientX - rect.left) / rect.width;
-            const y = (e.clientY - rect.top) / rect.height;
-            
-            // Check if click is on a marker
-            const clickedMarker = this.getMarkerAtPosition(x, y);
-            
-            if (clickedMarker) {
-                // Clicked on existing marker
-                if (this.options.onLocationSelect) {
-                    this.options.onLocationSelect(clickedMarker);
+        if (this.markerLayer) {
+            this.markerLayer.addEventListener('click', (e) => {
+                const rect = this.markerLayer.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / rect.width;
+                const y = (e.clientY - rect.top) / rect.height;
+                
+                // Check if click is on a marker
+                const clickedMarker = this.getMarkerAtPosition(x, y);
+                
+                if (clickedMarker) {
+                    // Clicked on existing marker
+                    if (this.options.onLocationSelect) {
+                        this.options.onLocationSelect(clickedMarker);
+                    }
+                } else if (this.options.mode === 'edit') {
+                    // Clicked on empty space in edit mode
+                    if (this.options.onFloorplanClick) {
+                        // Store the selected location
+                        this.selectedLocation = {
+                            coords: [x, y]
+                        };
+                        
+                        // Notify parent component
+                        this.options.onFloorplanClick([x, y]);
+                    }
                 }
-            } else if (this.options.mode === 'edit') {
-                // Clicked on empty space in edit mode
-                if (this.options.onFloorplanClick) {
-                    // Store the selected location
-                    this.selectedLocation = {
-                        coords: [x, y]
-                    };
-                    
-                    // Notify parent component
-                    this.options.onFloorplanClick([x, y]);
-                }
-            }
-        });
+            });
+        }
         
         // Toggle button for multi mode
         if (this.toggleBtn) {
@@ -200,6 +218,8 @@ export class FloorplanViewer {
     }
     
     addMarker(x, y, id = '', label = '', boxes = []) {
+        if (!this.markerLayer) return null;
+        
         const marker = document.createElement('div');
         marker.className = `location-marker marker-${id || 'default'}`;
         marker.dataset.x = x;
@@ -249,6 +269,8 @@ export class FloorplanViewer {
     }
     
     updateMarkerPosition(marker) {
+        if (!this.markerLayer) return;
+        
         const rect = this.markerLayer.getBoundingClientRect();
         const x = parseFloat(marker.dataset.x);
         const y = parseFloat(marker.dataset.y);
@@ -315,13 +337,17 @@ export class FloorplanViewer {
         if (mode === 'edit') {
             this.container.classList.add('edit-mode');
             this.container.classList.remove('view-mode');
-            this.markerLayer.style.pointerEvents = 'auto';
-            this.markerLayer.style.cursor = 'crosshair';
+            if (this.markerLayer) {
+                this.markerLayer.style.pointerEvents = 'auto';
+                this.markerLayer.style.cursor = 'crosshair';
+            }
         } else {
             this.container.classList.add('view-mode');
             this.container.classList.remove('edit-mode');
-            this.markerLayer.style.pointerEvents = 'none';
-            this.markerLayer.style.cursor = 'default';
+            if (this.markerLayer) {
+                this.markerLayer.style.pointerEvents = 'none';
+                this.markerLayer.style.cursor = 'default';
+            }
         }
         
         // Force a refresh of all markers to update controls visibility
