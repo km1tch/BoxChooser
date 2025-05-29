@@ -11,7 +11,7 @@
 }
 
 .wizard-header p {
-    color: #666;
+    color: #1976D2;
     font-size: 18px;
 }
 
@@ -21,7 +21,7 @@
     border-radius: 8px;
     padding: 30px;
     margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(74, 144, 226, 0.25);
 }
 
 .step-header {
@@ -76,7 +76,7 @@
 .input-field input {
     width: 100%;
     padding: 10px;
-    border: 1px solid #ddd;
+    border: 1px solid #90CAF9;
     border-radius: 4px;
     font-size: 16px;
 }
@@ -84,6 +84,17 @@
 .input-field input:focus {
     outline: none;
     border-color: #007bff;
+}
+
+/* Hide spinner arrows on number inputs */
+.input-field input[type="number"] {
+    -moz-appearance: textfield; /* Firefox */
+}
+
+.input-field input[type="number"]::-webkit-inner-spin-button,
+.input-field input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 /* Buttons */
@@ -120,7 +131,7 @@
 }
 
 .packing-option {
-    border: 2px solid #ddd;
+    border: 2px solid #90CAF9;
     border-radius: 8px;
     padding: 20px;
     cursor: pointer;
@@ -129,7 +140,7 @@
 
 .packing-option:hover {
     border-color: #007bff;
-    background: #f8f9fa;
+    background: #E3F2FD;
 }
 
 .packing-option.selected {
@@ -155,7 +166,7 @@
 
 .recommendation-card {
     background: white;
-    border: 1px solid #ddd;
+    border: 1px solid #90CAF9;
     border-radius: 8px;
     padding: 12px 16px;
     margin-bottom: 10px;
@@ -176,7 +187,7 @@
 .card-rank {
     font-size: 18px;
     font-weight: bold;
-    color: #666;
+    color: #1976D2;
     margin-right: 15px;
     min-width: 25px;
 }
@@ -201,7 +212,7 @@
 }
 
 .dimensions {
-    color: #666;
+    color: #1976D2;
     font-size: 12px;
     margin-top: 2px;
 }
@@ -263,7 +274,7 @@
 
 .box-pricing .box-cost {
     font-size: 12px;
-    color: #666;
+    color: #1976D2;
 }
 
 .action-icons {
@@ -276,7 +287,7 @@
     border: none;
     cursor: pointer;
     padding: 6px;
-    color: #666;
+    color: #1976D2;
     transition: color 0.2s;
     font-size: 16px;
 }
@@ -310,7 +321,7 @@
 .no-results {
     text-align: center;
     padding: 40px;
-    color: #666;
+    color: #1976D2;
 }
 
 .no-results a {
@@ -363,7 +374,7 @@
     border: none;
     font-size: 24px;
     cursor: pointer;
-    color: #666;
+    color: #1976D2;
     padding: 0;
     width: 30px;
     height: 30px;
@@ -396,7 +407,7 @@
     background-color: #ff0000;
     border: 2px solid #fff;
     border-radius: 50%;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 4px rgba(74, 144, 226, 0.4);
     z-index: 10;
 }
 
@@ -418,6 +429,27 @@
     display: none;
 }
 
+/* For small screens, use visibility instead of display:none to maintain document height */
+@media (max-height: 800px) {
+    .wizard-step.hidden {
+        display: block !important;
+        visibility: hidden;
+        opacity: 0;
+        pointer-events: none;
+    }
+    
+    .wizard-step:not(.hidden) {
+        visibility: visible;
+        opacity: 1;
+        pointer-events: auto;
+    }
+    
+    /* Add extra space at bottom to ensure we can scroll any step to top */
+    .wizard-step:last-child {
+        margin-bottom: 100vh !important;
+    }
+}
+
 .text-muted {
     color: #6c757d;
     font-size: 14px;
@@ -433,6 +465,12 @@
 
 /* Print styles - Monochrome for Zebra thermal printers */
 @media print {
+    /* Page setup for 4x6 labels */
+    @page {
+        size: 4in 6in;
+        margin: 0;
+    }
+    
     /* Force pure black and white */
     * {
         color: #000 !important;
@@ -484,5 +522,39 @@
         text-shadow: none !important;
         background-image: none !important;
         filter: none !important;
+    }
+    
+    /* Force page break when floorplan won't fit */
+    .force-page-break {
+        page-break-before: always !important;
+        break-before: page !important;
+        -webkit-column-break-before: always !important;
+        display: block !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* Ensure the floorplan section starts on new page */
+    .print-floorplan-section.force-page-break {
+        page-break-before: always !important;
+        break-before: page !important;
+        margin-top: 0 !important;
+    }
+    
+    /* Page break handling for split labels */
+    .print-label.page1 {
+        page-break-after: always !important;
+        break-after: page !important;
+    }
+    
+    .print-label.page2 {
+        page-break-before: always !important;
+        break-before: page !important;
+    }
+    
+    /* Hide page break hr in print */
+    hr[style*="page-break-after"] {
+        display: none !important;
     }
 }

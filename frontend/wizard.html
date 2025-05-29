@@ -1,143 +1,147 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>Packing Wizard</title>
-        <meta name="description" content="Find the perfect box in 3 easy steps">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-        <link rel="stylesheet" href="/assets/css/common.css">
-        <link rel="stylesheet" href="/assets/css/wizard.css">
-        
-        <!-- Load required modules -->
-        <script src="/js/lib/auth.js"></script>
-        <script src="/js/lib/pricing.js"></script>
-        <script src="/js/lib/packing.js"></script>
-        <script src="/js/lib/packing-rules.js"></script>
-        <script src="/js/lib/recommendation-engine.js"></script>
-        <script src="/js/components/navigation.js"></script>
-        <script src="/js/components/wizard-ui.js"></script>
-    </head>
-    
-    <body>
-        <div id="app-container">
-            <nav id="nav-container"></nav>
-            
-            <div class="container" id="wizard-container">
-                <!-- Wizard UI will be rendered here -->
-            </div>
-        </div>
-        
-        <script>
-            // Initialize wizard when DOM is ready
-            document.addEventListener('DOMContentLoaded', async function() {
-                // Get store ID from AuthManager
-                const storeId = AuthManager.getCurrentStoreId();
-                if (!storeId) {
-                    window.location.href = '/login.html';
-                    return;
-                }
-                
-                // Initialize navigation
-                if (typeof initAdminNav !== 'undefined') {
-                    await initAdminNav('nav-container', storeId, 'wizard');
-                }
-                
-                // Check authentication (user or admin)
-                if (typeof AuthManager !== 'undefined') {
-                    await AuthManager.requireAuth(storeId, false);
-                }
-                
-                // Load boxes and engine config for this store
-                let boxes = [];
-                let engineConfig = {};
-                
-                try {
-                    // Load both in parallel
-                    const [boxData, configData] = await Promise.all([
-                        loadBoxes(storeId),
-                        fetch(`/api/store/${storeId}/engine-config`).then(r => r.json())
-                    ]);
-                    
-                    boxes = boxData;
-                    engineConfig = configData;
-                } catch (error) {
-                    console.error('Error loading data:', error);
-                    document.getElementById('wizard-container').innerHTML = 
-                        '<div class="error">Error loading data. Please refresh the page.</div>';
-                    return;
-                }
-                
-                // Initialize recommendation engine with store config
-                const engine = new RecommendationEngine(engineConfig);
-                
-                // Initialize wizard UI
-                const wizard = new WizardUI('wizard-container', {
-                    storeId: storeId,
-                    onFindBoxes: async (itemDims, packingLevel) => {
-                        // Get recommendations from engine
-                        return engine.getRecommendations(boxes, itemDims, packingLevel);
-                    }
-                });
-                
-                wizard.init();
-            });
-            
-            // Global functions for box location and printing
-            async function showBoxLocation(boxModel, recId) {
-                try {
-                    // Get the store ID
-                    const storeId = AuthManager.getCurrentStoreId();
-                    if (!storeId) {
-                        alert('Please log in to view box locations');
-                        return;
-                    }
-                    
-                    // Get the store's box data to find location
-                    const response = await fetch(`/api/store/${storeId}/boxes`);
-                    if (!response.ok) {
-                        throw new Error('Failed to load box data');
-                    }
-                    
-                    const data = await response.json();
-                    const boxData = data.boxes.find(b => b.model === boxModel);
-                    
-                    if (!boxData || !boxData.location) {
-                        alert(`Location not set for ${boxModel}`);
-                        return;
-                    }
-                    
-                    // Check if floorplan exists
-                    const floorplanResponse = await fetch(`/api/store/${storeId}/floorplan`);
-                    if (!floorplanResponse.ok) {
-                        // No floorplan, just show text location
-                        if (typeof boxData.location === 'string') {
-                            alert(`${boxModel} Location: ${boxData.location}`);
-                        } else {
-                            alert(`${boxModel} is mapped on the store floorplan`);
-                        }
-                        return;
-                    }
-                    
-                    // Show floorplan modal with location marker
-                    showFloorplanModal(boxModel, boxData.location, floorplanResponse);
-                    
-                } catch (error) {
-                    console.error('Error showing location:', error);
-                    alert('Unable to show box location');
-                }
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Packing Wizard</title>
+    <meta name="description" content="Find the perfect box in 3 easy steps" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="/assets/css/common.css" />
+    <link rel="stylesheet" href="/assets/css/wizard.css" />
+
+    <!-- Load required modules -->
+    <script src="/js/lib/auth.js"></script>
+    <script src="/js/lib/pricing.js"></script>
+    <script src="/js/lib/packing.js"></script>
+    <script src="/js/lib/packing-rules.js"></script>
+    <script src="/js/lib/recommendation-engine.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components/wizard-ui.js"></script>
+  </head>
+
+  <body>
+    <div id="app-container">
+      <nav id="nav-container"></nav>
+
+      <div class="container" id="wizard-container">
+        <!-- Wizard UI will be rendered here -->
+      </div>
+    </div>
+
+    <script>
+      // Initialize wizard when DOM is ready
+      document.addEventListener("DOMContentLoaded", async function () {
+        // Get store ID from AuthManager
+        const storeId = AuthManager.getCurrentStoreId();
+        if (!storeId) {
+          window.location.href = "/login.html";
+          return;
+        }
+
+        // Initialize navigation
+        if (typeof initAdminNav !== "undefined") {
+          await initAdminNav("nav-container", storeId, "wizard");
+        }
+
+        // Check authentication (user or admin)
+        if (typeof AuthManager !== "undefined") {
+          await AuthManager.requireAuth(storeId, false);
+        }
+
+        // Load boxes and engine config for this store
+        let boxes = [];
+        let engineConfig = {};
+
+        try {
+          // Load both in parallel
+          const [boxData, configData] = await Promise.all([
+            loadBoxes(storeId),
+            fetch(`/api/store/${storeId}/engine-config`).then((r) => r.json()),
+          ]);
+
+          boxes = boxData;
+          engineConfig = configData;
+        } catch (error) {
+          console.error("Error loading data:", error);
+          document.getElementById("wizard-container").innerHTML =
+            '<div class="error">Error loading data. Please refresh the page.</div>';
+          return;
+        }
+
+        // Initialize recommendation engine with store config
+        const engine = new RecommendationEngine(engineConfig);
+
+        // Initialize wizard UI
+        const wizard = new WizardUI("wizard-container", {
+          storeId: storeId,
+          onFindBoxes: async (itemDims, packingLevel) => {
+            // Get recommendations from engine
+            return engine.getRecommendations(boxes, itemDims, packingLevel);
+          },
+        });
+
+        wizard.init();
+      });
+
+      // Global functions for box location and printing
+      async function showBoxLocation(boxModel, recId) {
+        try {
+          // Get the store ID
+          const storeId = AuthManager.getCurrentStoreId();
+          if (!storeId) {
+            alert("Please log in to view box locations");
+            return;
+          }
+
+          // Get the store's box data to find location
+          const response = await fetch(`/api/store/${storeId}/boxes`);
+          if (!response.ok) {
+            throw new Error("Failed to load box data");
+          }
+
+          const data = await response.json();
+          const boxData = data.boxes.find((b) => b.model === boxModel);
+
+          if (!boxData || !boxData.location) {
+            alert(`Location not set for ${boxModel}`);
+            return;
+          }
+
+          // Check if floorplan exists
+          const floorplanResponse = await fetch(
+            `/api/store/${storeId}/floorplan`
+          );
+          if (!floorplanResponse.ok) {
+            // No floorplan, just show text location
+            if (typeof boxData.location === "string") {
+              alert(`${boxModel} Location: ${boxData.location}`);
+            } else {
+              alert(`${boxModel} is mapped on the store floorplan`);
             }
-            
-            async function showFloorplanModal(boxModel, location, floorplanResponse) {
-                // Get floorplan image
-                const blob = await floorplanResponse.blob();
-                const imageUrl = URL.createObjectURL(blob);
-                
-                // Create modal
-                const modal = document.createElement('div');
-                modal.className = 'modal-backdrop';
-                modal.innerHTML = `
+            return;
+          }
+
+          // Show floorplan modal with location marker
+          showFloorplanModal(boxModel, boxData.location, floorplanResponse);
+        } catch (error) {
+          console.error("Error showing location:", error);
+          alert("Unable to show box location");
+        }
+      }
+
+      async function showFloorplanModal(boxModel, location, floorplanResponse) {
+        // Get floorplan image
+        const blob = await floorplanResponse.blob();
+        const imageUrl = URL.createObjectURL(blob);
+
+        // Create modal
+        const modal = document.createElement("div");
+        modal.className = "modal-backdrop";
+        modal.innerHTML = `
                     <div class="modal-content">
                         <div class="modal-header">
                             <h2>${boxModel} Location</h2>
@@ -148,184 +152,370 @@
                         </div>
                     </div>
                 `;
-                
-                // Close modal on backdrop click
-                modal.addEventListener('click', (e) => {
-                    if (e.target === modal) {
-                        modal.remove();
-                        URL.revokeObjectURL(imageUrl);
-                    }
-                });
-                
-                // Also clean up on close button
-                modal.querySelector('.modal-close').addEventListener('click', () => {
-                    URL.revokeObjectURL(imageUrl);
-                });
-                
-                document.body.appendChild(modal);
-                
-                // Wait for image to load, then add marker
-                const img = modal.querySelector('#floorplan-image');
-                img.onload = () => {
-                    if (location && location.coords) {
-                        const container = modal.querySelector('#floorplan-container');
-                        
-                        // Create marker
-                        const marker = document.createElement('div');
-                        marker.className = 'location-marker';
-                        marker.style.left = `${location.coords[0] * 100}%`;
-                        marker.style.top = `${location.coords[1] * 100}%`;
-                        
-                        // Add label
-                        const label = document.createElement('div');
-                        label.className = 'marker-label';
-                        label.textContent = boxModel;
-                        
-                        marker.appendChild(label);
-                        container.appendChild(marker);
-                    }
-                };
-            }
-            
-            async function printRecommendation(recId, index) {
-                // Get the recommendation card
-                const cards = document.querySelectorAll('.recommendation-card');
-                const card = cards[index];
-                if (!card) return;
-                
-                // Parse the stored data
-                const data = JSON.parse(card.dataset.recommendation);
-                
-                // Get store ID
-                const storeId = AuthManager.getCurrentStoreId();
-                if (!storeId) {
-                    alert('Please log in to print recommendations');
-                    return;
+
+        // Close modal on backdrop click
+        modal.addEventListener("click", (e) => {
+          if (e.target === modal) {
+            modal.remove();
+            URL.revokeObjectURL(imageUrl);
+          }
+        });
+
+        // Also clean up on close button
+        modal.querySelector(".modal-close").addEventListener("click", () => {
+          URL.revokeObjectURL(imageUrl);
+        });
+
+        document.body.appendChild(modal);
+
+        // Wait for image to load, then add marker
+        const img = modal.querySelector("#floorplan-image");
+        img.onload = () => {
+          if (location && location.coords) {
+            const container = modal.querySelector("#floorplan-container");
+
+            // Create marker
+            const marker = document.createElement("div");
+            marker.className = "location-marker";
+            marker.style.left = `${location.coords[0] * 100}%`;
+            marker.style.top = `${location.coords[1] * 100}%`;
+
+            // Add label
+            const label = document.createElement("div");
+            label.className = "marker-label";
+            label.textContent = boxModel;
+
+            marker.appendChild(label);
+            container.appendChild(marker);
+          }
+        };
+      }
+
+      async function printRecommendation(recId, index) {
+        // Get the recommendation card
+        const cards = document.querySelectorAll(".recommendation-card");
+        const card = cards[index];
+        if (!card) return;
+
+        // Parse the stored data
+        const data = JSON.parse(card.dataset.recommendation);
+
+        // Get store ID
+        const storeId = AuthManager.getCurrentStoreId();
+        if (!storeId) {
+          alert("Please log in to print recommendations");
+          return;
+        }
+
+        try {
+          // Fetch packing rules to get instructions
+          const rulesResponse = await fetch(
+            `/api/store/${storeId}/packing-rules`
+          );
+          const rulesData = await rulesResponse.json();
+
+          // Get the selected packing level API name
+          const packingLevelApi = data.packingLevelApi || "Basic";
+
+          // Find the matching rule
+          const rule = rulesData.effective_rules.find(
+            (r) => r.packing_type === packingLevelApi
+          );
+          const instructions = rule
+            ? rule.label_instructions
+            : "No specific instructions available";
+
+          // Prepare floorplan if location exists
+          let floorplanHtml = "";
+          let shouldPageBreak = false;
+          
+          if (data.box.location && data.box.location.coords) {
+            const floorplanResponse = await fetch(
+              `/api/store/${storeId}/floorplan`
+            );
+            if (floorplanResponse.ok) {
+              const blob = await floorplanResponse.blob();
+              const imageUrl = URL.createObjectURL(blob);
+              
+              // Load image to get dimensions
+              const img = new Image();
+              await new Promise((resolve) => {
+                img.onload = resolve;
+                img.src = imageUrl;
+              });
+              
+              // Calculate aspect ratio and height at 792px width (4" - 20px padding)
+              const aspectRatio = img.height / img.width;
+              const printWidth = 792; // 4" at 203dpi minus 20px padding
+              const printHeight = Math.round(printWidth * aspectRatio);
+              
+              // STEP 1: Calculate total page height
+              const pageHeightInches = 6;
+              const dpi = 203;
+              const totalPageHeight = pageHeightInches * dpi; // 1218px
+              
+              // STEP 2: Calculate page margins/padding
+              const topMargin = 14; // 1em at 11pt
+              const bottomPadding = 10; // bottom padding from .print-label
+              const usablePageHeight = totalPageHeight - topMargin - bottomPadding;
+              
+              // STEP 3: Count instruction lines including wrapping
+              // With monospace font, we can calculate exactly how many chars fit per line
+              // Box width: 792px (4" - 20px padding)
+              // Instruction box has 8px padding on each side = 776px content width
+              // Based on actual testing: 40 characters per line to catch wrapping
+              const boxContentWidth = 792 - 16; // 792px minus 8px padding each side
+              const charsPerLine = 40; // Conservative estimate based on actual wrapping behavior
+              const charWidth = boxContentWidth / charsPerLine; // ~19.4px per char
+              
+              const rawLines = instructions.split('\n');
+              let totalLines = 0;
+              
+              
+              rawLines.forEach((line, index) => {
+                if (line.length === 0) {
+                  totalLines += 1; // Empty line
+                } else {
+                  // For lines starting with "- ", account for bullet rendering
+                  let effectiveLength = line.length;
+                  if (line.trim().startsWith('- ')) {
+                    // Bullet point might take extra space or cause different wrapping
+                    effectiveLength += 3; // Add a few chars to be safe
+                  }
+                  
+                  // Calculate how many display lines this will take
+                  const wrappedLines = Math.ceil(effectiveLength / charsPerLine);
+                  totalLines += wrappedLines;
                 }
-                
-                try {
-                    // Fetch packing rules to get instructions
-                    const rulesResponse = await fetch(`/api/store/${storeId}/packing-rules`);
-                    const rulesData = await rulesResponse.json();
-                    
-                    // Get the selected packing level API name
-                    const packingLevelApi = data.packingLevelApi || 'Basic';
-                    
-                    // Find the matching rule
-                    const rule = rulesData.effective_rules.find(r => r.packing_type === packingLevelApi);
-                    const instructions = rule ? rule.label_instructions : 'No specific instructions available';
-                    
-                    // Prepare floorplan if location exists
-                    let floorplanHtml = '';
-                    if (data.box.location && data.box.location.coords) {
-                        const floorplanResponse = await fetch(`/api/store/${storeId}/floorplan`);
-                        if (floorplanResponse.ok) {
-                            const blob = await floorplanResponse.blob();
-                            const imageUrl = URL.createObjectURL(blob);
-                            
-                            floorplanHtml = `
-                                <div class="print-floorplan-section">
+              });
+              
+              // Add one extra line to account for any rendering differences
+              if (totalLines >= 5) {
+                totalLines += 1;
+              } else {
+              }
+              const instructionLines = totalLines;
+              
+              // STEP 4: Calculate "top half" heights
+              // Box info: 3 lines
+              const boxLine1Height = 17; // Box Model line
+              const boxLine2Height = 17; // Strategy line  
+              const boxLine3Height = 17; // Price line
+              const boxInfoMarginBottom = 15;
+              const totalBoxInfoHeight = boxLine1Height + boxLine2Height + boxLine3Height + boxInfoMarginBottom;
+              
+              // Instructions section
+              const instructionsH3Height = 17; // "Packing Instructions" header
+              const instructionsH3Margin = 5;
+              const instructionsLineHeight = 16; // 10pt font with proper line spacing
+              const instructionsPadding = 16; // 8px top + 8px bottom
+              const instructionsBorder = 2;
+              const instructionsMarginBottom = 15;
+              const instructionsBoxHeight = (instructionLines * instructionsLineHeight) + instructionsPadding + instructionsBorder;
+              const totalInstructionsHeight = instructionsH3Height + instructionsH3Margin + instructionsBoxHeight + instructionsMarginBottom;
+              
+              // Box Location header
+              const locationH3Height = 17;
+              const locationH3Margin = 10;
+              const totalLocationHeaderHeight = locationH3Height + locationH3Margin;
+              
+              // STEP 5: Calculate total "top half"
+              const totalTopHalfHeight = totalBoxInfoHeight + totalInstructionsHeight + totalLocationHeaderHeight;
+              
+              // STEP 6: Calculate remaining space for floorplan
+              const remainingForFloorplan = usablePageHeight - totalTopHalfHeight;
+              
+              // STEP 7: Calculate floorplan height at full width
+              const floorplanBorder = 2;
+              const floorplanHeightNeeded = printHeight + floorplanBorder;
+              
+              // STEP 8: Add safety buffer
+              const safetyBuffer = 100; // Extra buffer to prevent cropping
+              const remainingWithBuffer = remainingForFloorplan - safetyBuffer;
+              
+              // STEP 9: Decision
+              const fits = floorplanHeightNeeded <= remainingWithBuffer;
+              shouldPageBreak = !fits;
+              
+              const pageBreakClass = shouldPageBreak ? ' force-page-break' : '';
+              
+              floorplanHtml = `
+                                <div class="print-floorplan-section${pageBreakClass}">
                                     <h3>Box Location</h3>
                                     <div class="floorplan-wrapper">
                                         <img src="${imageUrl}" class="floorplan-image">
-                                        <div class="location-marker-print" style="left: ${data.box.location.coords[0] * 100}%; top: ${data.box.location.coords[1] * 100}%;">
+                                        <div class="location-marker-print" style="left: ${
+                                          data.box.location.coords[0] * 100
+                                        }%; top: ${
+                data.box.location.coords[1] * 100
+              }%;">
                                             <span class="marker-x">X</span>
                                         </div>
                                     </div>
                                 </div>
                             `;
-                        }
-                    }
-                    
-                    // Create print content with proper formatting
-                    const printContent = `
-                        <div class="print-label">
-                            <div class="print-line"><strong>Box Model: ${data.box.model} (${data.box.dimensions[0]}"×${data.box.dimensions[1]}"×${data.box.dimensions[2]}")</strong></div>
-                            <div class="print-line">Strategy: ${data.result.strategy}</div>
-                            <div class="print-line"><strong>Total Price: $${data.result.price.toFixed(2)} Box Price: $${data.box.prices[0].toFixed(2)}</strong></div>
-                            
+            }
+          }
+
+          // Create print content - separate pages if needed
+          let printContent;
+          if (shouldPageBreak) {
+            // Split content across two pages - MINIMAL approach
+            printContent = `
+                        <div class="page1">
+                            <strong>Box: ${data.box.model} (${data.box.dimensions[0]}"×${data.box.dimensions[1]}"×${data.box.dimensions[2]}")</strong><br>
+                            Strategy: ${data.result.strategy}<br>
+                            <strong>Total: $${data.result.price.toFixed(2)}${data.boxPrice !== null ? ` Box: $${data.boxPrice.toFixed(2)}` : ""}</strong>
+                            <br><br>
+                            <h3>Packing Instructions</h3>
+                            <pre>${instructions}</pre>
+                        </div>
+                        
+                        <div class="page2">
                             ${floorplanHtml}
-                            
-                            <div class="print-instructions">
-                                <h3>Packing Instructions</h3>
-                                <pre>${instructions}</pre>
-                            </div>
                         </div>
                     `;
-                    
-                    // Open print dialog
-                    const printWindow = window.open('', '', 'width=600,height=800');
-                    printWindow.document.write(`
+          } else {
+            // Keep everything on one page - MINIMAL approach
+            printContent = `
+                        <div class="page1">
+                            <strong>Box: ${data.box.model} (${data.box.dimensions[0]}"×${data.box.dimensions[1]}"×${data.box.dimensions[2]}")</strong><br>
+                            Strategy: ${data.result.strategy}<br>
+                            <strong>Total: $${data.result.price.toFixed(2)}${data.boxPrice !== null ? ` Box: $${data.boxPrice.toFixed(2)}` : ""}</strong>
+                            <br><br>
+                            <h3>Packing Instructions</h3>
+                            <pre>${instructions}</pre>
+                            
+                            ${floorplanHtml}
+                        </div>
+                    `;
+          }
+
+          // Create a hidden iframe for direct printing
+          const printFrame = document.createElement("iframe");
+          printFrame.style.position = "absolute";
+          printFrame.style.top = "-9999px";
+          printFrame.style.left = "-9999px";
+          printFrame.style.width = "0";
+          printFrame.style.height = "0";
+          document.body.appendChild(printFrame);
+
+          // Write content to iframe
+          const printDoc =
+            printFrame.contentDocument || printFrame.contentWindow.document;
+          printDoc.open();
+          printDoc.write(`
                         <!DOCTYPE html>
                         <html>
                             <head>
                                 <title>Packing Label - ${data.box.model}</title>
-                                <link rel="stylesheet" href="/assets/css/print.css">
+                                <!-- Removed print.css to avoid conflicts -->
                                 <style>
-                                    @media print {
-                                        body { margin: 0; padding: 10px; }
-                                        .print-label { font-family: monospace; font-size: 11pt; }
-                                        .print-line { margin: 5px 0; }
-                                        .print-floorplan-section { margin: 20px 0; page-break-inside: avoid; }
-                                        .floorplan-wrapper { position: relative; width: 100%; max-width: 400px; margin: 10px auto; }
-                                        .floorplan-image { width: 100%; height: auto; border: 1px solid #000; }
-                                        .location-marker-print { 
-                                            position: absolute; 
-                                            transform: translate(-50%, -50%);
-                                            pointer-events: none;
-                                        }
-                                        .marker-x { 
-                                            font-size: 48pt; 
-                                            font-weight: bold; 
-                                            color: #000;
-                                            text-shadow: -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff;
-                                        }
-                                        .print-instructions { margin-top: 20px; }
-                                        .print-instructions h3 { margin: 10px 0 5px 0; font-size: 12pt; }
-                                        .print-instructions pre { 
-                                            white-space: pre-wrap; 
-                                            font-family: monospace; 
-                                            font-size: 10pt;
-                                            margin: 0;
-                                            padding: 10px;
-                                            border: 1px solid #000;
-                                            background: #f5f5f5;
-                                        }
+                                    /* Force 4x6 page size */
+                                    @page {
+                                        size: 4in 6in;
+                                        margin: 0;
                                     }
-                                    @media screen {
-                                        body { font-family: monospace; padding: 20px; }
-                                        .print-label { max-width: 600px; margin: 0 auto; }
-                                        .print-line { margin: 10px 0; font-size: 14pt; }
-                                        .floorplan-wrapper { position: relative; max-width: 400px; margin: 20px auto; }
-                                        .floorplan-image { width: 100%; border: 1px solid #ccc; }
-                                        .location-marker-print { position: absolute; transform: translate(-50%, -50%); }
-                                        .marker-x { font-size: 36pt; font-weight: bold; color: red; }
-                                        .print-instructions pre { white-space: pre-wrap; padding: 10px; background: #f5f5f5; }
+                                    
+                                    @media print {
+                                        * {
+                                            margin: 0;
+                                            padding: 0;
+                                            box-sizing: border-box;
+                                        }
+                                        
+                                        body {
+                                            margin: 0;
+                                            padding: 0;
+                                        }
+                                        
+                                        /* Each page is exactly one label */
+                                        .page1, .page2 {
+                                            width: 4in;
+                                            height: 6in;
+                                            padding: 14px 10px 10px 10px; /* Small padding to avoid edge cutoff */
+                                            page-break-after: always;
+                                            overflow: hidden;
+                                        }
+                                        
+                                        /* Basic text styles */
+                                        body {
+                                            font-family: 'Roboto', 'Open Sans', Arial, sans-serif;
+                                            font-size: 10pt;
+                                        }
+                                        
+                                        /* Keep monospace for instructions */
+                                        pre {
+                                            font-family: 'Roboto Mono', 'Consolas', 'Monaco', monospace;
+                                        }
+                                        
+                                        /* Simple margins */
+                                        h3 { margin-bottom: 10px; }
+                                        pre { white-space: pre-wrap; }
+                                        img { max-width: 100%; }
+                                        
+                                        /* Floorplan positioning */
+                                        .floorplan-wrapper {
+                                            position: relative;
+                                            width: 100%;
+                                        }
+                                        
+                                        .floorplan-image {
+                                            width: 100%;
+                                            height: auto;
+                                            border: 1px solid #000;
+                                        }
+                                        
+                                        /* Location marker */
+                                        .location-marker-print {
+                                            position: absolute;
+                                            transform: translate(-50%, -50%);
+                                            width: 40px;
+                                            height: 40px;
+                                            display: flex;
+                                            align-items: center;
+                                            justify-content: center;
+                                        }
+                                        
+                                        .marker-x {
+                                            font-size: 36pt;
+                                            font-weight: bold;
+                                            color: #000;
+                                            /* White outline for visibility */
+                                            text-shadow: 
+                                                -2px -2px 0 #fff,
+                                                2px -2px 0 #fff,
+                                                -2px 2px 0 #fff,
+                                                2px 2px 0 #fff,
+                                                -3px 0 0 #fff,
+                                                3px 0 0 #fff,
+                                                0 -3px 0 #fff,
+                                                0 3px 0 #fff;
+                                        }
                                     }
                                 </style>
                             </head>
                             <body>${printContent}</body>
                         </html>
                     `);
-                    printWindow.document.close();
-                    
-                    // Wait for image to load before printing
-                    if (floorplanHtml) {
-                        printWindow.onload = () => {
-                            setTimeout(() => {
-                                printWindow.print();
-                            }, 500);
-                        };
-                    } else {
-                        printWindow.print();
-                    }
-                    
-                } catch (error) {
-                    console.error('Error preparing print:', error);
-                    // Fallback to simple print
-                    window.print();
-                }
-            }
-        </script>
-    </body>
+          printDoc.close();
+
+          // Wait for content to load, then print
+          printFrame.contentWindow.onload = () => {
+            setTimeout(() => {
+              printFrame.contentWindow.print();
+              // Remove iframe after printing
+              setTimeout(() => {
+                document.body.removeChild(printFrame);
+              }, 1000);
+            }, 100);
+          };
+        } catch (error) {
+          console.error("Error preparing print:", error);
+          // Fallback to simple print
+          window.print();
+        }
+      }
+    </script>
+  </body>
 </html>

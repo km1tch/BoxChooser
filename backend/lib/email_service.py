@@ -19,6 +19,9 @@ SMTP_USERNAME = os.getenv("SMTP_USERNAME", "")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
 SMTP_FROM = os.getenv("SMTP_FROM", "noreply@packingsite.com")
 
+# Site configuration
+SITE_NAME = os.getenv("SITE_NAME", "Packing Site")
+
 
 def send_email_smtp(to_email: str, subject: str, body: str, html_body: Optional[str] = None) -> bool:
     """Send email via SMTP"""
@@ -56,7 +59,7 @@ def send_email(to_email: str, subject: str, body: str, html_body: Optional[str] 
 
 def send_login_code(to_email: str, code: str, store_name: str = "") -> bool:
     """Send login verification code"""
-    subject = "Your Packing Site Login Code"
+    subject = f"Your {SITE_NAME} Login Code"
     
     store_text = f" for {store_name}" if store_name else ""
     
@@ -83,7 +86,7 @@ If you didn't request this code, please ignore this email."""
 <body>
     <div class="container">
         <div class="header">
-            <h1>Packing Site Login</h1>
+            <h1>{SITE_NAME} Login</h1>
         </div>
         <div class="content">
             <p>Hello,</p>

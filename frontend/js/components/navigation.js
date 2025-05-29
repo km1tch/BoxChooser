@@ -134,9 +134,9 @@ async function createAdminNav(storeId, activePage = 'prices') {
       .admin-nav {
         display: flex;
         align-items: center;
-        background: #f8f9fa;
+        background: #E3F2FD;
         padding: 10px 20px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 4px rgba(74, 144, 226, 0.25);
       }
       
       .nav-items {
@@ -200,9 +200,9 @@ async function createAdminNav(storeId, activePage = 'prices') {
         top: 100%;
         left: 0;
         background: white;
-        border: 1px solid #ccc;
+        border: 1px solid #90CAF9;
         border-radius: 4px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
         padding: 8px;
         min-width: 160px;
         opacity: 0;
@@ -296,15 +296,15 @@ async function createAdminNav(storeId, activePage = 'prices') {
           top: 60px;
           left: 0;
           right: 0;
-          background: #f8f9fa;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          background: #E3F2FD;
+          box-shadow: 0 2px 4px rgba(74, 144, 226, 0.25);
           z-index: 1000;
         }
         
         .nav-expanded .nav-item {
           margin: 0;
           padding: 10px 20px;
-          border-bottom: 1px solid #eee;
+          border-bottom: 1px solid #BBDEFB;
         }
       }
     `;

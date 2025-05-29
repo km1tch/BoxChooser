@@ -30,6 +30,7 @@ services:
       - ./db:/db:rw # Read-write for database
       - ./tools:/code/tools:ro # Read-only for auth management
     environment:
+      - SITE_NAME=${SITE_NAME}
       - SQLITE_DB_PATH=/db/packingwebsite.db
       # Security
       - SECRET_KEY=${SECRET_KEY}

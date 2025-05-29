@@ -27,6 +27,7 @@ services:
       - ./db:/db
       - ./tools:/code/tools
     environment:
+      - SITE_NAME=${SITE_NAME}
       - SQLITE_DB_PATH=/db/packingwebsite.db
       # Security
       - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}

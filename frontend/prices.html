@@ -1042,6 +1042,15 @@
                     $('#saveChanges').hide();
                 }
                 
+                // Check if floorplan exists for this store BEFORE creating the table
+                try {
+                    const floorplanResponse = await fetch(`/api/store/${storeId}/floorplan`);
+                    window.hasFloorplan = floorplanResponse.ok;
+                } catch (error) {
+                    console.error('Error checking floorplan:', error);
+                    window.hasFloorplan = false;
+                }
+                
                 // Load box data
                 const response = await window.api.fetchAllBoxes(storeId);
                 
@@ -1056,15 +1065,6 @@
                 });
                 
                 await priceTable.initialize(processedData);
-                
-                // Check if floorplan exists for this store
-                try {
-                    const floorplanResponse = await fetch(`/api/store/${storeId}/floorplan`);
-                    window.hasFloorplan = floorplanResponse.ok;
-                } catch (error) {
-                    console.error('Error checking floorplan:', error);
-                    window.hasFloorplan = false;
-                }
                 
             } catch (error) {
                 console.error('Initialization error:', error);

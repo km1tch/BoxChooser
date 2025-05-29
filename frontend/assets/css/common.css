@@ -4,7 +4,7 @@
 
 :root {
   --primary-color: #007bff;
-  --secondary-color: #6c757d;
+  --secondary-color: #1976D2;
   --success-color: #28a745;
   --danger-color: #dc3545;
   --warning-color: #ffc107;
@@ -117,7 +117,7 @@ input, select, textarea {
   color: var(--text-color);
   background-color: #fff;
   background-clip: padding-box;
-  border: 1px solid #ced4da;
+  border: 1px solid #90CAF9;
   border-radius: 0.25rem;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
@@ -208,16 +208,16 @@ input:focus, select:focus, textarea:focus {
   word-wrap: break-word;
   background-color: #fff;
   background-clip: border-box;
-  border: 1px solid rgba(0, 0, 0, 0.125);
+  border: 1px solid rgba(74, 144, 226, 0.2);
   border-radius: 0.25rem;
-  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  box-shadow: 0 0.125rem 0.25rem rgba(74, 144, 226, 0.25);
 }
 
 .card-header {
   padding: 0.75rem 1.25rem;
   margin-bottom: 0;
-  background-color: rgba(0, 0, 0, 0.03);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+  background-color: rgba(74, 144, 226, 0.08);
+  border-bottom: 1px solid rgba(74, 144, 226, 0.2);
 }
 
 .card-body {
@@ -227,8 +227,8 @@ input:focus, select:focus, textarea:focus {
 
 .card-footer {
   padding: 0.75rem 1.25rem;
-  background-color: rgba(0, 0, 0, 0.03);
-  border-top: 1px solid rgba(0, 0, 0, 0.125);
+  background-color: rgba(74, 144, 226, 0.08);
+  border-top: 1px solid rgba(74, 144, 226, 0.2);
 }
 
 /* Utility classes for colors */
@@ -378,7 +378,7 @@ h6 { font-size: 1rem; }
 .text-info { color: var(--info-color); }
 .text-light { color: var(--light-color); }
 .text-dark { color: var(--dark-color); }
-.text-muted { color: #6c757d; }
+.text-muted { color: #1976D2; }
 
 /* Utility classes */
 .d-none { display: none; }
@@ -409,9 +409,9 @@ h6 { font-size: 1rem; }
 .rounded-circle { border-radius: 50%; }
 .rounded-0 { border-radius: 0; }
 
-.shadow-sm { box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); }
-.shadow { box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15); }
-.shadow-lg { box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175); }
+.shadow-sm { box-shadow: 0 0.125rem 0.25rem rgba(74, 144, 226, 0.25); }
+.shadow { box-shadow: 0 0.5rem 1rem rgba(74, 144, 226, 0.3); }
+.shadow-lg { box-shadow: 0 1rem 3rem rgba(74, 144, 226, 0.35); }
 .shadow-none { box-shadow: none; }
 
 /* Responsive utilities */

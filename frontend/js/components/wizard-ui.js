@@ -175,6 +175,16 @@ class WizardUI {
       }
     });
 
+    // Add Enter key listener to depth field
+    const depthInput = document.getElementById("depth");
+    if (depthInput) {
+      depthInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter" && this.validateStep1()) {
+          this.proceedToStep2();
+        }
+      });
+    }
+
     // Next button for step 1
     const nextBtn = document.getElementById("next-step-1");
     if (nextBtn) {
@@ -217,7 +227,39 @@ class WizardUI {
     // Update UI
     document.querySelector("#step-1 .step-number").classList.add("completed");
     document.getElementById("step-2").classList.remove("hidden");
-    document.getElementById("step-2").scrollIntoView({ behavior: "smooth" });
+    
+    // Adaptive scrolling based on viewport height
+    const step2Element = document.getElementById("step-2");
+    const viewportHeight = window.innerHeight;
+    
+    if (viewportHeight < 800) {
+      // Small screen: manually scroll to account for fixed nav
+      const navElement = document.querySelector('nav');
+      const navHeight = navElement ? navElement.offsetHeight : 0;
+      const navIsFixed = navElement && window.getComputedStyle(navElement).position === 'fixed';
+      
+      // Calculate scroll position to put element at top (accounting for fixed nav)
+      const targetScrollY = step2Element.offsetTop - (navIsFixed ? navHeight : 0);
+      
+      // Use a small delay to ensure DOM is ready
+      setTimeout(() => {
+        // Try direct scroll first
+        window.scrollTo(0, targetScrollY);
+        
+        // Then try smooth scroll as backup
+        setTimeout(() => {
+          const currentScroll = window.scrollY;
+          if (Math.abs(currentScroll - targetScrollY) > 10) {
+            // Force scroll using scrollTop
+            document.documentElement.scrollTop = targetScrollY;
+            document.body.scrollTop = targetScrollY; // For some browsers
+          }
+        }, 100);
+      }, 50);
+    } else {
+      // Normal screen: standard smooth scroll
+      step2Element.scrollIntoView({ behavior: "smooth" });
+    }
 
     // Show packing levels
     this.showPackingLevels();
@@ -335,7 +377,39 @@ class WizardUI {
 
     // Show step 3
     document.getElementById("step-3").classList.remove("hidden");
-    document.getElementById("step-3").scrollIntoView({ behavior: "smooth" });
+    
+    // Adaptive scrolling based on viewport height
+    const step3Element = document.getElementById("step-3");
+    const viewportHeight = window.innerHeight;
+    
+    if (viewportHeight < 800) {
+      // Small screen: manually scroll to account for fixed nav
+      const navElement = document.querySelector('nav');
+      const navHeight = navElement ? navElement.offsetHeight : 0;
+      const navIsFixed = navElement && window.getComputedStyle(navElement).position === 'fixed';
+      
+      // Calculate scroll position to put element at top (accounting for fixed nav)
+      const targetScrollY = step3Element.offsetTop - (navIsFixed ? navHeight : 0);
+      
+      // Use a small delay to ensure DOM is ready
+      setTimeout(() => {
+        // Try direct scroll first
+        window.scrollTo(0, targetScrollY);
+        
+        // Then try smooth scroll as backup
+        setTimeout(() => {
+          const currentScroll = window.scrollY;
+          if (Math.abs(currentScroll - targetScrollY) > 10) {
+            // Force scroll using scrollTop
+            document.documentElement.scrollTop = targetScrollY;
+            document.body.scrollTop = targetScrollY; // For some browsers
+          }
+        }, 100);
+      }, 50);
+    } else {
+      // Normal screen: standard smooth scroll
+      step3Element.scrollIntoView({ behavior: "smooth" });
+    }
 
     // Call the callback to get recommendations
     try {
