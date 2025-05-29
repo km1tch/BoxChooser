@@ -570,6 +570,7 @@
       }
     </style>
     <script src="/js/lib/auth.js"></script>
+    <script src="/js/lib/api-utils.js"></script>
     <script src="/js/lib/packing-rules.js"></script>
     <script src="/js/components/navigation.js"></script>
   </head>
@@ -1089,8 +1090,12 @@
 
       async function loadRules() {
         try {
-          const response = await fetch(`/api/store/${storeId}/packing-rules`);
-          if (!response.ok) throw new Error("Failed to load rules");
+          const response = await apiUtils.authenticatedFetch(
+            `/api/store/${storeId}/packing-rules`, 
+            storeId
+          );
+          
+          await apiUtils.handleApiError(response, "load packing rules");
 
           const data = await response.json();
           allRules = data.effective_rules;
@@ -1125,45 +1130,72 @@
               ? "No padding required"
               : `${rule.padding_inches}" padding on all sides`;
 
-          card.innerHTML = `
-                    <div class="rule-header">
-                        <div class="rule-title">${rule.packing_type} Pack</div>
-                        <span class="rule-badge ${
-                          rule.is_custom ? "badge-custom" : "badge-default"
-                        }">
-                            ${rule.is_custom ? "✓ Custom" : "⚪ Default"}
-                        </span>
-                    </div>
-                    <div class="rule-details">
-                        <div class="rule-field">
-                            <span class="field-label">Padding:</span>
-                            <span class="field-value">${paddingText}</span>
-                        </div>
-                        <div class="rule-field">
-                            <span class="field-label">Description:</span>
-                            <span class="field-value">${
-                              rule.wizard_description
-                            }</span>
-                        </div>
-                        <div class="rule-field">
-                            <span class="field-label">Instructions:</span>
-                            <div class="field-value">
-                                <div class="instructions-preview">${
-                                  rule.label_instructions
-                                }</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="rule-actions">
-                        <button class="btn btn-primary" onclick='editRule(${JSON.stringify(
-                          rule
-                        )})'>
-                            <i class="fas fa-edit"></i> ${
-                              rule.is_custom ? "Edit" : "Customize"
-                            }
-                        </button>
-                    </div>
-                `;
+          // Create card structure using DOM methods to prevent XSS
+          const header = document.createElement('div');
+          header.className = 'rule-header';
+          
+          const title = document.createElement('div');
+          title.className = 'rule-title';
+          title.textContent = `${rule.packing_type} Pack`;
+          
+          const badge = document.createElement('span');
+          badge.className = `rule-badge ${rule.is_custom ? 'badge-custom' : 'badge-default'}`;
+          badge.textContent = rule.is_custom ? '✓ Custom' : '⚪ Default';
+          
+          header.appendChild(title);
+          header.appendChild(badge);
+          
+          const details = document.createElement('div');
+          details.className = 'rule-details';
+          
+          // Padding field
+          const paddingField = document.createElement('div');
+          paddingField.className = 'rule-field';
+          paddingField.innerHTML = `<span class="field-label">Padding:</span><span class="field-value">${paddingText}</span>`;
+          
+          // Description field - use textContent for safety
+          const descField = document.createElement('div');
+          descField.className = 'rule-field';
+          const descLabel = document.createElement('span');
+          descLabel.className = 'field-label';
+          descLabel.textContent = 'Description:';
+          const descValue = document.createElement('span');
+          descValue.className = 'field-value';
+          descValue.textContent = rule.wizard_description;
+          descField.appendChild(descLabel);
+          descField.appendChild(descValue);
+          
+          // Instructions field - use textContent for safety
+          const instrField = document.createElement('div');
+          instrField.className = 'rule-field';
+          const instrLabel = document.createElement('span');
+          instrLabel.className = 'field-label';
+          instrLabel.textContent = 'Instructions:';
+          const instrValueWrapper = document.createElement('div');
+          instrValueWrapper.className = 'field-value';
+          const instrPreview = document.createElement('div');
+          instrPreview.className = 'instructions-preview';
+          instrPreview.textContent = rule.label_instructions;
+          instrValueWrapper.appendChild(instrPreview);
+          instrField.appendChild(instrLabel);
+          instrField.appendChild(instrValueWrapper);
+          
+          details.appendChild(paddingField);
+          details.appendChild(descField);
+          details.appendChild(instrField);
+          
+          // Actions
+          const actions = document.createElement('div');
+          actions.className = 'rule-actions';
+          const editBtn = document.createElement('button');
+          editBtn.className = 'btn btn-primary';
+          editBtn.innerHTML = `<i class="fas fa-edit"></i> ${rule.is_custom ? 'Edit' : 'Customize'}`;
+          editBtn.onclick = () => editRule(rule);
+          actions.appendChild(editBtn);
+          
+          card.appendChild(header);
+          card.appendChild(details);
+          card.appendChild(actions);
 
           grid.appendChild(card);
         });
@@ -1345,8 +1377,12 @@
 
       async function loadEngineConfig() {
         try {
-          const response = await fetch(`/api/store/${storeId}/engine-config`);
-          if (!response.ok) throw new Error("Failed to load engine config");
+          const response = await apiUtils.authenticatedFetch(
+            `/api/store/${storeId}/engine-config`,
+            storeId
+          );
+          
+          await apiUtils.handleApiError(response, "load engine configuration");
 
           engineConfig = await response.json();
           engineConfigLoaded = true;

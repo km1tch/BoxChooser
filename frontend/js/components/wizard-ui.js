@@ -331,11 +331,21 @@ class WizardUI {
         level.padding === 0
           ? "No padding required"
           : `${level.padding}" padding on all sides`;
-      option.innerHTML = `
-                <h4>${level.name}</h4>
-                <div class="padding-info">${paddingText}</div>
-                <div class="text-muted">${level.description}</div>
-            `;
+      // Create elements safely to prevent XSS
+      const h4 = document.createElement('h4');
+      h4.textContent = level.name;
+      
+      const paddingDiv = document.createElement('div');
+      paddingDiv.className = 'padding-info';
+      paddingDiv.textContent = paddingText;
+      
+      const descDiv = document.createElement('div');
+      descDiv.className = 'text-muted';
+      descDiv.textContent = level.description;
+      
+      option.appendChild(h4);
+      option.appendChild(paddingDiv);
+      option.appendChild(descDiv);
 
       option.addEventListener("click", () =>
         this.selectPackingLevel(level.name, option)

@@ -1,9 +1,9 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, UploadFile
 from fastapi.responses import JSONResponse
 
-from backend.lib.auth_middleware import get_current_store
+from backend.lib.auth_middleware import get_current_store, get_current_auth
 from backend.lib.excel_import import (
     export_prices_to_excel, import_prices_from_excel,
     analyze_excel_structure, analyze_import_for_matching,
@@ -84,6 +84,10 @@ general_router = APIRouter(prefix="/api", tags=["import-export"])
 
 
 @general_router.post("/analyze_excel")
-async def analyze_excel(file: UploadFile = File(...)):
+async def analyze_excel(
+    file: UploadFile = File(...),
+    auth: Tuple[str, str] = Depends(get_current_auth)
+):
     """Analyze uploaded Excel file structure"""
+    # Any authenticated user can analyze Excel files
     return await analyze_excel_structure(file)

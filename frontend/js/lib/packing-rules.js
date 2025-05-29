@@ -14,6 +14,21 @@ class PackingRulesManager {
     }
 
     /**
+     * Helper method to make authenticated requests
+     */
+    async authenticatedFetch(url, options = {}) {
+        // Add auth token if available
+        if (typeof AuthManager !== 'undefined') {
+            const token = AuthManager.getToken(this.storeId);
+            if (token) {
+                options.headers = options.headers || {};
+                options.headers['Authorization'] = `Bearer ${token}`;
+            }
+        }
+        return fetch(url, options);
+    }
+
+    /**
      * Get all packing requirements, using cache when available
      */
     async getAllRequirements() {
@@ -24,7 +39,7 @@ class PackingRulesManager {
 
         // Fetch from API
         try {
-            const response = await fetch(`/api/store/${this.storeId}/packing-rules`);
+            const response = await this.authenticatedFetch(`/api/store/${this.storeId}/packing-rules`);
             if (!response.ok) {
                 throw new Error(`Failed to fetch packing rules: ${response.statusText}`);
             }
@@ -48,7 +63,7 @@ class PackingRulesManager {
      */
     async getRequirements(packingType) {
         try {
-            const response = await fetch(
+            const response = await this.authenticatedFetch(
                 `/api/store/${this.storeId}/packing-requirements?type=${packingType}`
             );
             

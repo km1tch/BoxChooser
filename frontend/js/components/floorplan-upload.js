@@ -14,6 +14,21 @@ export class FloorplanUpload {
         this.init();
     }
     
+    /**
+     * Helper method to make authenticated requests
+     */
+    async authenticatedFetch(url, options = {}) {
+        // Add auth token if available
+        if (typeof AuthManager !== 'undefined') {
+            const token = AuthManager.getToken(this.storeId);
+            if (token) {
+                options.headers = options.headers || {};
+                options.headers['Authorization'] = `Bearer ${token}`;
+            }
+        }
+        return fetch(url, options);
+    }
+    
     init() {
         this.render();
         this.attachEventListeners();
@@ -199,7 +214,7 @@ export class FloorplanUpload {
     
     async checkExistingLocations() {
         try {
-            const response = await fetch(`/api/store/${this.storeId}/box-locations`);
+            const response = await this.authenticatedFetch(`/api/store/${this.storeId}/box-locations`);
             if (!response.ok) return false;
             
             const locations = await response.json();

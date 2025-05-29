@@ -553,6 +553,7 @@
     <script src="https://cdn.datatables.net/select/1.3.4/js/dataTables.select.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
     <script src="/js/lib/auth.js"></script>
+    <script src="/js/lib/api-utils.js"></script>
     <script src="/js/lib/api.js"></script>
     <script src="/js/components/navigation.js"></script>
     <script src="/js/components/price-table.js"></script>
@@ -601,7 +602,11 @@
             
             // Load floorplan
             try {
-                const response = await fetch(`/api/store/${storeId}/floorplan`);
+                const response = await apiUtils.authenticatedFetch(
+                    `/api/store/${storeId}/floorplan`,
+                    storeId
+                );
+                
                 if (!response.ok) {
                     alert('No floorplan available for this store.');
                     return;
@@ -671,7 +676,11 @@
         async function openLocationEditor(model, currentLocation, callback) {
             // First check if floorplan exists
             try {
-                const response = await fetch(`/api/store/${storeId}/floorplan`);
+                const response = await apiUtils.authenticatedFetch(
+                    `/api/store/${storeId}/floorplan`,
+                    storeId
+                );
+                
                 if (!response.ok) {
                     alert('No floorplan available for this store.');
                     return;
@@ -1044,7 +1053,10 @@
                 
                 // Check if floorplan exists for this store BEFORE creating the table
                 try {
-                    const floorplanResponse = await fetch(`/api/store/${storeId}/floorplan`);
+                    const floorplanResponse = await apiUtils.authenticatedFetch(
+                        `/api/store/${storeId}/floorplan`,
+                        storeId
+                    );
                     window.hasFloorplan = floorplanResponse.ok;
                 } catch (error) {
                     console.error('Error checking floorplan:', error);

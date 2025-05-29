@@ -397,20 +397,27 @@ def verify_email_code(store_id: str, email: str, code: str) -> bool:
             db.commit()
             return False
 
-def create_session(store_id: str, auth_level: str = "user", hours: int = 24) -> str:
+def create_session(store_id: str, auth_level: str = "user", hours: Optional[int] = None) -> str:
     """
     Create a new session token for a store
     
     Args:
         store_id: The store identifier
         auth_level: Either "user" or "admin"
-        hours: How many hours the session should last
+        hours: How many hours the session should last (defaults to env vars)
     
     Returns:
         The session token
     """
     if auth_level not in ["user", "admin"]:
         raise ValueError("auth_level must be 'user' or 'admin'")
+    
+    # Use environment variables for session duration
+    if hours is None:
+        if auth_level == "user":
+            hours = int(os.getenv("USER_SESSION_HOURS", "168"))  # 7 days default
+        else:  # admin
+            hours = int(os.getenv("ADMIN_SESSION_HOURS", "24"))   # 24 hours default
         
     token = secrets.token_urlsafe(32)
     expires_at = datetime.now() + timedelta(hours=hours)
@@ -587,6 +594,40 @@ def regenerate_pin(store_id: str) -> str:
         db.commit()
     
     return new_pin
+
+def update_email(store_id: str, new_email: str) -> None:
+    """
+    Update the admin email for a store
+    
+    Args:
+        store_id: The store identifier
+        new_email: The new admin email address
+    """
+    with get_db() as db:
+        # Check if store exists
+        existing = db.execute(
+            "SELECT admin_email FROM store_auth WHERE store_id = ?",
+            (store_id,)
+        ).fetchone()
+        
+        if not existing:
+            raise ValueError(f"Store {store_id} does not have authentication configured")
+        
+        old_email = existing['admin_email']
+        
+        # Update the email
+        db.execute(
+            "UPDATE store_auth SET admin_email = ?, updated_at = CURRENT_TIMESTAMP WHERE store_id = ?",
+            (new_email, store_id)
+        )
+        
+        # Log the action
+        db.execute(
+            "INSERT INTO audit_log (store_id, action, details) VALUES (?, ?, ?)",
+            (store_id, "email_updated", json.dumps({"old_email": old_email, "new_email": new_email}))
+        )
+        
+        db.commit()
 
 
 # This module is a library and should not be executed directly.

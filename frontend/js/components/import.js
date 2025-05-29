@@ -6,6 +6,7 @@ let mappedDimensions = new Set(); // Track dimensions already mapped for 1:1 map
 
 // Initialize import functionality
 function initializeImport(storeId) {
+    console.log('Initializing import for store:', storeId);
     currentStoreId = storeId;
     setupFileUpload();
     loadStorePriceGroup();
@@ -14,7 +15,30 @@ function initializeImport(storeId) {
 // Load store price group info
 async function loadStorePriceGroup() {
     try {
-        const response = await fetch(`/api/store/${currentStoreId}`);
+        if (!currentStoreId) {
+            console.error('Store ID not set');
+            document.getElementById('price-group').textContent = 'N/A';
+            return;
+        }
+        
+        const token = AuthManager.getToken(currentStoreId);
+        if (!token) {
+            console.error('No auth token available for store', currentStoreId);
+            console.log('Available tokens:', localStorage);
+            console.log('AuthManager available?', typeof AuthManager !== 'undefined');
+            document.getElementById('price-group').textContent = 'N/A';
+            return;
+        }
+        
+        const headers = { 'Authorization': `Bearer ${token}` };
+        const response = await fetch(`/api/store/${currentStoreId}/info`, { headers });
+        
+        if (!response.ok) {
+            // If not admin or endpoint fails, just show N/A
+            document.getElementById('price-group').textContent = 'N/A';
+            return;
+        }
+        
         const data = await response.json();
         
         // Get price group from store config
@@ -22,6 +46,7 @@ async function loadStorePriceGroup() {
         document.getElementById('price-group').textContent = priceGroup;
     } catch (error) {
         console.error('Error loading store info:', error);
+        document.getElementById('price-group').textContent = 'N/A';
     }
 }
 

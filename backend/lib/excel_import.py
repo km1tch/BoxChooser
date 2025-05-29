@@ -124,12 +124,19 @@ async def import_prices_from_excel(
     if not file.filename.endswith(('.xlsx', '.xls')):
         raise HTTPException(status_code=400, detail="File must be an Excel file (.xlsx or .xls)")
     
+    # Check file size (5MB limit)
+    MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+    file_content = await file.read()
+    await file.seek(0)  # Reset file pointer
+    
+    if len(file_content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="File size exceeds 5MB limit")
+    
     # Save uploaded file temporarily
     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx")
     try:
         # Write uploaded content to temp file
-        content = await file.read()
-        temp_file.write(content)
+        temp_file.write(file_content)
         temp_file.close()
         
         # Read Excel file
@@ -252,12 +259,19 @@ async def analyze_excel_structure(file: UploadFile) -> dict:
     if not file.filename.endswith(('.xlsx', '.xls')):
         raise HTTPException(status_code=400, detail="File must be an Excel file (.xlsx or .xls)")
     
+    # Check file size (5MB limit)
+    MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+    file_content = await file.read()
+    await file.seek(0)  # Reset file pointer
+    
+    if len(file_content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="File size exceeds 5MB limit")
+    
     # Save uploaded file temporarily
     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx")
     try:
         # Write uploaded content to temp file
-        content = await file.read()
-        temp_file.write(content)
+        temp_file.write(file_content)
         temp_file.close()
         
         # Read Excel file info
@@ -471,11 +485,18 @@ async def analyze_import_for_matching(
     if not file.filename.endswith(('.xlsx', '.xls')):
         raise HTTPException(status_code=400, detail="File must be an Excel file (.xlsx or .xls)")
     
+    # Check file size (5MB limit)
+    MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+    file_content = await file.read()
+    await file.seek(0)  # Reset file pointer
+    
+    if len(file_content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="File size exceeds 5MB limit")
+    
     # Save uploaded file temporarily
     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx")
     try:
-        content = await file.read()
-        temp_file.write(content)
+        temp_file.write(file_content)
         temp_file.close()
         
         # Load store data

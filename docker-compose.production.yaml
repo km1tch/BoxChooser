@@ -2,9 +2,7 @@ services:
   caddy:
     image: caddy:2-alpine
     container_name: packingsite_caddy
-    ports:
-      - "80:80"
-      - "443:443"
+    network_mode: host
     volumes:
       - ./Caddyfile.production:/etc/caddy/Caddyfile:ro
       - ./frontend:/srv/frontend:ro
@@ -23,28 +21,19 @@ services:
   backend:
     build: .
     container_name: packingsite_backend
+    ports:
+      - "8000:8000"
     volumes:
       - ./backend:/code/backend:ro # Read-only in production
       - ./stores:/code/stores:rw
       - ./floorplans:/code/floorplans:rw # Read-write for uploads
       - ./db:/db:rw # Read-write for database
       - ./tools:/code/tools:ro # Read-only for auth management
+    env_file:
+      - .env
     environment:
-      - SITE_NAME=${SITE_NAME}
+      # Override specific values for production
       - SQLITE_DB_PATH=/db/packingwebsite.db
-      # Security
-      - SECRET_KEY=${SECRET_KEY}
-      - SESSION_LIFETIME_HOURS=${SESSION_LIFETIME_HOURS}
-      - MAX_LOGIN_ATTEMPTS=${MAX_LOGIN_ATTEMPTS}
-      - RATE_LIMIT_PER_MINUTE=${RATE_LIMIT_PER_MINUTE}
-      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
-      # SMTP email configuration
-      - SMTP_HOST=${SMTP_HOST}
-      - SMTP_PORT=${SMTP_PORT}
-      - SMTP_USE_TLS=${SMTP_USE_TLS}
-      - SMTP_USERNAME=${SMTP_USERNAME}
-      - SMTP_PASSWORD=${SMTP_PASSWORD}
-      - SMTP_FROM=${SMTP_FROM}
     restart: always
 
   # No mailhog in production

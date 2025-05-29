@@ -150,7 +150,7 @@ export class FloorplanLocationEditor {
     async loadData() {
         try {
             // Load boxes
-            const boxesResponse = await fetch(`/api/store/${this.storeId}/boxes`);
+            const boxesResponse = await this.authenticatedFetch(`/api/store/${this.storeId}/boxes`);
             if (boxesResponse.ok) {
                 const data = await boxesResponse.json();
                 this.boxes = data.boxes || []; // Extract boxes array from YAML data
@@ -1957,7 +1957,7 @@ export class FloorplanLocationEditor {
     
     async checkFloorplanStatus() {
         try {
-            const response = await fetch(`/api/store/${this.storeId}/floorplan`);
+            const response = await this.authenticatedFetch(`/api/store/${this.storeId}/floorplan`);
             this.hasFloorplan = response.ok;
             
             const floorplanContent = document.getElementById('floorplan-content');

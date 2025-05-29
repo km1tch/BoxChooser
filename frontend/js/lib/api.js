@@ -12,7 +12,17 @@
  */
 async function fetchPricingMode(storeId) {
   try {
-    const response = await fetch(`/api/store/${storeId}/pricing_mode`);
+    const headers = {};
+    
+    // Add auth token if available
+    if (typeof AuthManager !== 'undefined') {
+      const token = AuthManager.getToken(storeId);
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
+    
+    const response = await fetch(`/api/store/${storeId}/pricing_mode`, { headers });
     if (!response.ok) {
       throw new Error(`Failed to fetch pricing mode: ${response.status}`);
     }
@@ -32,7 +42,17 @@ async function fetchPricingMode(storeId) {
  */
 async function fetchBoxes(storeId) {
   try {
-    const response = await fetch(`/api/store/${storeId}/boxes`);
+    const headers = {};
+    
+    // Add auth token if available
+    if (typeof AuthManager !== 'undefined') {
+      const token = AuthManager.getToken(storeId);
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
+    
+    const response = await fetch(`/api/store/${storeId}/boxes`, { headers });
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`Server error: ${response.status} - ${errorText}`);
@@ -51,7 +71,17 @@ async function fetchBoxes(storeId) {
  */
 async function fetchBoxesWithSections(storeId) {
   try {
-    const response = await fetch(`/api/store/${storeId}/boxes_with_sections`);
+    const headers = {};
+    
+    // Add auth token if available
+    if (typeof AuthManager !== 'undefined') {
+      const token = AuthManager.getToken(storeId);
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
+    
+    const response = await fetch(`/api/store/${storeId}/boxes_with_sections`, { headers });
     if (!response.ok) {
       throw new Error(`Failed to fetch boxes with sections: ${response.status}`);
     }
@@ -69,7 +99,17 @@ async function fetchBoxesWithSections(storeId) {
  */
 async function fetchAllBoxes(storeId) {
   try {
-    const response = await fetch(`/api/store/${storeId}/all_boxes`);
+    const headers = {};
+    
+    // Add auth token if available
+    if (typeof AuthManager !== 'undefined') {
+      const token = AuthManager.getToken(storeId);
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
+    
+    const response = await fetch(`/api/store/${storeId}/all_boxes`, { headers });
     if (!response.ok) {
       throw new Error(`Failed to fetch all boxes: ${response.status}`);
     }

@@ -21,6 +21,21 @@ export class LocationModal {
         this.init();
     }
     
+    /**
+     * Helper method to make authenticated requests
+     */
+    async authenticatedFetch(url, options = {}) {
+        // Add auth token if available
+        if (typeof AuthManager !== 'undefined') {
+            const token = AuthManager.getToken(this.options.storeId);
+            if (token) {
+                options.headers = options.headers || {};
+                options.headers['Authorization'] = `Bearer ${token}`;
+            }
+        }
+        return fetch(url, options);
+    }
+    
     init() {
         this.createModal();
         this.attachEventListeners();
@@ -368,7 +383,7 @@ export class LocationModal {
                              Math.random().toString(36).substring(2, 15);
             
             // Save to API
-            const response = await fetch(`/api/store/${this.options.storeId}/update-locations`, {
+            const response = await this.authenticatedFetch(`/api/store/${this.options.storeId}/update-locations`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -418,7 +433,7 @@ export class LocationModal {
                                  Math.random().toString(36).substring(2, 15);
                 
                 // Send API request
-                fetch(`/api/store/${this.options.storeId}/update-locations`, {
+                this.authenticatedFetch(`/api/store/${this.options.storeId}/update-locations`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

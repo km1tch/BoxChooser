@@ -2,9 +2,7 @@ services:
   caddy:
     image: caddy:2-alpine
     container_name: packingsite_caddy
-    ports:
-      - "5893:80"
-      - "5443:443"
+    network_mode: host
     volumes:
       - ./Caddyfile.dev:/etc/caddy/Caddyfile:ro
       - ./frontend:/srv/frontend:ro
@@ -20,28 +18,21 @@ services:
   backend:
     build: .
     container_name: packingsite_backend
+    ports:
+      - "8000:8000"
     volumes:
       - ./backend:/code/backend
       - ./stores:/code/stores
       - ./floorplans:/code/floorplans
       - ./db:/db
       - ./tools:/code/tools
+    env_file:
+      - .env
     environment:
-      - SITE_NAME=${SITE_NAME}
+      # Override specific values for development
       - SQLITE_DB_PATH=/db/packingwebsite.db
-      # Security
-      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
-      - SESSION_LIFETIME_HOURS=${SESSION_LIFETIME_HOURS:-8}
-      - MAX_LOGIN_ATTEMPTS=${MAX_LOGIN_ATTEMPTS:-5}
-      - RATE_LIMIT_PER_MINUTE=${RATE_LIMIT_PER_MINUTE:-10}
-      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-https://localhost}
-      # SMTP email configuration (defaults to MailHog in dev)
       - SMTP_HOST=${SMTP_HOST:-mailhog}
       - SMTP_PORT=${SMTP_PORT:-1025}
-      - SMTP_USE_TLS=${SMTP_USE_TLS:-false}
-      - SMTP_USERNAME=${SMTP_USERNAME:-}
-      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
-      - SMTP_FROM=${SMTP_FROM:-noreply@packingsite.com}
     depends_on:
       - mailhog
     restart: unless-stopped

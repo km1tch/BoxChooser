@@ -15,8 +15,14 @@ router = APIRouter(prefix="/api/store/{store_id}", tags=["packing"])
 
 
 @router.get("/packing-rules", response_class=JSONResponse)
-async def get_packing_rules(store_id: str = Path(..., regex=r"^\d{1,6}$")):
+async def get_packing_rules(
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),
+    auth: Tuple[str, str] = get_current_auth()
+):
     """Get all packing rules for a store (custom + defaults)"""
+    # Verify user has access to this store
+    if auth[0] != store_id:
+        raise HTTPException(status_code=403, detail="Access denied")
     
     custom_rules = []
     with get_db() as db:
@@ -151,9 +157,13 @@ async def reset_packing_rules(
 @router.get("/packing-requirements", response_class=JSONResponse)
 async def get_packing_requirements(
     store_id: str = Path(..., regex=r"^\d{1,6}$"),
-    type: str = Query(..., description="Packing type (Basic, Standard, Fragile, Custom)")
+    type: str = Query(..., description="Packing type (Basic, Standard, Fragile, Custom)"),
+    auth: Tuple[str, str] = get_current_auth()
 ):
     """Get specific packing requirements for given type"""
+    # Verify user has access to this store
+    if auth[0] != store_id:
+        raise HTTPException(status_code=403, detail="Access denied")
     
     # First check for custom rule
     with get_db() as db:
@@ -181,8 +191,14 @@ async def get_packing_requirements(
 
 
 @router.get("/engine-config", response_class=JSONResponse)
-async def get_engine_config(store_id: str = Path(..., regex=r"^\d{1,6}$")):
+async def get_engine_config(
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),
+    auth: Tuple[str, str] = get_current_auth()
+):
     """Get recommendation engine configuration for a store"""
+    # Verify user has access to this store
+    if auth[0] != store_id:
+        raise HTTPException(status_code=403, detail="Access denied")
     
     # Check for custom config
     with get_db() as db:
@@ -327,14 +343,20 @@ async def reset_engine_config(
 
 
 @router.get("/packing-config", response_class=JSONResponse)
-async def get_packing_config(store_id: str = Path(..., regex=r"^\d{1,6}$")):
+async def get_packing_config(
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),
+    auth: Tuple[str, str] = get_current_auth()
+):
     """Get combined packing rules and engine config for a store"""
+    # Verify user has access to this store
+    if auth[0] != store_id:
+        raise HTTPException(status_code=403, detail="Access denied")
     
     # Get packing rules
-    rules_response = await get_packing_rules(store_id)
+    rules_response = await get_packing_rules(store_id, auth)
     
     # Get engine config
-    engine_config = await get_engine_config(store_id)
+    engine_config = await get_engine_config(store_id, auth)
     
     return {
         'rules': rules_response['effective_rules'],

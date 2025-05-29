@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import Optional, Tuple
 
 import yaml
-from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Header
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Header, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -17,6 +17,7 @@ from backend.lib.auth_manager import (
     regenerate_pin
 )
 from backend.lib.email_service import send_login_code
+from backend.lib.rate_limiter import limiter, check_email_rate_limit
 from backend.models.auth import (
     LoginRequest, EmailCodeRequest, VerifyCodeRequest,
     TokenResponse, UpdateEmailRequest
@@ -26,66 +27,78 @@ router = APIRouter(prefix="/api/auth", tags=["authentication"])
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(request: LoginRequest):
+@limiter.limit("5/minute")
+async def login(request: Request, login_request: LoginRequest):
     """Authenticate with store ID and PIN"""
+    # Always return the same error to prevent enumeration
+    generic_error = HTTPException(status_code=401, detail="Invalid store ID or PIN")
+    
     # Verify store exists
-    yaml_file = f"stores/store{request.store_id}.yml"
+    yaml_file = f"stores/store{login_request.store_id}.yml"
     if not os.path.exists(yaml_file):
-        raise HTTPException(status_code=404, detail="Store not found")
+        raise generic_error
     
     # Check if store has auth configured
-    if not store_has_auth(request.store_id):
-        raise HTTPException(status_code=403, detail="Authentication not configured for this store")
+    if not store_has_auth(login_request.store_id):
+        raise generic_error
     
     # Verify PIN
-    if not verify_pin(request.store_id, request.pin):
-        raise HTTPException(status_code=401, detail="Invalid PIN")
+    if not verify_pin(login_request.store_id, login_request.pin):
+        raise generic_error
     
     # Create session token
-    token = create_session(request.store_id, auth_level="user")
+    token = create_session(login_request.store_id, auth_level="user")
     
     return TokenResponse(access_token=token)
 
 
 @router.post("/send-code")
-async def send_code(request: EmailCodeRequest):
+@limiter.limit("3/minute")
+async def send_code(request: Request, code_request: EmailCodeRequest):
     """Send verification code to admin email"""
+    # Check email rate limit per store
+    check_email_rate_limit(code_request.store_id)
+    
+    # Always return success to prevent enumeration
+    generic_response = {"message": "If the store ID and email are valid, a verification code has been sent"}
+    
     # Verify store exists
-    yaml_file = f"stores/store{request.store_id}.yml"
+    yaml_file = f"stores/store{code_request.store_id}.yml"
     if not os.path.exists(yaml_file):
-        raise HTTPException(status_code=404, detail="Store not found")
+        return generic_response
     
     # Check if store has auth configured
-    if not store_has_auth(request.store_id):
-        raise HTTPException(status_code=403, detail="Authentication not configured for this store")
+    if not store_has_auth(code_request.store_id):
+        return generic_response
     
     try:
         # Create verification code
-        code = create_email_verification_code(request.store_id, request.email)
+        code = create_email_verification_code(code_request.store_id, code_request.email)
         
         # Get store info for name
-        store_info = get_store_info(request.store_id)
-        store_name = f"Store {request.store_id}"
+        store_info = get_store_info(code_request.store_id)
+        store_name = f"Store {code_request.store_id}"
         
         # Send email
-        if send_login_code(request.email, code, store_name):
-            return {"message": "Verification code sent"}
-        else:
-            raise HTTPException(status_code=500, detail="Failed to send email")
-            
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        send_login_code(code_request.email, code, store_name)
+        
+    except ValueError:
+        # Invalid email for this store, but don't reveal this
+        pass
+    
+    return generic_response
 
 
 @router.post("/verify-code", response_model=TokenResponse)
-async def verify_code(request: VerifyCodeRequest):
+@limiter.limit("10/minute")
+async def verify_code(request: Request, verify_request: VerifyCodeRequest):
     """Verify email code and return admin token"""
     # Verify code
-    if not verify_email_code(request.store_id, request.email, request.code):
+    if not verify_email_code(verify_request.store_id, verify_request.email, verify_request.code):
         raise HTTPException(status_code=401, detail="Invalid or expired code")
     
     # Create admin session token
-    token = create_session(request.store_id, auth_level="admin")
+    token = create_session(verify_request.store_id, auth_level="admin")
     
     return TokenResponse(access_token=token)
 
@@ -102,34 +115,6 @@ async def logout(
         delete_session(token)
     
     return {"message": "Logged out successfully"}
-
-
-@router.get("/status")
-async def auth_status(
-    store_id: str = Query(...),
-    auth_info: Optional[dict] = get_optional_auth_with_demo()
-):
-    """Check authentication status for a store"""
-    # Check if store has auth configured
-    has_auth = store_has_auth(store_id)
-    
-    # Check if authenticated
-    is_authenticated = False
-    auth_level = None
-    is_demo = False
-    
-    if auth_info:
-        auth_store_id = auth_info['store_id']
-        auth_level = auth_info['auth_level']
-        is_demo = auth_info.get('is_demo', False)
-        is_authenticated = (auth_store_id == store_id)
-    
-    return {
-        "hasAuth": has_auth,
-        "isAuthenticated": is_authenticated,
-        "authLevel": auth_level if is_authenticated else None,
-        "isDemo": is_demo if is_authenticated else False
-    }
 
 
 # Store-specific auth endpoints
@@ -260,15 +245,9 @@ async def update_admin_email(
 @router_store.get("/has-auth")
 async def check_has_auth(store_id: str = Path(..., regex=r"^\d{1,6}$")):
     """Check if store has authentication enabled"""
-    # Check if the store's YAML file exists
-    yaml_file = f"stores/store{store_id}.yml"
-    if not os.path.exists(yaml_file):
-        raise HTTPException(status_code=404, detail=f"Store not found: {store_id}")
-    
-    # Check if auth is enabled
-    has_auth = store_has_auth(store_id)
-    
-    return {"hasAuth": has_auth}
+    # Since all stores now require auth, always return true
+    # This prevents store enumeration via 404 errors
+    return {"hasAuth": True}
 
 
 # Demo mode models

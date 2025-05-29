@@ -4,7 +4,7 @@ Handles uploading floorplans and managing box locations on the floorplan.
 """
 
 import os
-from typing import Dict, Union, Any
+from typing import Dict, Union, Any, Tuple
 from io import BytesIO
 
 import aiofiles
@@ -13,7 +13,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 from PIL import Image
 
-from backend.lib.auth_middleware import get_current_store, get_current_auth_with_demo
+from backend.lib.auth_middleware import get_current_store, get_current_auth_with_demo, get_current_auth
 from backend.lib.yaml_helpers import load_store_yaml, save_store_yaml
 
 
@@ -21,8 +21,14 @@ router = APIRouter(prefix="/api/store/{store_id}", tags=["floorplan"])
 
 
 @router.get("/floorplan", response_class=FileResponse)
-async def get_floorplan(store_id: str = Path(..., regex=r"^\d{1,6}$")):  # Allow 6 digits for demo
+async def get_floorplan(
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),  # Allow 6 digits for demo
+    auth: Tuple[str, str] = get_current_auth()
+):
     """Get the floorplan image for a store"""
+    # Verify user has access to this store
+    if auth[0] != store_id:
+        raise HTTPException(status_code=403, detail="Access denied")
     # Check for existing floorplan files in expected formats
     floorplan_dir = "floorplans"
     extensions = ['.png', '.jpg', '.jpeg']
@@ -164,8 +170,14 @@ async def upload_floorplan(
 
 
 @router.get("/box-locations", response_class=JSONResponse)
-async def get_box_locations(store_id: str = Path(..., regex=r"^\d{1,6}$")):  # Allow 6 digits for demo
+async def get_box_locations(
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),  # Allow 6 digits for demo
+    auth: Tuple[str, str] = get_current_auth()
+):
     """Get all box locations for mapping"""
+    # Verify user has access to this store
+    if auth[0] != store_id:
+        raise HTTPException(status_code=403, detail="Access denied")
     data = load_store_yaml(store_id)
     
     locations = []

@@ -9,14 +9,21 @@ from typing import Optional, Tuple
 from backend.lib import auth_manager
 
 # Bearer token security scheme
-bearer_scheme = HTTPBearer()
+bearer_scheme = HTTPBearer(auto_error=False)
 
 def _get_current_auth_impl(
-    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme)
 ) -> Tuple[str, str]:
     """
     Implementation that verifies Bearer token and returns (store_id, auth_level)
     """
+    if not credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
     token = credentials.credentials
     result = auth_manager.verify_session(token)
     
@@ -63,7 +70,7 @@ def get_current_auth_with_demo():
     return Depends(_get_current_auth_with_demo_impl)
 
 def get_current_store(
-    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme)
 ) -> str:
     """
     Verify Bearer token and return the store_id
@@ -72,6 +79,13 @@ def get_current_store(
     Raises:
         HTTPException: If token is invalid or expired
     """
+    if not credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
     token = credentials.credentials
     result = auth_manager.verify_session(token)
     
@@ -168,12 +182,6 @@ def require_auth(admin: bool = False):
         return wrapper
     return decorator
 
-def require_store_auth(store_id_param: str = "store_id"):
-    """
-    Decorator to require authentication for a specific store
-    (Backward compatibility wrapper around require_auth)
-    """
-    return require_auth(admin=False)
 
 def get_optional_auth() -> Optional[Tuple[str, str]]:
     """

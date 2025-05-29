@@ -12,7 +12,8 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from backend.lib.auth_middleware import get_current_store, require_auth
+from backend.lib.auth_middleware import get_current_auth, require_auth
+from typing import Tuple
 from backend.lib.yaml_helpers import load_store_yaml, save_store_yaml, get_box_section, validate_box_data
 
 
@@ -20,16 +21,29 @@ router = APIRouter(prefix="/api/store/{store_id}", tags=["boxes"])
 
 
 @router.get("/pricing_mode", response_class=JSONResponse)
-async def get_pricing_mode(store_id: str = Path(..., regex=r"^\d{1,6}$")):
+async def get_pricing_mode(
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),
+    auth: Tuple[str, str] = get_current_auth()
+):
     """Get the pricing mode for a store"""
+    # Verify user has access to this store
+    if auth[0] != store_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
     data = load_store_yaml(store_id)
     pricing_mode = data.get("pricing-mode", "standard")
     return {"mode": pricing_mode}
 
 
 @router.get("/boxes", response_class=JSONResponse)
-async def get_boxes(store_id: str = Path(..., regex=r"^\d{1,6}$")):
+async def get_boxes(
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),
+    auth: Tuple[str, str] = get_current_auth()
+):
     """Get all boxes for a store with validation"""
+    # Verify user has access to this store
+    if auth[0] != store_id:
+        raise HTTPException(status_code=403, detail="Access denied")
     yaml_file = f"stores/store{store_id}.yml"
 
     if not os.path.exists(yaml_file):
@@ -64,8 +78,14 @@ async def get_boxes(store_id: str = Path(..., regex=r"^\d{1,6}$")):
 
 
 @router.get("/boxes_with_sections", response_class=JSONResponse)
-async def get_boxes_with_sections(store_id: str = Path(..., regex=r"^\d{1,6}$")):
+async def get_boxes_with_sections(
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),
+    auth: Tuple[str, str] = get_current_auth()
+):
     """Get boxes formatted for the editor with sections"""
+    # Verify user has access to this store
+    if auth[0] != store_id:
+        raise HTTPException(status_code=403, detail="Access denied")
     data = load_store_yaml(store_id)
     result = []
     
@@ -140,8 +160,14 @@ async def get_boxes_with_sections(store_id: str = Path(..., regex=r"^\d{1,6}$"))
 
 
 @router.get("/all_boxes", response_class=JSONResponse)
-async def get_all_boxes(store_id: str = Path(..., regex=r"^\d{1,6}$")):
+async def get_all_boxes(
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),
+    auth: Tuple[str, str] = get_current_auth()
+):
     """Get all boxes at once (bulk endpoint)"""
+    # Verify user has access to this store
+    if auth[0] != store_id:
+        raise HTTPException(status_code=403, detail="Access denied")
     data = load_store_yaml(store_id)
     
     # Add model field to all boxes that don't have it
@@ -155,8 +181,13 @@ async def get_all_boxes(store_id: str = Path(..., regex=r"^\d{1,6}$")):
 @router.get("/box/{model}", response_class=JSONResponse)
 async def get_box_by_model(
     store_id: str = Path(..., regex=r"^\d{1,6}$"),
-    model: str = Path(...)):
+    model: str = Path(...),
+    auth: Tuple[str, str] = get_current_auth()
+):
     """Get a single box by model"""
+    # Verify user has access to this store
+    if auth[0] != store_id:
+        raise HTTPException(status_code=403, detail="Access denied")
     
     data = load_store_yaml(store_id)
     pricing_mode = data.get("pricing-mode", "standard")

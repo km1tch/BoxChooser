@@ -35,9 +35,9 @@ const AuthManager = (function() {
   }
   
   /**
-   * Check authentication status for a store
-   * @param {string} storeId 
-   * @returns {Promise<{hasAuth: boolean, isAuthenticated: boolean, authLevel: string|null}>}
+   * Check authentication status for current user
+   * @param {string} storeId - Used to get the token for this store
+   * @returns {Promise<{authenticated: boolean, authLevel: string|null, storeId: string|null}>}
    */
   async function getAuthStatus(storeId) {
     try {
@@ -48,7 +48,7 @@ const AuthManager = (function() {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      const response = await fetch(`/api/auth/status?store_id=${storeId}`, {
+      const response = await fetch(`/api/status`, {
         headers
       });
       
@@ -58,14 +58,22 @@ const AuthManager = (function() {
       
       const data = await response.json();
       
-      return data;
+      // Transform to match old interface for backward compatibility
+      return {
+        hasAuth: true,  // All stores require auth now
+        isAuthenticated: data.authenticated,
+        authLevel: data.authLevel,
+        isDemo: data.isDemo,
+        actualStoreId: data.storeId  // The store they're actually logged into
+      };
     } catch (error) {
       console.error('Error checking auth status:', error);
       return {
-        hasAuth: false,
+        hasAuth: true,  // All stores require auth now
         isAuthenticated: false,
         authLevel: null,
-        isLegacy: false
+        isDemo: false,
+        actualStoreId: null
       };
     }
   }

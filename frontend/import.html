@@ -194,9 +194,24 @@
     <script>
         // Initialize page
         document.addEventListener('DOMContentLoaded', async function() {
+            // Get current store ID
             const storeId = AuthManager.getCurrentStoreId();
             if (!storeId) {
-                window.location.href = '/login.html';
+                window.location.href = '/login';
+                return;
+            }
+            
+            // Check if user is authenticated for this store
+            const authStatus = await AuthManager.getAuthStatus(storeId);
+            if (!authStatus.isAuthenticated) {
+                window.location.href = `/login?redirect=/import`;
+                return;
+            }
+            
+            // Check if user is admin (required for import)
+            if (authStatus.authLevel !== 'admin') {
+                alert('You must be an admin to access the import feature.');
+                window.location.href = `/${storeId}/`;
                 return;
             }
             

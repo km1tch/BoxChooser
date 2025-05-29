@@ -15,6 +15,7 @@
 
     <!-- Load required modules -->
     <script src="/js/lib/auth.js"></script>
+    <script src="/js/lib/api-utils.js"></script>
     <script src="/js/lib/pricing.js"></script>
     <script src="/js/lib/packing.js"></script>
     <script src="/js/lib/packing-rules.js"></script>
@@ -60,7 +61,11 @@
           // Load both in parallel
           const [boxData, configData] = await Promise.all([
             loadBoxes(storeId),
-            fetch(`/api/store/${storeId}/engine-config`).then((r) => r.json()),
+            apiUtils.authenticatedFetch(`/api/store/${storeId}/engine-config`, storeId)
+              .then(async (r) => {
+                await apiUtils.handleApiError(r, "load engine config");
+                return r.json();
+              }),
           ]);
 
           boxes = boxData;
@@ -98,10 +103,12 @@
           }
 
           // Get the store's box data to find location
-          const response = await fetch(`/api/store/${storeId}/boxes`);
-          if (!response.ok) {
-            throw new Error("Failed to load box data");
-          }
+          const response = await apiUtils.authenticatedFetch(
+            `/api/store/${storeId}/boxes`,
+            storeId
+          );
+          
+          await apiUtils.handleApiError(response, "load box data");
 
           const data = await response.json();
           const boxData = data.boxes.find((b) => b.model === boxModel);

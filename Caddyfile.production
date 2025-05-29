@@ -49,6 +49,13 @@
 	}
 	
 	handle @api {
+		# Strip any incoming forwarded headers to prevent spoofing
+		header {
+			-X-Forwarded-For
+			-X-Real-IP
+			-X-Forwarded-Proto
+		}
+		
 		header {
 			# Strict CORS for production
 			Access-Control-Allow-Origin "{$ALLOWED_ORIGINS}"
@@ -67,7 +74,11 @@
 		}
 		
 		# Proxy to backend
-		reverse_proxy backend:8000 {
+		reverse_proxy localhost:8000 {
+			# Forward real client IP
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
 			# Add timeout settings for production
 			transport http {
 				read_timeout 30s
@@ -78,7 +89,7 @@
 
 	# Health check endpoint
 	handle /health {
-		reverse_proxy backend:8000
+		reverse_proxy localhost:8000
 	}
 
 	# Serve static files

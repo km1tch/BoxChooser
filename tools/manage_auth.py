@@ -10,6 +10,7 @@ Examples:
     ./tools/auth create 1 admin@example.com
     ./tools/auth list
     ./tools/auth regenerate-pin 1
+    ./tools/auth modify-email 1 newemail@example.com
     ./tools/auth verify 1
     ./tools/auth audit
     
@@ -30,7 +31,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from backend.lib.auth_manager import (
     init_db, create_store_auth, list_stores, 
     get_audit_log, verify_pin, hasAuth,
-    get_store_info, regenerate_pin
+    get_store_info, regenerate_pin, update_email
 )
 
 def cmd_init(args):
@@ -84,6 +85,35 @@ def cmd_regenerate_pin(args):
     print(f"\nNew PIN for Store {store_id}: {new_pin}")
     print("\nIMPORTANT: Save this PIN! The old PIN no longer works.")
 
+def cmd_modify_email(args):
+    """Modify admin email for a store"""
+    store_id = args.store
+    new_email = args.email
+    
+    if not hasAuth(store_id):
+        print(f"Error: Store {store_id} does not have authentication configured.")
+        return
+    
+    # Get current info
+    info = get_store_info(store_id)
+    current_email = info['admin_email']
+    
+    if not args.force:
+        print(f"Current admin email for Store {store_id}: {current_email}")
+        response = input(f"Change admin email to {new_email}? [y/N]: ")
+        if response.lower() != 'y':
+            print("Aborted.")
+            return
+    
+    try:
+        update_email(store_id, new_email)
+        print(f"\nAdmin email for Store {store_id} updated successfully.")
+        print(f"Old email: {current_email}")
+        print(f"New email: {new_email}")
+    except Exception as e:
+        print(f"Error updating email: {e}")
+        sys.exit(1)
+
 def cmd_list(args):
     """List all stores with authentication"""
     stores = list_stores()
@@ -104,7 +134,7 @@ def cmd_list(args):
         ])
     
     headers = ['Store ID', 'Admin Email', 'Created', 'Last Updated']
-    print(tabulate(table_data, headers=headers, tablefmt='grid'))
+    print(tabulate(table_data, headers=headers, tablefmt='plain'))
 
 def cmd_verify(args):
     """Verify a store PIN"""
@@ -149,7 +179,7 @@ def cmd_audit(args):
         ])
     
     headers = ['Timestamp', 'Store', 'Action', 'Details']
-    print(tabulate(table_data, headers=headers, tablefmt='grid'))
+    print(tabulate(table_data, headers=headers, tablefmt='plain'))
 
 def main():
     parser = argparse.ArgumentParser(
@@ -182,6 +212,20 @@ def main():
         help='Force regeneration without confirmation'
     )
     parser_regen.set_defaults(func=cmd_regenerate_pin)
+    
+    # modify-email command
+    parser_modify_email = subparsers.add_parser(
+        'modify-email',
+        help='Modify admin email for a store'
+    )
+    parser_modify_email.add_argument('store', help='Store ID')
+    parser_modify_email.add_argument('email', help='New admin email address')
+    parser_modify_email.add_argument(
+        '-f', '--force',
+        action='store_true',
+        help='Force modification without confirmation'
+    )
+    parser_modify_email.set_defaults(func=cmd_modify_email)
     
     # list command
     parser_list = subparsers.add_parser('list', help='List all stores with authentication')
