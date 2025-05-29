@@ -32,7 +32,15 @@ class Box {
         this.originalDimensions = [...dimensions]; // Store original order
         const open_dim_val = dimensions[open_dim];
         this.dimensions = dimensions.toSorted((a, b) => b - a);     // Just to presort by size
-        this.open_dim = this.dimensions.findIndex((e) => {return e == open_dim_val});
+        // Find where the open dimension ended up after sorting
+        this.open_dim = this.dimensions.indexOf(open_dim_val);
+        // Handle case where multiple dimensions have the same value
+        if (this.open_dim === -1 || dimensions.filter(d => d === open_dim_val).length > 1) {
+            // If dimensions are not unique, we need to track more carefully
+            const dimWithIndex = dimensions.map((d, i) => ({value: d, originalIndex: i}));
+            dimWithIndex.sort((a, b) => b.value - a.value);
+            this.open_dim = dimWithIndex.findIndex(d => d.originalIndex === open_dim);
+        }
         this.model = model;
         this.alternateDepths = alternateDepths || [];
         
