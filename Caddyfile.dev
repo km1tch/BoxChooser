@@ -13,13 +13,6 @@
 
 	# API routes - proxy to FastAPI backend
 	handle /api/* {
-		# Strip any incoming forwarded headers to prevent spoofing
-		header {
-			-X-Forwarded-For
-			-X-Real-IP
-			-X-Forwarded-Proto
-		}
-		
 		# Wide open CORS for development
 		header {
 			Access-Control-Allow-Origin "*"
@@ -37,16 +30,13 @@
 			respond 204
 		}
 		
-		reverse_proxy localhost:8000 {
-			header_up X-Real-IP {remote_host}
-			header_up X-Forwarded-For {remote_host}
-			header_up X-Forwarded-Proto {scheme}
-		}
+		# Simple proxy for dev - no need for header manipulation
+		reverse_proxy backend:8000
 	}
 
 	# Health check for backend
 	handle /health {
-		reverse_proxy localhost:8000
+		reverse_proxy backend:8000
 	}
 
 	# Serve static files

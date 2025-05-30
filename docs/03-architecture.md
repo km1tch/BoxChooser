@@ -32,28 +32,49 @@ PackingWebsite uses a modern web architecture with clear separation between fron
 
 ## Request Flow
 
-1. **Static Assets** (HTML, CSS, JS, images)
-   - Client → Caddy → Filesystem
-   - Served directly by Caddy with caching headers
+### Production Environment
+1. **HTTPS Request**
+   - Client → Host Caddy (port 443) → Docker Caddy (port 5893) → FastAPI/Filesystem
+   - Host Caddy handles SSL termination and real IP forwarding
+   - Docker Caddy receives plain HTTP with trusted headers
+
+2. **Static Assets** (HTML, CSS, JS, images)
+   - Served directly by Docker Caddy with caching headers
    - No authentication required
 
-2. **API Requests** (`/api/*`)
-   - Client → Caddy → FastAPI
-   - Proxied by Caddy to FastAPI backend
+3. **API Requests** (`/api/*`)
+   - Proxied by Docker Caddy to FastAPI backend
    - Authentication handled by FastAPI middleware
+   - Rate limiting uses real client IPs from headers
 
-3. **Store Configuration** (YAML files)
-   - Client → Caddy → FastAPI → Filesystem
-   - Served through API with authentication
-   - Allows for data filtering based on user role
+4. **Store Data** (served by FastAPI, not directly exposed)
+   - Store configurations from `stores/*.yml` accessed via `/api/store/{id}/boxes`, `/api/store/{id}/pricing_mode`, etc.
+   - Floorplan images from `floorplans/` served at `/api/store/{id}/floorplan`
+   - Packing guidelines from `stores/packing_guidelines.yml` at `/api/packing-guidelines`
+   - All require authentication - YAML files never served directly
+
+### Development Environment
+- Direct access via ports 5893 (HTTP) and 5443 (HTTPS)
+- No host proxy needed
+- Simplified configuration for local development
 
 ## Services
 
 ### Caddy (Web Server)
+
+#### Host Caddy (Production Only)
+- Handles SSL/TLS termination with Let's Encrypt
+- Forwards real client IPs via headers
+- Strips incoming forwarded headers to prevent spoofing
+- Minimal configuration for security and performance
+
+#### Docker Caddy
 - Serves all static frontend assets
-- Reverse proxy for API requests
-- Handles HTTPS termination
+- Reverse proxy for API requests to FastAPI
 - Provides compression and caching
+- Handles CORS and security headers
+- In production: receives HTTP from host Caddy
+- In development: direct access on ports 5893/5443
 
 ### FastAPI (API Backend)
 - RESTful API endpoints
@@ -88,11 +109,39 @@ PackingWebsite uses a modern web architecture with clear separation between fron
 
 ### Development
 - Caddy and FastAPI run in Docker containers
-- Hot reload enabled for both services
+- Frontend files mounted as volumes for hot reload
+- Backend hot reload enabled via uvicorn --reload
 - MailHog captures email for testing
+- No cache busting (use browser dev tools)
 
 ### Production
-- Caddy handles SSL/TLS termination
+- Frontend files baked into Caddy Docker image
+- Cache busting applied during build (timestamp in filenames)
+- No hot reload - immutable container images
+- Host Caddy handles SSL/TLS termination on the Alpine host
+- Docker Caddy receives plain HTTP on localhost:5893
 - FastAPI runs with production server (uvicorn)
 - Real email service configured
 - Database backups enabled
+- Rate limiting sees real client IPs via forwarded headers
+
+## Cache Busting Strategy
+
+Production builds implement automatic cache busting:
+
+1. **Build Process**:
+   - Frontend files copied into Caddy container
+   - Shell script renames all CSS/JS files with timestamps
+   - HTML references updated to match new filenames
+   - Example: `common.css` → `common.1748630573.css`
+
+2. **Benefits**:
+   - Guaranteed fresh assets after deployments
+   - Long cache headers (1 year) for optimal performance
+   - No manual version tracking needed
+   - Zero runtime overhead
+
+3. **Implementation**:
+   - Uses only Alpine Linux built-in tools (sh, sed, find)
+   - Runs during `docker-compose build`
+   - Similar approach to PML/printmylabel project

@@ -1,17 +1,7 @@
-# Production Caddyfile with environment variables
+# Production Caddyfile - receives HTTP from host Caddy
+# Host Caddy handles: SSL/TLS, HTTPS redirect, real IP forwarding
 
-# Global options
-{
-	# Email for Let's Encrypt notifications
-	email {$ACME_EMAIL:admin@yourdomain.com}
-}
-
-{$SITE_URL} {
-	# TLS configuration - Caddy will auto-provision Let's Encrypt certificates
-	# For staging/testing, uncomment the next line:
-	# tls {$ACME_EMAIL:admin@yourdomain.com} {
-	#     ca https://acme-staging-v02.api.letsencrypt.org/directory
-	# }
+:80 {
 
 	# Enable compression
 	encode gzip
@@ -38,9 +28,6 @@
 		
 		# Remove server header
 		-Server
-		
-		# Strict Transport Security (HSTS)
-		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
 	}
 
 	# API routes with strict CORS
@@ -49,13 +36,7 @@
 	}
 	
 	handle @api {
-		# Strip any incoming forwarded headers to prevent spoofing
-		header {
-			-X-Forwarded-For
-			-X-Real-IP
-			-X-Forwarded-Proto
-		}
-		
+		# Trust the headers from host Caddy - they've already been cleaned
 		header {
 			# Strict CORS for production
 			Access-Control-Allow-Origin "{$ALLOWED_ORIGINS}"
@@ -74,11 +55,8 @@
 		}
 		
 		# Proxy to backend
-		reverse_proxy localhost:8000 {
-			# Forward real client IP
-			header_up X-Real-IP {remote_host}
-			header_up X-Forwarded-For {remote_host}
-			header_up X-Forwarded-Proto {scheme}
+		reverse_proxy backend:8000 {
+			# Just pass through - host Caddy already set the real client IP
 			# Add timeout settings for production
 			transport http {
 				read_timeout 30s
@@ -89,7 +67,7 @@
 
 	# Health check endpoint
 	handle /health {
-		reverse_proxy localhost:8000
+		reverse_proxy backend:8000
 	}
 
 	# Serve static files
@@ -184,9 +162,4 @@
 			roll_keep 10
 		}
 	}
-}
-
-# HTTP to HTTPS redirect
-:80 {
-	redir https://{host}{uri} permanent
 }

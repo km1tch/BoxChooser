@@ -1,4 +1,4 @@
-FROM python:3.9
+FROM python:3.9-slim
 
 # Install SQLite3 CLI
 RUN apt-get update && apt-get install -y sqlite3 && rm -rf /var/lib/apt/lists/*

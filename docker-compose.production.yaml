@@ -1,11 +1,13 @@
 services:
   caddy:
-    image: caddy:2-alpine
+    build:
+      context: .
+      dockerfile: dockerfile.caddy
     container_name: packingsite_caddy
-    network_mode: host
+    ports:
+      - "127.0.0.1:5893:80"
+      - "127.0.0.1:5443:443"
     volumes:
-      - ./Caddyfile.production:/etc/caddy/Caddyfile:ro
-      - ./frontend:/srv/frontend:ro
       - caddy_data:/data
       - caddy_config:/config
       # Persistent access logs for production

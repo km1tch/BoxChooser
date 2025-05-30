@@ -2,7 +2,9 @@ services:
   caddy:
     image: caddy:2-alpine
     container_name: packingsite_caddy
-    network_mode: host
+    ports:
+      - "5893:80"
+      - "5443:443"
     volumes:
       - ./Caddyfile.dev:/etc/caddy/Caddyfile:ro
       - ./frontend:/srv/frontend:ro
