@@ -168,22 +168,34 @@ class WizardUI {
    */
   attachEventListeners() {
     // Step 1: Dimension inputs
-    ["height", "width", "depth"].forEach((id) => {
+    const dimensionInputs = ["height", "width", "depth"];
+    dimensionInputs.forEach((id, index) => {
       const input = document.getElementById(id);
       if (input) {
         input.addEventListener("input", () => this.validateStep1());
+        
+        // Add Enter key listener to advance to next field
+        input.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            
+            // If this is the last field and validation passes, proceed to step 2
+            if (index === dimensionInputs.length - 1 && this.validateStep1()) {
+              this.proceedToStep2();
+            } else {
+              // Otherwise, focus on the next field
+              const nextIndex = index + 1;
+              if (nextIndex < dimensionInputs.length) {
+                const nextInput = document.getElementById(dimensionInputs[nextIndex]);
+                if (nextInput) {
+                  nextInput.focus();
+                }
+              }
+            }
+          }
+        });
       }
     });
-
-    // Add Enter key listener to depth field
-    const depthInput = document.getElementById("depth");
-    if (depthInput) {
-      depthInput.addEventListener("keypress", (e) => {
-        if (e.key === "Enter" && this.validateStep1()) {
-          this.proceedToStep2();
-        }
-      });
-    }
 
     // Next button for step 1
     const nextBtn = document.getElementById("next-step-1");
