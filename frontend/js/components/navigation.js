@@ -73,15 +73,14 @@ async function createAdminNav(storeId, activePage = 'prices') {
   // Define nav items based on auth level
   const userItems = [
     { id: 'wizard', label: 'Wizard', href: '/wizard' },
-    { id: 'packing', label: 'Packing', href: '/packing' },
     { id: 'prices', label: 'Price Table', href: '/prices' }
   ];
   
   const adminItems = [
     { id: 'wizard', label: 'Wizard', href: '/wizard' },
-    { id: 'packing', label: 'Packing', href: '/packing' },
+    { id: 'packing', label: 'Packing Calc', href: '/packing' },
     { id: 'prices', label: 'Edit Prices', href: '/prices' },
-    { id: 'import', label: 'Import', href: '/import' },
+    { id: 'import', label: 'Import Prices', href: '/import' },
     { id: 'floorplan', label: 'Floorplan', href: '/floorplan' },
     { id: 'settings', label: 'Settings', href: '/settings' }
   ];
