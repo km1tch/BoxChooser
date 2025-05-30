@@ -354,6 +354,8 @@
     max-height: 90%;
     overflow: auto;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
 }
 
 .modal-header {
@@ -362,6 +364,7 @@
     align-items: center;
     padding: 20px;
     border-bottom: 1px solid #ddd;
+    flex-shrink: 0;
 }
 
 .modal-header h2 {
@@ -390,12 +393,16 @@
 #floorplan-container {
     position: relative;
     padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: auto;
+    flex: 1;
 }
 
 #floorplan-image {
-    max-width: 100%;
-    height: auto;
     display: block;
+    /* max-width and max-height will be set dynamically by JS */
 }
 
 .location-marker {
@@ -409,6 +416,34 @@
     border-radius: 50%;
     box-shadow: 0 2px 4px rgba(74, 144, 226, 0.4);
     z-index: 10;
+}
+
+/* X marker style for floorplan modal - screen display only */
+.location-marker-x {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.location-marker-x .marker-x {
+    font-size: 36px;
+    font-weight: bold;
+    color: #ff0000;  /* Red for screen display */
+    /* White outline for visibility */
+    text-shadow: 
+        -2px -2px 0 #fff,
+        2px -2px 0 #fff,
+        -2px 2px 0 #fff,
+        2px 2px 0 #fff,
+        -3px 0 0 #fff,
+        3px 0 0 #fff,
+        0 -3px 0 #fff,
+        0 3px 0 #fff;
 }
 
 .marker-label {

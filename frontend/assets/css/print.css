@@ -31,6 +31,35 @@
     color: #000;
   }
   
+  /* Location marker styles for printing */
+  .location-marker-print,
+  .location-marker-x {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .location-marker-print .marker-x,
+  .location-marker-x .marker-x {
+    font-size: 36pt;
+    font-weight: bold;
+    color: #000;
+    /* White outline for visibility on any background */
+    text-shadow: 
+      -2px -2px 0 #fff,
+      2px -2px 0 #fff,
+      -2px 2px 0 #fff,
+      2px 2px 0 #fff,
+      -3px 0 0 #fff,
+      3px 0 0 #fff,
+      0 -3px 0 #fff,
+      0 3px 0 #fff;
+  }
+  
   h1, h2, h3, h4, h5, h6 {
     page-break-after: avoid;
     page-break-inside: avoid;

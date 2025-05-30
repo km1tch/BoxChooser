@@ -325,21 +325,6 @@ class Box {
 }
 
 /**
- * Helper function to make authenticated requests
- */
-async function authenticatedFetch(url, storeId, options = {}) {
-    // Add auth token if available
-    if (typeof AuthManager !== 'undefined') {
-        const token = AuthManager.getToken(storeId);
-        if (token) {
-            options.headers = options.headers || {};
-            options.headers['Authorization'] = `Bearer ${token}`;
-        }
-    }
-    return fetch(url, options);
-}
-
-/**
  * Loads boxes for a specific store from the API
  * @param {string} storeId - The store ID to load boxes for
  * @returns {Promise<Array<Box>>} - A promise that resolves to an array of Box instances
@@ -351,7 +336,7 @@ async function loadBoxes(storeId = '1') {
             throw new Error(`Invalid store ID: ${storeId}. Must be a number between 1-9999 or 999999 for demo.`);
         }
 
-        const response = await authenticatedFetch(`/api/store/${storeId}/boxes`, storeId)
+        const response = await apiUtils.authenticatedFetch(`/api/store/${storeId}/boxes`, storeId)
             .catch(networkError => {
                 console.error("Network error:", networkError);
                 throw new Error(`Network error: ${networkError.message}. Make sure the server is running.`);

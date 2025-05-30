@@ -30,8 +30,7 @@ async function loadStorePriceGroup() {
             return;
         }
         
-        const headers = { 'Authorization': `Bearer ${token}` };
-        const response = await fetch(`/api/store/${currentStoreId}/info`, { headers });
+        const response = await apiUtils.authenticatedFetch(`/api/store/${currentStoreId}/info`, currentStoreId);
         
         if (!response.ok) {
             // If not admin or endpoint fails, just show N/A
@@ -118,11 +117,8 @@ async function handleFile(file) {
             return;
         }
         
-        const response = await fetch(`/api/store/${currentStoreId}/import/analyze`, {
+        const response = await apiUtils.authenticatedFetch(`/api/store/${currentStoreId}/import/analyze`, currentStoreId, {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            },
             body: formData
         });
         
@@ -1648,11 +1644,10 @@ async function applyImportChanges() {
         }
         
         
-        const response = await fetch(`/api/store/${currentStoreId}/import/apply`, {
+        const response = await apiUtils.authenticatedFetch(`/api/store/${currentStoreId}/import/apply`, currentStoreId, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify(updates)
         });

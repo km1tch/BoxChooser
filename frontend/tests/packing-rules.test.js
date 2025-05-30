@@ -39,7 +39,7 @@ describe('PackingRulesManager', () => {
       
       const rules = await manager.getAllRequirements();
       
-      expect(fetch).toHaveBeenCalledWith('/api/store/1/packing-rules');
+      expect(fetch).toHaveBeenCalledWith('/api/store/1/packing-rules', {});
       expect(rules).toEqual(mockRules);
     });
 
@@ -128,7 +128,8 @@ describe('PackingRulesManager', () => {
       const req = await manager.getRequirements('Fragile');
       
       expect(fetch).toHaveBeenCalledWith(
-        '/api/store/1/packing-requirements?type=Fragile'
+        '/api/store/1/packing-requirements?type=Fragile',
+        {}
       );
       expect(req).toEqual(mockRequirement);
     });
@@ -305,10 +306,10 @@ describe('PackingRulesManager', () => {
       });
       
       await manager1.getAllRequirements();
-      expect(fetch).toHaveBeenCalledWith('/api/store/1/packing-rules');
+      expect(fetch).toHaveBeenCalledWith('/api/store/1/packing-rules', {});
       
       await manager2.getAllRequirements();
-      expect(fetch).toHaveBeenCalledWith('/api/store/42/packing-rules');
+      expect(fetch).toHaveBeenCalledWith('/api/store/42/packing-rules', {});
     });
 
     it('should maintain separate caches per instance', async () => {

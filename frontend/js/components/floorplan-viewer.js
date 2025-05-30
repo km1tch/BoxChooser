@@ -20,20 +20,6 @@ export class FloorplanViewer {
         this.init();
     }
     
-    /**
-     * Helper method to make authenticated requests
-     */
-    async authenticatedFetch(url, options = {}) {
-        // Add auth token if available
-        if (typeof AuthManager !== 'undefined') {
-            const token = AuthManager.getToken(this.options.storeId);
-            if (token) {
-                options.headers = options.headers || {};
-                options.headers['Authorization'] = `Bearer ${token}`;
-            }
-        }
-        return fetch(url, options);
-    }
     
     async init() {
         if (!this.options.storeId) {
@@ -63,7 +49,7 @@ export class FloorplanViewer {
     
     async loadFloorplan() {
         try {
-            const response = await this.authenticatedFetch(`/api/store/${this.options.storeId}/floorplan`);
+            const response = await apiUtils.authenticatedFetch(`/api/store/${this.options.storeId}/floorplan`, this.options.storeId);
             if (!response.ok) {
                 // Don't log 404s as errors - they're expected when no floorplan exists
                 if (response.status !== 404) {
@@ -185,7 +171,7 @@ export class FloorplanViewer {
         if (this.options.mode !== 'multi') return;
         
         try {
-            const response = await this.authenticatedFetch(`/api/store/${this.options.storeId}/box-locations`);
+            const response = await apiUtils.authenticatedFetch(`/api/store/${this.options.storeId}/box-locations`, this.options.storeId);
             const locations = await response.json();
             
             // Group boxes by location

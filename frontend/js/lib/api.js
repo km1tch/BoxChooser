@@ -12,17 +12,7 @@
  */
 async function fetchPricingMode(storeId) {
   try {
-    const headers = {};
-    
-    // Add auth token if available
-    if (typeof AuthManager !== 'undefined') {
-      const token = AuthManager.getToken(storeId);
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-    }
-    
-    const response = await fetch(`/api/store/${storeId}/pricing_mode`, { headers });
+    const response = await apiUtils.authenticatedFetch(`/api/store/${storeId}/pricing_mode`, storeId);
     if (!response.ok) {
       throw new Error(`Failed to fetch pricing mode: ${response.status}`);
     }
@@ -42,17 +32,7 @@ async function fetchPricingMode(storeId) {
  */
 async function fetchBoxes(storeId) {
   try {
-    const headers = {};
-    
-    // Add auth token if available
-    if (typeof AuthManager !== 'undefined') {
-      const token = AuthManager.getToken(storeId);
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-    }
-    
-    const response = await fetch(`/api/store/${storeId}/boxes`, { headers });
+    const response = await apiUtils.authenticatedFetch(`/api/store/${storeId}/boxes`, storeId);
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`Server error: ${response.status} - ${errorText}`);
@@ -71,17 +51,7 @@ async function fetchBoxes(storeId) {
  */
 async function fetchBoxesWithSections(storeId) {
   try {
-    const headers = {};
-    
-    // Add auth token if available
-    if (typeof AuthManager !== 'undefined') {
-      const token = AuthManager.getToken(storeId);
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-    }
-    
-    const response = await fetch(`/api/store/${storeId}/boxes_with_sections`, { headers });
+    const response = await apiUtils.authenticatedFetch(`/api/store/${storeId}/boxes_with_sections`, storeId);
     if (!response.ok) {
       throw new Error(`Failed to fetch boxes with sections: ${response.status}`);
     }
@@ -99,17 +69,7 @@ async function fetchBoxesWithSections(storeId) {
  */
 async function fetchAllBoxes(storeId) {
   try {
-    const headers = {};
-    
-    // Add auth token if available
-    if (typeof AuthManager !== 'undefined') {
-      const token = AuthManager.getToken(storeId);
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-    }
-    
-    const response = await fetch(`/api/store/${storeId}/all_boxes`, { headers });
+    const response = await apiUtils.authenticatedFetch(`/api/store/${storeId}/all_boxes`, storeId);
     if (!response.ok) {
       throw new Error(`Failed to fetch all boxes: ${response.status}`);
     }
@@ -129,22 +89,12 @@ async function fetchAllBoxes(storeId) {
  */
 async function updateStandardPrices(storeId, changes, csrfToken) {
   try {
-    const headers = {
-      'Content-Type': 'application/json',
-      'X-CSRF-Token': csrfToken
-    };
-    
-    // Add auth token if available
-    if (typeof AuthManager !== 'undefined') {
-      const token = AuthManager.getToken(storeId);
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-    }
-    
-    const response = await fetch(`/api/store/${storeId}/update_prices`, {
+    const response = await apiUtils.authenticatedFetch(`/api/store/${storeId}/update_prices`, storeId, {
       method: 'POST',
-      headers: headers,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken
+      },
       body: JSON.stringify({
         changes: changes,
         csrf_token: csrfToken
@@ -172,22 +122,12 @@ async function updateStandardPrices(storeId, changes, csrfToken) {
  */
 async function updateItemizedPrices(storeId, changes, csrfToken) {
   try {
-    const headers = {
-      'Content-Type': 'application/json',
-      'X-CSRF-Token': csrfToken
-    };
-    
-    // Add auth token if available
-    if (typeof AuthManager !== 'undefined') {
-      const token = AuthManager.getToken(storeId);
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-    }
-    
-    const response = await fetch(`/api/store/${storeId}/update_itemized_prices`, {
+    const response = await apiUtils.authenticatedFetch(`/api/store/${storeId}/update_itemized_prices`, storeId, {
       method: 'POST',
-      headers: headers,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken
+      },
       body: JSON.stringify({
         changes: changes,
         csrf_token: csrfToken
@@ -215,22 +155,12 @@ async function updateItemizedPrices(storeId, changes, csrfToken) {
  */
 async function updateLocations(storeId, changes, csrfToken) {
   try {
-    const headers = {
-      'Content-Type': 'application/json',
-      'X-CSRF-Token': csrfToken
-    };
-    
-    // Add auth token if available
-    if (typeof AuthManager !== 'undefined') {
-      const token = AuthManager.getToken(storeId);
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-    }
-    
-    const response = await fetch(`/api/store/${storeId}/update-locations`, {
+    const response = await apiUtils.authenticatedFetch(`/api/store/${storeId}/update-locations`, storeId, {
       method: 'POST',
-      headers: headers,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken
+      },
       body: JSON.stringify({
         changes: changes,
         csrf_token: csrfToken

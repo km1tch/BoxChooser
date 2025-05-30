@@ -17,20 +17,6 @@ export class FloorplanLocationEditor {
         this.init();
     }
     
-    /**
-     * Helper method to make authenticated requests
-     */
-    async authenticatedFetch(url, options = {}) {
-        // Add auth token if available
-        if (typeof AuthManager !== 'undefined') {
-            const token = AuthManager.getToken(this.storeId);
-            if (token) {
-                options.headers = options.headers || {};
-                options.headers['Authorization'] = `Bearer ${token}`;
-            }
-        }
-        return fetch(url, options);
-    }
 
     async init() {
         // Check floorplan status first before initializing components
@@ -150,7 +136,7 @@ export class FloorplanLocationEditor {
     async loadData() {
         try {
             // Load boxes
-            const boxesResponse = await this.authenticatedFetch(`/api/store/${this.storeId}/boxes`);
+            const boxesResponse = await apiUtils.authenticatedFetch(`/api/store/${this.storeId}/boxes`, this.storeId);
             if (boxesResponse.ok) {
                 const data = await boxesResponse.json();
                 this.boxes = data.boxes || []; // Extract boxes array from YAML data
@@ -289,7 +275,7 @@ export class FloorplanLocationEditor {
             
             // Process box deletion
             
-            const response = await this.authenticatedFetch(`/api/store/${this.storeId}/update-locations`, {
+            const response = await apiUtils.authenticatedFetch(`/api/store/${this.storeId}/update-locations`, this.storeId, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -397,7 +383,7 @@ export class FloorplanLocationEditor {
             
             // Process marker movement
             
-            const response = await this.authenticatedFetch(`/api/store/${this.storeId}/update-locations`, {
+            const response = await apiUtils.authenticatedFetch(`/api/store/${this.storeId}/update-locations`, this.storeId, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -521,7 +507,7 @@ export class FloorplanLocationEditor {
             
             // Use models as keys for API
             
-            const response = await this.authenticatedFetch(`/api/store/${this.storeId}/update-locations`, {
+            const response = await apiUtils.authenticatedFetch(`/api/store/${this.storeId}/update-locations`, this.storeId, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -730,7 +716,7 @@ export class FloorplanLocationEditor {
             
             // Process marker merging
             
-            const response = await this.authenticatedFetch(`/api/store/${this.storeId}/update-locations`, {
+            const response = await apiUtils.authenticatedFetch(`/api/store/${this.storeId}/update-locations`, this.storeId, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1048,7 +1034,7 @@ export class FloorplanLocationEditor {
             // Generate CSRF token
             const csrfToken = Math.random().toString(36).substr(2) + Date.now().toString(36);
             
-            const response = await this.authenticatedFetch(`/api/store/${this.storeId}/update-locations`, {
+            const response = await apiUtils.authenticatedFetch(`/api/store/${this.storeId}/update-locations`, this.storeId, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1241,7 +1227,7 @@ export class FloorplanLocationEditor {
             
             // Send changes to API
             
-            const response = await this.authenticatedFetch(`/api/store/${this.storeId}/update-locations`, {
+            const response = await apiUtils.authenticatedFetch(`/api/store/${this.storeId}/update-locations`, this.storeId, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1957,7 +1943,7 @@ export class FloorplanLocationEditor {
     
     async checkFloorplanStatus() {
         try {
-            const response = await this.authenticatedFetch(`/api/store/${this.storeId}/floorplan`);
+            const response = await apiUtils.authenticatedFetch(`/api/store/${this.storeId}/floorplan`, this.storeId);
             this.hasFloorplan = response.ok;
             
             const floorplanContent = document.getElementById('floorplan-content');
