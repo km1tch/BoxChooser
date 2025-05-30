@@ -23,8 +23,6 @@ services:
   backend:
     build: .
     container_name: packingsite_backend
-    ports:
-      - "8000:8000"
     volumes:
       - ./backend:/code/backend:ro # Read-only in production
       - ./stores:/code/stores:rw
