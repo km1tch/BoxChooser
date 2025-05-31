@@ -37,7 +37,13 @@ async function createAdminNav(storeId, activePage = 'prices') {
     const indicator = document.createElement('span');
     indicator.className = 'admin-mode-indicator';
     
-    if (authStatus.isDemo) {
+    // Check if this is a sudo session
+    const isSudo = localStorage.getItem(`store_${storeId}_is_sudo`) === 'true';
+    
+    if (isSudo) {
+      indicator.textContent = 'SUPERADMIN SUDO';
+      indicator.style.background = '#e74c3c'; // Red for superadmin
+    } else if (authStatus.isDemo) {
       indicator.textContent = authStatus.authLevel === 'admin' ? 'DEMO ADMIN' : 'DEMO';
       indicator.style.background = '#17a2b8'; // Teal for demo
     } else if (authStatus.authLevel === 'admin') {

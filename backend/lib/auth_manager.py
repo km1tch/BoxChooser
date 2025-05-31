@@ -89,7 +89,7 @@ def init_db():
             CREATE TABLE IF NOT EXISTS sessions (
                 token TEXT PRIMARY KEY,
                 store_id TEXT NOT NULL,
-                auth_level TEXT NOT NULL CHECK (auth_level IN ('user', 'admin')),
+                auth_level TEXT NOT NULL CHECK (auth_level IN ('user', 'admin', 'superadmin')),
                 expires_at TIMESTAMP,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (store_id) REFERENCES store_auth(store_id)
@@ -165,6 +165,73 @@ def init_db():
                 )
             )
         ''')
+        
+        # Superadmin tables
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS superadmins (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_login TIMESTAMP
+            )
+        ''')
+        
+        db.execute('''
+            CREATE INDEX IF NOT EXISTS idx_superadmins_username ON superadmins(username)
+        ''')
+        
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS superadmin_audit (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                superadmin_username TEXT NOT NULL,
+                action TEXT NOT NULL,
+                target_store_id TEXT,
+                details JSON,
+                success BOOLEAN DEFAULT TRUE
+            )
+        ''')
+        
+        db.execute('''
+            CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON superadmin_audit(timestamp)
+        ''')
+        
+        db.execute('''
+            CREATE INDEX IF NOT EXISTS idx_audit_superadmin ON superadmin_audit(superadmin_username)
+        ''')
+        
+        # Add columns to existing tables if they don't exist
+        # Check if columns exist before adding (SQLite doesn't support IF NOT EXISTS for ALTER)
+        cursor = db.execute("PRAGMA table_info(store_auth)")
+        columns = [col[1] for col in cursor.fetchall()]
+        
+        if 'status' not in columns:
+            db.execute('ALTER TABLE store_auth ADD COLUMN status TEXT DEFAULT "active"')
+        if 'disabled_reason' not in columns:
+            db.execute('ALTER TABLE store_auth ADD COLUMN disabled_reason TEXT')
+        if 'disabled_at' not in columns:
+            db.execute('ALTER TABLE store_auth ADD COLUMN disabled_at TIMESTAMP')
+        if 'disabled_by' not in columns:
+            db.execute('ALTER TABLE store_auth ADD COLUMN disabled_by TEXT')
+        
+        # Check sessions table columns
+        cursor = db.execute("PRAGMA table_info(sessions)")
+        columns = [col[1] for col in cursor.fetchall()]
+        
+        if 'auth_level' not in columns:
+            db.execute('ALTER TABLE sessions ADD COLUMN auth_level TEXT DEFAULT "user"')
+        if 'sudo_stores' not in columns:
+            db.execute('ALTER TABLE sessions ADD COLUMN sudo_stores TEXT')
+        
+        # Check superadmins table columns for TOTP
+        cursor = db.execute("PRAGMA table_info(superadmins)")
+        columns = [col[1] for col in cursor.fetchall()]
+        
+        if 'totp_enabled' not in columns:
+            db.execute('ALTER TABLE superadmins ADD COLUMN totp_enabled BOOLEAN DEFAULT FALSE')
+        if 'totp_secret' not in columns:
+            db.execute('ALTER TABLE superadmins ADD COLUMN totp_secret TEXT')
         
         # Create demo store auth if it doesn't exist
         existing_demo = db.execute(
@@ -409,13 +476,15 @@ def create_session(store_id: str, auth_level: str = "user", hours: Optional[int]
     Returns:
         The session token
     """
-    if auth_level not in ["user", "admin"]:
-        raise ValueError("auth_level must be 'user' or 'admin'")
+    if auth_level not in ["user", "admin", "superadmin"]:
+        raise ValueError("auth_level must be 'user', 'admin', or 'superadmin'")
     
     # Use environment variables for session duration
     if hours is None:
         if auth_level == "user":
             hours = int(os.getenv("USER_SESSION_HOURS", "168"))  # 7 days default
+        elif auth_level == "superadmin":
+            hours = int(os.getenv("SUPERADMIN_SESSION_HOURS", "1"))  # 1 hour default
         else:  # admin
             hours = int(os.getenv("ADMIN_SESSION_HOURS", "24"))   # 24 hours default
         

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Superadmin Login - Packing Website</title>
+    <link rel="stylesheet" href="/assets/css/common.css">
+    <style>
+        body {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+        }
+        
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 2rem;
+            background: #34495e;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .login-container h1 {
+            text-align: center;
+            color: #e74c3c;
+            margin-bottom: 2rem;
+        }
+        
+        .superadmin-warning {
+            background: #e74c3c;
+            color: white;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #bdc3c7;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #7f8c8d;
+            border-radius: 4px;
+            background: #2c3e50;
+            color: #ecf0f1;
+            font-size: 1rem;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .submit-btn:hover {
+            background: #c0392b;
+        }
+        
+        .submit-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        .error-message {
+            background: #c0392b;
+            color: white;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .back-link {
+            text-align: center;
+            margin-top: 2rem;
+        }
+        
+        .back-link a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>Superadmin Access</h1>
+        
+        <div class="superadmin-warning">
+            ⚠️ RESTRICTED ACCESS ⚠️
+        </div>
+        
+        <div id="error-message" class="error-message"></div>
+        
+        <form id="login-form">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required autocomplete="username">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required autocomplete="current-password">
+            </div>
+            
+            <button type="submit" class="submit-btn" id="submit-btn">Login</button>
+        </form>
+        
+        <div class="back-link">
+            <a href="/login">← Back to Store Login</a>
+        </div>
+    </div>
+    
+    <!-- TOTP Modal -->
+    <div id="totp-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: #34495e; border-radius: 8px; padding: 2rem; max-width: 400px; width: 90%;">
+            <h2 style="color: #3498db; margin-bottom: 1rem;">Two-Factor Authentication</h2>
+            <p style="color: #bdc3c7; margin-bottom: 1.5rem;">Enter the 6-digit code from your authenticator app:</p>
+            
+            <form id="totp-form">
+                <div class="form-group">
+                    <input type="text" id="totp-code" pattern="[0-9]{6}" maxlength="6" 
+                           placeholder="000000" required 
+                           style="font-size: 1.5rem; text-align: center; letter-spacing: 0.5rem;"
+                           autocomplete="one-time-code">
+                </div>
+                <button type="submit" class="submit-btn" id="totp-submit-btn">Verify</button>
+            </form>
+            
+            <div id="totp-error" class="error-message" style="margin-top: 1rem; display: none;"></div>
+        </div>
+    </div>
+
+    <script src="/js/lib/superadmin-api.js"></script>
+    <script type="module">
+        const form = document.getElementById('login-form');
+        const errorDiv = document.getElementById('error-message');
+        const submitBtn = document.getElementById('submit-btn');
+        const totpModal = document.getElementById('totp-modal');
+        const totpForm = document.getElementById('totp-form');
+        const totpError = document.getElementById('totp-error');
+        const totpSubmitBtn = document.getElementById('totp-submit-btn');
+        
+        let pendingUsername = null;
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            errorDiv.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Logging in...';
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const result = await SuperadminAPI.login(username, password);
+                
+                // Check if TOTP is required
+                if (result.requires_totp) {
+                    // Store username for TOTP verification
+                    pendingUsername = username;
+                    
+                    // Show TOTP modal
+                    totpModal.style.display = 'flex';
+                    document.getElementById('totp-code').focus();
+                    
+                    // Re-enable login form
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Login';
+                } else {
+                    // No TOTP required, redirect to dashboard
+                    window.location.href = '/admin/';
+                }
+                
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Login';
+            }
+        });
+        
+        // TOTP form handler
+        totpForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            totpError.style.display = 'none';
+            totpSubmitBtn.disabled = true;
+            totpSubmitBtn.textContent = 'Verifying...';
+            
+            const totpCode = document.getElementById('totp-code').value;
+            
+            try {
+                // Call TOTP verification endpoint
+                const response = await fetch('/api/admin/login/totp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: pendingUsername,
+                        totp_token: totpCode
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json().catch(() => null);
+                    throw new Error(error?.detail || 'Invalid TOTP code');
+                }
+                
+                const data = await response.json();
+                localStorage.setItem('superadmin_token', data.access_token);
+                
+                // Redirect to dashboard
+                window.location.href = '/admin/';
+                
+            } catch (error) {
+                totpError.textContent = error.message;
+                totpError.style.display = 'block';
+                totpSubmitBtn.disabled = false;
+                totpSubmitBtn.textContent = 'Verify';
+                
+                // Clear the code input
+                document.getElementById('totp-code').value = '';
+                document.getElementById('totp-code').focus();
+            }
+        });
+        
+        // Auto-focus on TOTP code input
+        document.getElementById('totp-code').addEventListener('input', (e) => {
+            if (e.target.value.length === 6) {
+                totpForm.requestSubmit();
+            }
+        });
+    </script>
+</body>
+</html>

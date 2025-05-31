@@ -135,11 +135,23 @@ const AuthManager = (function() {
       }
     }
     
-    // Always remove token locally
-    removeToken(storeId);
+    // Check if this was a sudo session before removing
+    const isSudo = localStorage.getItem(`store_${storeId}_is_sudo`) === 'true';
     
-    // Redirect to home page (clean URL without store ID)
-    window.location.href = '/';
+    // Always remove token and sudo flag locally
+    removeToken(storeId);
+    localStorage.removeItem(`store_${storeId}_is_sudo`);
+    
+    // Redirect appropriately
+    if (isSudo) {
+      // Close the tab if it's a sudo session
+      window.close();
+      // If window.close() doesn't work (not opened by script), redirect
+      window.location.href = '/';
+    } else {
+      // Redirect to home page (clean URL without store ID)
+      window.location.href = '/';
+    }
   }
   
   /**

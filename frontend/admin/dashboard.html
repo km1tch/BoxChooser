@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Superadmin Dashboard - Packing Website</title>
+    <link rel="stylesheet" href="/assets/css/common.css" />
+    <style>
+      body {
+        background-color: #2c3e50;
+        color: #ecf0f1;
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+      }
+
+      .superadmin-header {
+        background: #34495e;
+        padding: 1rem 2rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .superadmin-header h1 {
+        margin: 0;
+        color: #e74c3c;
+        font-size: 1.5rem;
+      }
+
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .superadmin-badge {
+        background: #e74c3c;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-weight: bold;
+      }
+
+      .logout-btn {
+        background: #95a5a6;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+
+      .logout-btn:hover {
+        background: #7f8c8d;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 2rem auto;
+        padding: 0 2rem;
+      }
+
+      .tab-navigation {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid #34495e;
+      }
+
+      .tab-button {
+        background: none;
+        border: none;
+        color: #95a5a6;
+        padding: 1rem 2rem;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s;
+      }
+
+      .tab-button:hover {
+        color: #ecf0f1;
+      }
+
+      .tab-button.active {
+        color: #3498db;
+        border-bottom-color: #3498db;
+      }
+
+      .tab-content {
+        display: none;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      .stores-table {
+        width: 100%;
+        background: #34495e;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .stores-table table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .stores-table th {
+        background: #2c3e50;
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #bdc3c7;
+        text-transform: uppercase;
+        font-size: 0.875rem;
+        letter-spacing: 0.05em;
+      }
+
+      .stores-table td {
+        padding: 1rem;
+        border-top: 1px solid #2c3e50;
+      }
+
+      .stores-table tr:hover {
+        background: #3a526b;
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+
+      .status-active {
+        background: #27ae60;
+        color: white;
+      }
+
+      .status-disabled {
+        background: #e74c3c;
+        color: white;
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 0.875rem;
+        transition: all 0.3s;
+      }
+
+      .btn-primary {
+        background: #3498db;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #2980b9;
+      }
+
+      .btn-success {
+        background: #27ae60;
+        color: white;
+      }
+
+      .btn-success:hover {
+        background: #229954;
+      }
+
+      .btn-danger {
+        background: #e74c3c;
+        color: white;
+      }
+
+      .btn-danger:hover {
+        background: #c0392b;
+      }
+
+      .btn-secondary {
+        background: #95a5a6;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #7f8c8d;
+      }
+
+      .audit-log {
+        background: #34495e;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .audit-entry {
+        display: flex;
+        align-items: start;
+        gap: 1rem;
+        padding: 1rem 0;
+        border-bottom: 1px solid #2c3e50;
+      }
+
+      .audit-entry:last-child {
+        border-bottom: none;
+      }
+
+      .audit-time {
+        color: #95a5a6;
+        font-size: 0.875rem;
+        min-width: 150px;
+      }
+
+      .audit-action {
+        flex: 1;
+      }
+
+      .audit-user {
+        color: #3498db;
+        font-weight: 500;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal.active {
+        display: flex;
+      }
+
+      .modal-content {
+        background: #34495e;
+        border-radius: 8px;
+        padding: 2rem;
+        max-width: 600px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+
+      .modal-header h2 {
+        margin: 0;
+        color: #3498db;
+      }
+
+      .close-btn {
+        background: none;
+        border: none;
+        color: #95a5a6;
+        font-size: 1.5rem;
+        cursor: pointer;
+      }
+
+      .close-btn:hover {
+        color: #ecf0f1;
+      }
+
+      .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #2c3e50;
+      }
+
+      .detail-label {
+        color: #95a5a6;
+        font-weight: 500;
+      }
+
+      .detail-value {
+        color: #ecf0f1;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 2rem;
+        color: #95a5a6;
+      }
+
+      .error-message {
+        background: #c0392b;
+        color: white;
+        padding: 1rem;
+        border-radius: 4px;
+        margin: 1rem 0;
+      }
+
+      .success-message {
+        background: #27ae60;
+        color: white;
+        padding: 1rem;
+        border-radius: 4px;
+        margin: 1rem 0;
+      }
+
+      textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #7f8c8d;
+        border-radius: 4px;
+        background: #2c3e50;
+        color: #ecf0f1;
+        font-family: inherit;
+        resize: vertical;
+        min-height: 100px;
+      }
+
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #bdc3c7;
+        font-weight: 500;
+      }
+
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #7f8c8d;
+        border-radius: 4px;
+        background: #2c3e50;
+        color: #ecf0f1;
+        font-size: 1rem;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: #3498db;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="superadmin-header">
+      <h1>Superadmin Dashboard</h1>
+      <div class="header-right">
+        <span class="superadmin-badge" id="username-badge">SUPERADMIN</span>
+        <button class="logout-btn" onclick="SuperadminAPI.logout()">
+          Logout
+        </button>
+      </div>
+    </header>
+
+    <div class="container">
+      <nav class="tab-navigation">
+        <button class="tab-button active" onclick="switchTab('stores')">
+          Stores
+        </button>
+        <button class="tab-button" onclick="switchTab('audit')">
+          Audit Trail
+        </button>
+        <button class="tab-button" onclick="switchTab('security')">
+          Security
+        </button>
+      </nav>
+
+      <!-- Stores Tab -->
+      <div id="stores-tab" class="tab-content active">
+        <div style="margin-bottom: 1rem">
+          <button
+            class="btn btn-primary"
+            onclick="openModal('create-store-modal')"
+          >
+            Create New Store
+          </button>
+        </div>
+        <div class="stores-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Store ID</th>
+                <th>Admin Email</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="stores-tbody">
+              <tr>
+                <td colspan="5" class="loading">Loading stores...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Audit Trail Tab -->
+      <div id="audit-tab" class="tab-content">
+        <div class="audit-log" id="audit-log">
+          <div class="loading">Loading audit trail...</div>
+        </div>
+      </div>
+
+      <!-- Security Tab -->
+      <div id="security-tab" class="tab-content">
+        <div class="security-container">
+          <h2 style="color: #3498db; margin-bottom: 2rem">Security Settings</h2>
+
+          <div
+            class="security-card"
+            style="
+              background: #34495e;
+              padding: 2rem;
+              border-radius: 8px;
+              margin-bottom: 2rem;
+            "
+          >
+            <h3 style="color: #e74c3c; margin-bottom: 1rem">
+              Two-Factor Authentication (TOTP)
+            </h3>
+            <div id="totp-status">
+              <div class="loading">Loading...</div>
+            </div>
+          </div>
+
+          <div
+            class="security-card"
+            style="background: #34495e; padding: 2rem; border-radius: 8px"
+          >
+            <h3 style="color: #3498db; margin-bottom: 1rem">Password</h3>
+            <p style="color: #95a5a6; margin-bottom: 1rem">
+              To change your password, use the command line tool:
+            </p>
+            <code
+              style="
+                background: #2c3e50;
+                padding: 1rem;
+                display: block;
+                border-radius: 4px;
+                font-family: monospace;
+              "
+            >
+              ./tools/auth superadmin reset-password {your-username}
+            </code>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Store Details Modal -->
+    <div id="store-details-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Store Details</h2>
+          <button class="close-btn" onclick="closeModal('store-details-modal')">
+            &times;
+          </button>
+        </div>
+        <div id="store-details-content">
+          <div class="loading">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Disable Store Modal -->
+    <div id="disable-store-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Disable Store</h2>
+          <button class="close-btn" onclick="closeModal('disable-store-modal')">
+            &times;
+          </button>
+        </div>
+        <form onsubmit="handleDisableStore(event)">
+          <input type="hidden" id="disable-store-id" />
+          <div class="form-group">
+            <label for="disable-reason">Reason for disabling:</label>
+            <textarea
+              id="disable-reason"
+              placeholder="Enter reason (optional)"
+            ></textarea>
+          </div>
+          <div class="action-buttons">
+            <button type="submit" class="btn btn-danger">Disable Store</button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="closeModal('disable-store-modal')"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Create Store Modal -->
+    <div id="create-store-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Create New Store</h2>
+          <button class="close-btn" onclick="closeModal('create-store-modal')">
+            &times;
+          </button>
+        </div>
+        <form onsubmit="handleCreateStore(event)">
+          <div class="form-group">
+            <label for="new-store-id">Store ID:</label>
+            <input
+              type="text"
+              id="new-store-id"
+              required
+              pattern="[0-9]{1,6}"
+              placeholder="e.g., 123"
+              title="Numeric ID up to 6 digits"
+            />
+          </div>
+          <div class="form-group">
+            <label for="new-store-name">Store Name (Optional):</label>
+            <input
+              type="text"
+              id="new-store-name"
+              placeholder="e.g., Downtown Branch"
+            />
+          </div>
+          <div class="form-group">
+            <label for="new-admin-email">Admin Email:</label>
+            <input
+              type="email"
+              id="new-admin-email"
+              required
+              placeholder="admin@example.com"
+            />
+          </div>
+          <div class="form-group">
+            <label for="copy-from-store">Copy Configuration From:</label>
+            <select id="copy-from-store">
+              <option value="">-- Use Default Template --</option>
+            </select>
+          </div>
+          <div class="action-buttons">
+            <button type="submit" class="btn btn-primary">Create Store</button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="closeModal('create-store-modal')"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Store Created Modal -->
+    <div id="store-created-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Store Created Successfully!</h2>
+          <button class="close-btn" onclick="closeModal('store-created-modal')">
+            &times;
+          </button>
+        </div>
+        <div id="store-created-content">
+          <!-- Will be populated with store details and PIN -->
+        </div>
+      </div>
+    </div>
+
+    <!-- TOTP Setup Modal -->
+    <div id="totp-setup-modal" class="modal">
+      <div class="modal-content" style="max-width: 700px">
+        <div class="modal-header">
+          <h2>Enable Two-Factor Authentication</h2>
+          <button class="close-btn" onclick="closeTOTPModal()">&times;</button>
+        </div>
+        <div id="totp-setup-content">
+          <div class="loading">Setting up 2FA...</div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/lib/superadmin-api.js"></script>
+    <script>
+      // Check auth on load
+      if (!SuperadminAPI.getToken()) {
+        window.location.href = "/admin-login.html";
+      }
+
+      // Global state
+      let currentStores = [];
+      let currentAuditLogs = [];
+      let auditRefreshInterval = null;
+      let totpSetupData = null;
+
+      // Tab switching
+      function switchTab(tabName) {
+        // Update buttons
+        document.querySelectorAll(".tab-button").forEach((btn) => {
+          btn.classList.remove("active");
+        });
+        event.target.classList.add("active");
+
+        // Update content
+        document.querySelectorAll(".tab-content").forEach((content) => {
+          content.classList.remove("active");
+        });
+        document.getElementById(`${tabName}-tab`).classList.add("active");
+
+        // Handle tab-specific loading
+        if (tabName === "audit") {
+          loadAuditLog();
+          // Start auto-refresh every 5 seconds
+          auditRefreshInterval = setInterval(loadAuditLog, 5000);
+        } else {
+          // Clear auto-refresh when leaving audit tab
+          if (auditRefreshInterval) {
+            clearInterval(auditRefreshInterval);
+            auditRefreshInterval = null;
+          }
+        }
+
+        if (tabName === "security") {
+          loadSecurityStatus();
+        }
+      }
+
+      // Modal functions
+      function openModal(modalId) {
+        document.getElementById(modalId).classList.add("active");
+      }
+
+      function closeModal(modalId) {
+        document.getElementById(modalId).classList.remove("active");
+      }
+
+      // Load stores
+      async function loadStores() {
+        try {
+          currentStores = await SuperadminAPI.listStores();
+          renderStores();
+        } catch (error) {
+          document.getElementById("stores-tbody").innerHTML = `
+                    <tr><td colspan="5" class="error-message">Error loading stores: ${error.message}</td></tr>
+                `;
+        }
+      }
+
+      // Render stores table
+      function renderStores() {
+        const tbody = document.getElementById("stores-tbody");
+
+        if (currentStores.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="5" style="text-align: center;">No stores found</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = currentStores
+          .map(
+            (store) => `
+                <tr>
+                    <td>
+                        ${store.store_id}
+                        ${store.name ? `<br><small style="color: #95a5a6; font-style: italic;">${store.name}</small>` : ''}
+                    </td>
+                    <td>${store.admin_email}</td>
+                    <td>
+                        <span class="status-badge status-${store.status}">
+                            ${store.status.toUpperCase()}
+                        </span>
+                    </td>
+                    <td>${new Date(store.created_at).toLocaleDateString()}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-secondary" onclick="viewStoreDetails('${
+                              store.store_id
+                            }')">Details</button>
+                            <button class="btn btn-primary" onclick="sudoIntoStore('${
+                              store.store_id
+                            }')" 
+                                ${
+                                  store.status !== "active" ? "disabled" : ""
+                                }>Sudo</button>
+                            ${
+                              store.status === "active"
+                                ? `<button class="btn btn-danger" onclick="showDisableModal('${store.store_id}')">Disable</button>`
+                                : `<button class="btn btn-success" onclick="enableStore('${store.store_id}')">Enable</button>`
+                            }
+                        </div>
+                    </td>
+                </tr>
+            `
+          )
+          .join("");
+
+        // Update copy-from dropdown
+        const copyFromSelect = document.getElementById("copy-from-store");
+        copyFromSelect.innerHTML =
+          '<option value="">-- Use Default Template --</option>' +
+          currentStores
+            .map(
+              (store) =>
+                `<option value="${store.store_id}">Copy from Store ${store.store_id}</option>`
+            )
+            .join("");
+      }
+
+      // View store details
+      async function viewStoreDetails(storeId) {
+        openModal("store-details-modal");
+        const content = document.getElementById("store-details-content");
+        content.innerHTML = '<div class="loading">Loading...</div>';
+
+        try {
+          const details = await SuperadminAPI.getStoreDetails(storeId);
+
+          content.innerHTML = `
+                    <div class="detail-row">
+                        <span class="detail-label">Store ID:</span>
+                        <span class="detail-value">${details.store_id}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Store Name:</span>
+                        <span class="detail-value">
+                            <span id="store-name-display">${details.name || '<em style="color: #95a5a6;">Not set</em>'}</span>
+                            <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin-left: 0.5rem;" onclick="editStoreMetadata('${storeId}')">Edit</button>
+                        </span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Description:</span>
+                        <span class="detail-value">
+                            <span id="store-desc-display">${details.description || '<em style="color: #95a5a6;">Not set</em>'}</span>
+                        </span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Admin Email:</span>
+                        <span class="detail-value">${details.admin_email}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Status:</span>
+                        <span class="detail-value">
+                            <span class="status-badge status-${
+                              details.status
+                            }">${details.status.toUpperCase()}</span>
+                        </span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Created:</span>
+                        <span class="detail-value">${new Date(
+                          details.created_at
+                        ).toLocaleString()}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Active Sessions:</span>
+                        <span class="detail-value">${
+                          details.active_sessions
+                        }</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Total Logins:</span>
+                        <span class="detail-value">${
+                          details.total_logins
+                        }</span>
+                    </div>
+                    ${
+                      details.disabled_reason
+                        ? `
+                        <div class="detail-row">
+                            <span class="detail-label">Disabled Reason:</span>
+                            <span class="detail-value">${
+                              details.disabled_reason
+                            }</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Disabled By:</span>
+                            <span class="detail-value">${
+                              details.disabled_by
+                            } at ${new Date(
+                            details.disabled_at
+                          ).toLocaleString()}</span>
+                        </div>
+                    `
+                        : ""
+                    }
+                    
+                    <h3 style="margin-top: 2rem; color: #3498db;">Recent Activity</h3>
+                    ${
+                      details.recent_activity.length > 0
+                        ? details.recent_activity
+                            .map((act) => {
+                              let actionText = act.action;
+                              let extraInfo = "";
+
+                              // Handle superadmin actions specially
+                              if (act.source === "superadmin") {
+                                try {
+                                  const details =
+                                    typeof act.details === "string"
+                                      ? JSON.parse(act.details)
+                                      : act.details;
+                                  if (act.action === "sudo_store") {
+                                    actionText = `🚨 <span style="color: #e74c3c;">SUDO ACCESS by ${details.by}</span>`;
+                                  } else if (act.action === "disable_store") {
+                                    actionText = `🚫 <span style="color: #e74c3c;">DISABLED by ${details.by}</span>`;
+                                    if (details.details) {
+                                      const innerDetails = JSON.parse(
+                                        details.details
+                                      );
+                                      if (innerDetails.reason) {
+                                        extraInfo = ` - Reason: ${innerDetails.reason}`;
+                                      }
+                                    }
+                                  } else if (act.action === "enable_store") {
+                                    actionText = `✅ <span style="color: #27ae60;">ENABLED by ${details.by}</span>`;
+                                  }
+                                } catch (e) {
+                                  // Fall back to simple display
+                                  actionText =
+                                    act.action +
+                                    (act.details ? `: ${act.details}` : "");
+                                }
+                              } else {
+                                // Regular store activity
+                                if (act.details) {
+                                  actionText += `: ${act.details}`;
+                                }
+                              }
+
+                              return `
+                                <div class="audit-entry">
+                                    <div class="audit-time">${new Date(
+                                      act.timestamp
+                                    ).toLocaleString()}</div>
+                                    <div class="audit-action">${actionText}${extraInfo}</div>
+                                </div>
+                            `;
+                            })
+                            .join("")
+                        : '<p style="color: #95a5a6;">No recent activity</p>'
+                    }
+                `;
+        } catch (error) {
+          content.innerHTML = `<div class="error-message">Error loading details: ${error.message}</div>`;
+        }
+      }
+
+      // Sudo into store
+      async function sudoIntoStore(storeId) {
+        if (!confirm(`Are you sure you want to sudo into Store ${storeId}?`)) {
+          return;
+        }
+
+        try {
+          const result = await SuperadminAPI.createSudoToken(storeId);
+
+          // Store the sudo token with a special flag to indicate it's a sudo session
+          localStorage.setItem(`store_${storeId}_token`, result.token);
+          localStorage.setItem('current_store_id', storeId);
+          localStorage.setItem(`store_${storeId}_is_sudo`, 'true');
+
+          // Open in new tab
+          window.open(`/wizard`, "_blank");
+
+          // Reload stores to update any counts
+          loadStores();
+        } catch (error) {
+          alert(`Error creating sudo session: ${error.message}`);
+        }
+      }
+
+      // Show disable modal
+      function showDisableModal(storeId) {
+        document.getElementById("disable-store-id").value = storeId;
+        document.getElementById("disable-reason").value = "";
+        openModal("disable-store-modal");
+      }
+
+      // Handle disable store
+      async function handleDisableStore(event) {
+        event.preventDefault();
+
+        const storeId = document.getElementById("disable-store-id").value;
+        const reason = document.getElementById("disable-reason").value;
+
+        try {
+          await SuperadminAPI.disableStore(storeId, reason);
+          closeModal("disable-store-modal");
+          loadStores();
+          showMessage("success", `Store ${storeId} has been disabled`);
+        } catch (error) {
+          alert(`Error disabling store: ${error.message}`);
+        }
+      }
+
+      // Enable store
+      async function enableStore(storeId) {
+        if (!confirm(`Are you sure you want to enable Store ${storeId}?`)) {
+          return;
+        }
+
+        try {
+          await SuperadminAPI.enableStore(storeId);
+          loadStores();
+          showMessage("success", `Store ${storeId} has been enabled`);
+        } catch (error) {
+          alert(`Error enabling store: ${error.message}`);
+        }
+      }
+
+      // Load audit log
+      async function loadAuditLog() {
+        const container = document.getElementById("audit-log");
+        container.innerHTML =
+          '<div class="loading">Loading audit trail...</div>';
+
+        try {
+          currentAuditLogs = await SuperadminAPI.getAuditLog({ limit: 100 });
+
+          if (currentAuditLogs.length === 0) {
+            container.innerHTML =
+              '<p style="text-align: center; color: #95a5a6;">No audit entries found</p>';
+            return;
+          }
+
+          container.innerHTML = currentAuditLogs
+            .map(
+              (log) => `
+                    <div class="audit-entry">
+                        <div class="audit-time">${new Date(
+                          log.timestamp
+                        ).toLocaleString()}</div>
+                        <div class="audit-action">
+                            <span class="audit-user">${log.superadmin}</span>
+                            ${log.action.replace(/_/g, " ")}
+                            ${log.store_id ? ` store ${log.store_id}` : ""}
+                            ${
+                              log.details
+                                ? ` - ${JSON.stringify(log.details)}`
+                                : ""
+                            }
+                            ${
+                              !log.success
+                                ? ' <span style="color: #e74c3c;">(FAILED)</span>'
+                                : ""
+                            }
+                        </div>
+                    </div>
+                `
+            )
+            .join("");
+        } catch (error) {
+          container.innerHTML = `<div class="error-message">Error loading audit log: ${error.message}</div>`;
+        }
+      }
+
+      // Handle create store
+      async function handleCreateStore(event) {
+        event.preventDefault();
+
+        const storeId = document.getElementById("new-store-id").value;
+        const storeName = document.getElementById("new-store-name").value;
+        const adminEmail = document.getElementById("new-admin-email").value;
+        const copyFromStore = document.getElementById("copy-from-store").value;
+
+        try {
+          const result = await SuperadminAPI.createStore({
+            store_id: storeId,
+            admin_email: adminEmail,
+            store_name: storeName || undefined,
+            copy_from_store: copyFromStore || undefined,
+          });
+
+          closeModal("create-store-modal");
+
+          // Show success modal with PIN
+          document.getElementById("store-created-content").innerHTML = `
+                    <div class="success-message" style="margin-bottom: 1rem;">
+                        Store ${result.store_id} has been created successfully!
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Store ID:</span>
+                        <span class="detail-value">${result.store_id}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Admin Email:</span>
+                        <span class="detail-value">${result.admin_email}</span>
+                    </div>
+                    <div class="detail-row" style="background: #e74c3c; color: white; padding: 1rem; border-radius: 4px; margin: 1rem 0;">
+                        <span class="detail-label" style="color: white;">Store PIN:</span>
+                        <span class="detail-value" style="font-size: 1.5rem; font-weight: bold;">${result.pin}</span>
+                    </div>
+                    <p style="color: #e74c3c; font-weight: bold;">⚠️ IMPORTANT: Save this PIN immediately! It cannot be recovered.</p>
+                    <div class="action-buttons" style="margin-top: 2rem;">
+                        <button class="btn btn-primary" onclick="closeModal('store-created-modal')">Done</button>
+                    </div>
+                `;
+          openModal("store-created-modal");
+
+          // Reload stores list
+          loadStores();
+        } catch (error) {
+          alert(`Error creating store: ${error.message}`);
+        }
+      }
+
+      // Show message
+      function showMessage(type, message) {
+        // Simple implementation - you could make this fancier
+        const msg = document.createElement("div");
+        msg.className =
+          type === "success" ? "success-message" : "error-message";
+        msg.textContent = message;
+        msg.style.position = "fixed";
+        msg.style.top = "20px";
+        msg.style.right = "20px";
+        msg.style.zIndex = "2000";
+        document.body.appendChild(msg);
+
+        setTimeout(() => {
+          msg.remove();
+        }, 3000);
+      }
+
+      // Load security status
+      async function loadSecurityStatus() {
+        const statusDiv = document.getElementById("totp-status");
+
+        try {
+          const status = await SuperadminAPI.getTOTPStatus();
+
+          statusDiv.innerHTML = `
+                    <p style="color: #95a5a6; margin-bottom: 1rem;">
+                        Two-factor authentication adds an extra layer of security to your account.
+                    </p>
+                    <div id="totp-status-content">
+                        ${
+                          status.enabled
+                            ? `
+                                <p style="color: #27ae60; margin-bottom: 1rem;">
+                                    ✅ Two-factor authentication is enabled
+                                </p>
+                                <p style="color: #95a5a6; font-size: 0.875rem;">
+                                    You're using your authenticator app for additional security when logging in.
+                                </p>
+                              `
+                            : `
+                                <p style="color: #e74c3c; margin-bottom: 1rem;">
+                                    ⚠️ Two-factor authentication is not enabled
+                                </p>
+                                <button class="btn btn-primary" onclick="startTOTPSetup()">
+                                    Enable 2FA
+                                </button>
+                              `
+                        }
+                    </div>
+                `;
+        } catch (error) {
+          statusDiv.innerHTML = `<div class="error-message">Error loading status: ${error.message}</div>`;
+        }
+      }
+
+      // Start TOTP setup
+      async function startTOTPSetup() {
+        openModal("totp-setup-modal");
+        const content = document.getElementById("totp-setup-content");
+
+        try {
+          totpSetupData = await SuperadminAPI.setupTOTP();
+
+          content.innerHTML = `
+                    <div style="display: grid; grid-template-columns: 45% 55%; gap: 2rem; align-items: start;">
+                        <div>
+                            <h3 style="color: #3498db; margin-bottom: 1rem;">1. Scan QR Code</h3>
+                            <p style="color: #95a5a6; margin-bottom: 1rem;">
+                                Use your authenticator app (Google Authenticator, Authy, etc.) to scan this QR code:
+                            </p>
+                            <div style="background: white; padding: 0.5rem; border-radius: 8px; display: inline-block;">
+                                <img src="${totpSetupData.qr_code}" alt="TOTP QR Code" style="display: block; width: 250px; height: 250px;">
+                            </div>
+                        </div>
+                        
+                        <div style="overflow-x: hidden; padding-right: 0.5rem;">
+                            <h3 style="color: #3498db; margin-bottom: 1rem;">2. Manual Entry</h3>
+                            <p style="color: #95a5a6; margin-bottom: 1rem;">
+                                Can't scan? Enter this code manually:
+                            </p>
+                            <div style="background: #2c3e50; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; overflow-wrap: break-word;">
+                                <code style="font-family: monospace; font-size: 1.1rem; color: #3498db; word-break: break-all;">
+                                    ${totpSetupData.secret}
+                                </code>
+                            </div>
+                            <p style="color: #95a5a6; font-size: 0.875rem; margin-bottom: 2rem;">
+                                Issuer: ${totpSetupData.issuer}
+                            </p>
+                            
+                            <div style="border-top: 1px solid #34495e; padding-top: 0.5rem;">
+                                <h3 style="color: #e74c3c; margin-bottom: 1rem;">3. Verify Setup</h3>
+                                <p style="color: #95a5a6; margin-bottom: 1rem;">
+                                    Enter the 6-digit code from your authenticator app to complete setup:
+                                </p>
+                                <form onsubmit="verifyTOTP(event)">
+                                    <div class="form-group" style="margin-bottom: 1rem; padding-right: 1.5rem;">
+                                        <input type="text" id="totp-verify-code" pattern="[0-9]{6}" maxlength="6"
+                                               placeholder="000000" required style="font-size: 1.5rem; text-align: center; width: 100%;">
+                                    </div>
+                                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                                        <button type="submit" class="btn btn-success">Verify & Enable 2FA</button>
+                                        <button type="button" class="btn btn-secondary" onclick="closeTOTPModal()">Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+          // Focus on the input
+          document.getElementById("totp-verify-code").focus();
+        } catch (error) {
+          content.innerHTML = `<div class="error-message">Error setting up 2FA: ${error.message}</div>`;
+        }
+      }
+
+      // Verify TOTP code
+      async function verifyTOTP(event) {
+        event.preventDefault();
+
+        const code = document.getElementById("totp-verify-code").value;
+        const submitButton = event.target.querySelector(
+          'button[type="submit"]'
+        );
+
+        submitButton.disabled = true;
+        submitButton.textContent = "Verifying...";
+
+        try {
+          await SuperadminAPI.verifyTOTP(code);
+
+          // Success!
+          document.getElementById("totp-setup-content").innerHTML = `
+                    <div class="success-message" style="margin-bottom: 2rem;">
+                        ✅ Two-factor authentication has been enabled successfully!
+                    </div>
+                    <p style="color: #95a5a6; margin-bottom: 2rem;">
+                        Your account is now protected with 2FA. You'll need your authenticator app to log in.
+                    </p>
+                    <div style="background: #e74c3c; color: white; padding: 1rem; border-radius: 4px; margin-bottom: 2rem;">
+                        <strong>⚠️ Important:</strong> Make sure to keep your authenticator app accessible. 
+                        If you lose access to it, you'll need to use the command line tool to disable 2FA.
+                    </div>
+                    <button class="btn btn-primary" onclick="closeTOTPModal()">Done</button>
+                `;
+
+          // Refresh security status
+          loadSecurityStatus();
+        } catch (error) {
+          alert(`Error enabling 2FA: ${error.message}`);
+          submitButton.disabled = false;
+          submitButton.textContent = "Verify & Enable 2FA";
+        }
+      }
+
+      // Close TOTP modal
+      function closeTOTPModal() {
+        closeModal("totp-setup-modal");
+        totpSetupData = null;
+      }
+
+      // Initialize on load
+      async function init() {
+        try {
+          // Get dashboard info to show username
+          const info = await SuperadminAPI.getDashboard();
+          document.getElementById("username-badge").textContent =
+            info.username.toUpperCase();
+
+          // Load stores
+          await loadStores();
+        } catch (error) {
+          console.error("Initialization error:", error);
+          // If auth fails, the API will redirect to login
+        }
+      }
+
+      // Edit store metadata
+      function editStoreMetadata(storeId) {
+        // Create a simple inline edit form
+        const nameDisplay = document.getElementById('store-name-display');
+        const descDisplay = document.getElementById('store-desc-display');
+        
+        const currentName = nameDisplay.textContent === 'Not set' ? '' : nameDisplay.textContent;
+        const currentDesc = descDisplay.textContent === 'Not set' ? '' : descDisplay.textContent;
+        
+        // Replace displays with inputs
+        nameDisplay.innerHTML = `
+          <input type="text" id="edit-store-name" value="${currentName}" 
+                 style="background: #2c3e50; color: #ecf0f1; border: 1px solid #7f8c8d; padding: 0.25rem;">
+        `;
+        
+        descDisplay.innerHTML = `
+          <textarea id="edit-store-desc" style="background: #2c3e50; color: #ecf0f1; border: 1px solid #7f8c8d; padding: 0.25rem; width: 100%; min-height: 60px;">${currentDesc}</textarea>
+          <div style="margin-top: 0.5rem;">
+            <button class="btn btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;" onclick="saveStoreMetadata('${storeId}')">Save</button>
+            <button class="btn btn-secondary" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;" onclick="viewStoreDetails('${storeId}')">Cancel</button>
+          </div>
+        `;
+      }
+      
+      // Save store metadata
+      async function saveStoreMetadata(storeId) {
+        const name = document.getElementById('edit-store-name').value;
+        const description = document.getElementById('edit-store-desc').value;
+        
+        try {
+          await SuperadminAPI.updateStoreMetadata(storeId, {
+            name: name || null,
+            description: description || null
+          });
+          
+          // Reload the details
+          viewStoreDetails(storeId);
+          showMessage('success', 'Store metadata updated successfully');
+        } catch (error) {
+          alert(`Error updating metadata: ${error.message}`);
+        }
+      }
+
+      // Start the app
+      init();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting - Packing Website</title>
+    <script>
+        // Redirect to the full dashboard
+        window.location.href = '/admin/dashboard.html';
+    </script>
+    <link rel="stylesheet" href="/assets/css/common.css">
+    <style>
+        body {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .superadmin-header {
+            background: #34495e;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .superadmin-header h1 {
+            margin: 0;
+            color: #e74c3c;
+            font-size: 1.5rem;
+        }
+        
+        .superadmin-badge {
+            background: #e74c3c;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-right: 1rem;
+        }
+        
+        .logout-btn {
+            background: #95a5a6;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .logout-btn:hover {
+            background: #7f8c8d;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .welcome-message {
+            background: #34495e;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .welcome-message h2 {
+            color: #3498db;
+            margin-bottom: 1rem;
+        }
+        
+        .hello-world {
+            font-size: 2rem;
+            color: #2ecc71;
+            margin: 2rem 0;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .info-card {
+            background: #34495e;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #7f8c8d;
+        }
+        
+        .info-card h3 {
+            color: #3498db;
+            margin-bottom: 1rem;
+        }
+        
+        .info-card pre {
+            background: #2c3e50;
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        
+        .loading {
+            text-align: center;
+            margin-top: 4rem;
+            font-size: 1.2rem;
+            color: #95a5a6;
+        }
+    </style>
+</head>
+<body>
+    <header class="superadmin-header">
+        <div>
+            <h1>Superadmin Dashboard</h1>
+        </div>
+        <div>
+            <span class="superadmin-badge" id="username-badge">SUPERADMIN</span>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="welcome-message">
+            <h2>🎉 Superadmin Access Confirmed!</h2>
+            <div class="hello-world">Hello World from Superadmin!</div>
+            <p>This is your first stake in the ground for the superadmin interface.</p>
+        </div>
+        
+        <div id="content" class="loading">Loading...</div>
+    </div>
+    
+    <script src="/js/lib/superadmin-api.js"></script>
+    <script type="module">
+        // Check superadmin auth
+        if (!SuperadminAPI.getToken()) {
+            window.location.href = '/admin-login.html';
+        }
+        
+        // Logout function
+        window.logout = function() {
+            SuperadminAPI.logout();
+        };
+        
+        // View stores function
+        window.viewStores = async function() {
+            const storesDiv = document.getElementById('stores-list');
+            storesDiv.innerHTML = 'Loading...';
+            
+            try {
+                const stores = await SuperadminAPI.listStores();
+                
+                if (stores.length === 0) {
+                    storesDiv.innerHTML = '<p>No stores found.</p>';
+                    return;
+                }
+                
+                let html = '<table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">';
+                html += '<thead><tr style="border-bottom: 2px solid #7f8c8d;">';
+                html += '<th style="text-align: left; padding: 0.5rem;">Store ID</th>';
+                html += '<th style="text-align: left; padding: 0.5rem;">Admin Email</th>';
+                html += '<th style="text-align: left; padding: 0.5rem;">Status</th>';
+                html += '</tr></thead><tbody>';
+                
+                stores.forEach(store => {
+                    const statusColor = store.status === 'active' ? '#2ecc71' : '#e74c3c';
+                    html += `<tr style="border-bottom: 1px solid #7f8c8d;">`;
+                    html += `<td style="padding: 0.5rem;">${store.store_id}</td>`;
+                    html += `<td style="padding: 0.5rem;">${store.admin_email}</td>`;
+                    html += `<td style="padding: 0.5rem;"><span style="color: ${statusColor};">${store.status}</span></td>`;
+                    html += `</tr>`;
+                });
+                
+                html += '</tbody></table>';
+                storesDiv.innerHTML = html;
+                
+            } catch (error) {
+                storesDiv.innerHTML = `<p style="color: #e74c3c;">Error: ${error.message}</p>`;
+            }
+        };
+        
+        // Load dashboard data
+        async function loadDashboard() {
+            try {
+                const data = await SuperadminAPI.getDashboard();
+                
+                // Update username badge
+                document.getElementById('username-badge').textContent = data.username.toUpperCase();
+                
+                // Display the response
+                document.getElementById('content').innerHTML = `
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <h3>API Response</h3>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                        
+                        <div class="info-card">
+                            <h3>Next Steps</h3>
+                            <ul>
+                                <li>View all stores</li>
+                                <li>Disable/enable stores</li>
+                                <li>Sudo into stores</li>
+                                <li>Audit trail</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="info-card">
+                            <h3>Quick Actions</h3>
+                            <button onclick="viewStores()" style="background: #3498db; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 0.5rem;">View All Stores</button>
+                            <div id="stores-list" style="margin-top: 1rem;"></div>
+                            <hr style="margin: 1rem 0; opacity: 0.3;">
+                            <a href="/login" style="color: #3498db;">Regular Store Login</a>
+                        </div>
+                    </div>
+                `;
+                
+            } catch (error) {
+                document.getElementById('content').innerHTML = `
+                    <div class="info-card" style="border-color: #e74c3c;">
+                        <h3 style="color: #e74c3c;">Error</h3>
+                        <p>${error.message}</p>
+                        <p>You may need to log in again.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        loadDashboard();
+    </script>
+</body>
+</html>

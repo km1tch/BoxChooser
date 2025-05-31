@@ -34,6 +34,23 @@ def _get_current_auth_impl(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    store_id, auth_level = result
+    
+    # Check if store is disabled (unless it's a superadmin)
+    if auth_level != 'superadmin':
+        from backend.lib.auth_manager import get_db
+        with get_db() as db:
+            store = db.execute(
+                "SELECT status FROM store_auth WHERE store_id = ?",
+                (store_id,)
+            ).fetchone()
+            
+            if store and store['status'] != 'active':
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Store is disabled"
+                )
+    
     return result
 
 def get_current_auth():

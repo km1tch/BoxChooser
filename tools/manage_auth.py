@@ -31,8 +31,11 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from backend.lib.auth_manager import (
     init_db, create_store_auth, list_stores, 
     get_audit_log, verify_pin, hasAuth,
-    get_store_info, regenerate_pin, update_email
+    get_store_info, regenerate_pin, update_email,
+    get_db
 )
+import bcrypt
+import secrets
 
 def cmd_init(args):
     """Initialize the database"""
@@ -181,6 +184,174 @@ def cmd_audit(args):
     headers = ['Timestamp', 'Store', 'Action', 'Details']
     print(tabulate(table_data, headers=headers, tablefmt='plain'))
 
+def cmd_superadmin_create(args):
+    """Create a new superadmin user"""
+    username = args.username
+    
+    # Check if already exists
+    with get_db() as db:
+        existing = db.execute("SELECT id FROM superadmins WHERE username = ?", (username,)).fetchone()
+        if existing:
+            print(f"Error: Superadmin '{username}' already exists!")
+            sys.exit(1)
+        
+        # Generate secure password
+        password = secrets.token_urlsafe(24)  # ~32 chars
+        password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        
+        # Create superadmin
+        db.execute(
+            "INSERT INTO superadmins (username, password_hash) VALUES (?, ?)",
+            (username, password_hash)
+        )
+        db.commit()
+        
+        print(f"\n✅ Superadmin created successfully!")
+        print(f"Username: {username}")
+        print(f"Password: {password}")
+        print(f"\n⚠️  IMPORTANT: Store this password in your password manager!")
+        print(f"This password cannot be recovered - only reset.\n")
+
+def cmd_superadmin_reset_password(args):
+    """Reset superadmin password"""
+    username = args.username
+    
+    with get_db() as db:
+        # Check if exists
+        existing = db.execute("SELECT id FROM superadmins WHERE username = ?", (username,)).fetchone()
+        if not existing:
+            print(f"Error: Superadmin '{username}' not found!")
+            sys.exit(1)
+        
+        # Confirm reset
+        confirm = input(f"Reset password for superadmin '{username}'? (yes/no): ")
+        if confirm.lower() != 'yes':
+            print("Cancelled.")
+            return
+        
+        # Generate new password
+        password = secrets.token_urlsafe(24)  # ~32 chars
+        password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        
+        # Update password
+        db.execute(
+            "UPDATE superadmins SET password_hash = ? WHERE username = ?",
+            (password_hash, username)
+        )
+        db.commit()
+        
+        print(f"\n✅ Password reset successfully!")
+        print(f"Username: {username}")
+        print(f"New Password: {password}")
+        print(f"\n⚠️  IMPORTANT: Store this password in your password manager!\n")
+
+def cmd_superadmin_list(args):
+    """List all superadmin users"""
+    with get_db() as db:
+        admins = db.execute("""
+            SELECT username, created_at, last_login, totp_enabled 
+            FROM superadmins 
+            ORDER BY username
+        """).fetchall()
+        
+        if not admins:
+            print("No superadmin users found.")
+            return
+        
+        table_data = []
+        for admin in admins:
+            table_data.append([
+                admin['username'],
+                admin['created_at'],
+                admin['last_login'] or 'Never',
+                '✓' if admin['totp_enabled'] else '✗'
+            ])
+        
+        print("\n", tabulate(table_data, headers=['Username', 'Created', 'Last Login', '2FA'], tablefmt='grid'))
+
+def cmd_superadmin_disable_totp(args):
+    """Disable TOTP for a superadmin user"""
+    username = args.username
+    
+    with get_db() as db:
+        # Check if exists
+        existing = db.execute("SELECT id, totp_enabled FROM superadmins WHERE username = ?", (username,)).fetchone()
+        if not existing:
+            print(f"Error: Superadmin '{username}' not found!")
+            sys.exit(1)
+        
+        if not existing['totp_enabled']:
+            print(f"TOTP is already disabled for '{username}'")
+            return
+        
+        # Confirm action
+        confirm = input(f"Disable TOTP for superadmin '{username}'? (yes/no): ")
+        if confirm.lower() != 'yes':
+            print("Cancelled.")
+            return
+        
+        # Disable TOTP
+        db.execute(
+            "UPDATE superadmins SET totp_enabled = FALSE, totp_secret = NULL WHERE username = ?",
+            (username,)
+        )
+        db.commit()
+        
+        print(f"\n✅ TOTP disabled for '{username}'")
+        print(f"They can now login with just username and password.\n")
+
+def cmd_superadmin_reset_totp(args):
+    """Reset TOTP for a superadmin user (disable and clear secret)"""
+    username = args.username
+    
+    with get_db() as db:
+        # Check if exists
+        existing = db.execute("SELECT id FROM superadmins WHERE username = ?", (username,)).fetchone()
+        if not existing:
+            print(f"Error: Superadmin '{username}' not found!")
+            sys.exit(1)
+        
+        # Confirm action
+        confirm = input(f"Reset TOTP for superadmin '{username}'? This will disable 2FA. (yes/no): ")
+        if confirm.lower() != 'yes':
+            print("Cancelled.")
+            return
+        
+        # Reset TOTP
+        db.execute(
+            "UPDATE superadmins SET totp_enabled = FALSE, totp_secret = NULL WHERE username = ?",
+            (username,)
+        )
+        db.commit()
+        
+        print(f"\n✅ TOTP reset for '{username}'")
+        print(f"They will need to set up 2FA again from the security settings.\n")
+
+def cmd_superadmin_totp_status(args):
+    """Check TOTP status for a superadmin user"""
+    username = args.username
+    
+    with get_db() as db:
+        # Get user info
+        admin = db.execute(
+            "SELECT username, totp_enabled, created_at, last_login FROM superadmins WHERE username = ?",
+            (username,)
+        ).fetchone()
+        
+        if not admin:
+            print(f"Error: Superadmin '{username}' not found!")
+            sys.exit(1)
+        
+        print(f"\n📋 TOTP Status for '{username}':")
+        print(f"2FA Enabled: {'✅ Yes' if admin['totp_enabled'] else '❌ No'}")
+        print(f"Created: {admin['created_at']}")
+        print(f"Last Login: {admin['last_login'] or 'Never'}")
+        
+        if admin['totp_enabled']:
+            print("\n💡 To disable TOTP, use: ./tools/auth superadmin disable-totp " + username)
+        else:
+            print("\n💡 TOTP can be enabled from the web interface security settings.")
+
 def main():
     parser = argparse.ArgumentParser(
         description='Manage store authentication for Packing Website'
@@ -253,11 +424,53 @@ def main():
     )
     parser_audit.set_defaults(func=cmd_audit)
     
+    # superadmin subcommand
+    parser_superadmin = subparsers.add_parser('superadmin', help='Manage superadmin users')
+    superadmin_subparsers = parser_superadmin.add_subparsers(dest='superadmin_command')
+    
+    # superadmin create
+    parser_sa_create = superadmin_subparsers.add_parser('create', help='Create a superadmin user')
+    parser_sa_create.add_argument('username', help='Superadmin username')
+    parser_sa_create.set_defaults(func=cmd_superadmin_create)
+    
+    # superadmin reset-password
+    parser_sa_reset = superadmin_subparsers.add_parser('reset-password', help='Reset superadmin password')
+    parser_sa_reset.add_argument('username', help='Superadmin username')
+    parser_sa_reset.set_defaults(func=cmd_superadmin_reset_password)
+    
+    # superadmin list
+    parser_sa_list = superadmin_subparsers.add_parser('list', help='List all superadmins')
+    parser_sa_list.set_defaults(func=cmd_superadmin_list)
+    
+    # superadmin disable-totp
+    parser_sa_disable_totp = superadmin_subparsers.add_parser('disable-totp', help='Disable TOTP for a superadmin')
+    parser_sa_disable_totp.add_argument('username', help='Superadmin username')
+    parser_sa_disable_totp.set_defaults(func=cmd_superadmin_disable_totp)
+    
+    # superadmin reset-totp
+    parser_sa_reset_totp = superadmin_subparsers.add_parser('reset-totp', help='Reset TOTP for a superadmin')
+    parser_sa_reset_totp.add_argument('username', help='Superadmin username')
+    parser_sa_reset_totp.set_defaults(func=cmd_superadmin_reset_totp)
+    
+    # superadmin totp-status
+    parser_sa_totp_status = superadmin_subparsers.add_parser('totp-status', help='Check TOTP status for a superadmin')
+    parser_sa_totp_status.add_argument('username', help='Superadmin username')
+    parser_sa_totp_status.set_defaults(func=cmd_superadmin_totp_status)
+    
     # Parse arguments
     args = parser.parse_args()
     
     if not args.command:
         parser.print_help()
+        sys.exit(1)
+    
+    # Handle superadmin command without subcommand
+    if args.command == 'superadmin' and not hasattr(args, 'superadmin_command'):
+        parser_superadmin.print_help()
+        sys.exit(1)
+    
+    if args.command == 'superadmin' and not args.superadmin_command:
+        parser_superadmin.print_help()
         sys.exit(1)
     
     # Execute the command

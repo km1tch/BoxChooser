@@ -22,18 +22,25 @@ def load_store_yaml(store_id: str) -> dict:
 
     with open(yaml_file, "r") as f:
         try:
-            boxes_data = yaml.safe_load(f)
+            store_data = yaml.safe_load(f)
         except Exception as e:
             print(f"YAML parsing error: {str(e)}")
             raise HTTPException(status_code=500, detail=f"YAML parsing error: {str(e)}")
 
-    # Validate the structure of the YAML data
-    if not boxes_data or "boxes" not in boxes_data or not isinstance(boxes_data["boxes"], list):
-        error_msg = "Invalid YAML structure: must contain a 'boxes' list"
+    # Handle empty YAML files or files with just metadata
+    if not store_data:
+        store_data = {"boxes": []}
+    
+    # Ensure boxes key exists and is a list (could be empty)
+    if "boxes" not in store_data:
+        store_data["boxes"] = []
+    elif not isinstance(store_data["boxes"], list):
+        error_msg = "Invalid YAML structure: 'boxes' must be a list"
         print(f"Error: {error_msg}")
         raise HTTPException(status_code=500, detail=error_msg)
 
-    return boxes_data
+    # Return the full data including any metadata fields
+    return store_data
 
 
 def save_store_yaml(store_id: str, data: dict) -> bool:
@@ -44,6 +51,13 @@ def save_store_yaml(store_id: str, data: dict) -> bool:
     try:
         # Custom YAML writing to maintain the desired format
         with open(yaml_file, "w") as f:
+            # Write store metadata if present
+            if "name" in data and data["name"]:
+                f.write(f"name: \"{data['name']}\"\n")
+            
+            if "description" in data and data["description"]:
+                f.write(f"description: \"{data['description']}\"\n")
+            
             # Write pricing mode if present
             if "pricing-mode" in data:
                 f.write(f"pricing-mode: {data['pricing-mode']}\n")
@@ -51,6 +65,11 @@ def save_store_yaml(store_id: str, data: dict) -> bool:
             # Write price group if present
             if "price-group" in data:
                 f.write(f"price-group: {data['price-group']}\n")
+            
+            # Always write boxes key, even if empty
+            if not data.get("boxes"):
+                f.write("boxes: []\n")
+                return True
             
             f.write("boxes:\n")
 
