@@ -233,6 +233,28 @@ def init_db():
         if 'totp_secret' not in columns:
             db.execute('ALTER TABLE superadmins ADD COLUMN totp_secret TEXT')
         
+        # Rate limit attempts table for deduplication
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS rate_limit_attempts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ip_address TEXT NOT NULL,
+                endpoint TEXT NOT NULL,
+                attempt_hash TEXT NOT NULL,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        db.execute('''
+            CREATE INDEX IF NOT EXISTS idx_rate_limit_lookup 
+            ON rate_limit_attempts(ip_address, endpoint, timestamp)
+        ''')
+        
+        # Auto-cleanup old entries
+        db.execute('''
+            CREATE INDEX IF NOT EXISTS idx_rate_limit_cleanup 
+            ON rate_limit_attempts(timestamp)
+        ''')
+        
         # Create demo store auth if it doesn't exist
         existing_demo = db.execute(
             "SELECT store_id FROM store_auth WHERE store_id = ?",

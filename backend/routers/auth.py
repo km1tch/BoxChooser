@@ -17,7 +17,7 @@ from backend.lib.auth_manager import (
     regenerate_pin
 )
 from backend.lib.email_service import send_login_code
-from backend.lib.rate_limiter import limiter, check_email_rate_limit
+from backend.lib.rate_limiter import limiter, check_email_rate_limit, check_rate_limit_with_dedup
 from backend.models.auth import (
     LoginRequest, EmailCodeRequest, VerifyCodeRequest,
     TokenResponse, UpdateEmailRequest
@@ -30,6 +30,14 @@ router = APIRouter(prefix="/api/auth", tags=["authentication"])
 @limiter.limit("5/minute")
 async def login(request: Request, login_request: LoginRequest):
     """Authenticate with store ID and PIN"""
+    # Check rate limit with deduplication
+    check_rate_limit_with_dedup(
+        request, 
+        "/api/auth/login", 
+        login_request.store_id, 
+        login_request.pin
+    )
+    
     # Always return the same error to prevent enumeration
     generic_error = HTTPException(status_code=401, detail="Invalid store ID or PIN")
     
@@ -93,6 +101,15 @@ async def send_code(request: Request, code_request: EmailCodeRequest):
 @limiter.limit("10/minute")
 async def verify_code(request: Request, verify_request: VerifyCodeRequest):
     """Verify email code and return admin token"""
+    # Check rate limit with deduplication
+    check_rate_limit_with_dedup(
+        request,
+        "/api/auth/verify-code",
+        verify_request.store_id,
+        verify_request.email,
+        verify_request.code
+    )
+    
     # Verify code
     if not verify_email_code(verify_request.store_id, verify_request.email, verify_request.code):
         raise HTTPException(status_code=401, detail="Invalid or expired code")

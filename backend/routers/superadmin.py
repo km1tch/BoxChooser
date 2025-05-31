@@ -18,7 +18,7 @@ import base64
 from backend.lib.auth_manager import get_db, create_session, get_session_info
 from backend.lib.auth_middleware import bearer_scheme
 from backend.lib.yaml_helpers import load_store_yaml, save_store_yaml
-from backend.lib.rate_limiter import limiter
+from backend.lib.rate_limiter import limiter, check_rate_limit_with_dedup
 from fastapi.security import HTTPAuthorizationCredentials
 
 router = APIRouter(prefix="/api/admin", tags=["superadmin"])
@@ -95,6 +95,14 @@ def audit_superadmin_action(username: str, action: str, target_store_id: str = N
 @limiter.limit("5/minute")
 async def superadmin_login(request: Request, login: SuperadminLogin):
     """Superadmin login endpoint"""
+    # Check rate limit with deduplication
+    check_rate_limit_with_dedup(
+        request,
+        "/api/admin/login",
+        login.username,
+        login.password
+    )
+    
     with get_db() as db:
         # Get superadmin from database
         result = db.execute(
@@ -154,6 +162,14 @@ async def superadmin_login(request: Request, login: SuperadminLogin):
 @limiter.limit("10/minute")
 async def superadmin_totp_verify(request: Request, totp_request: TOTPVerifyRequest):
     """Verify TOTP token for superadmin login"""
+    # Check rate limit with deduplication
+    check_rate_limit_with_dedup(
+        request,
+        "/api/admin/login/totp",
+        totp_request.username,
+        totp_request.totp_token
+    )
+    
     with get_db() as db:
         # Get superadmin from database
         result = db.execute(
