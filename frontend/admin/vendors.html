@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Catalog - Packing Site Admin</title>
+    <link rel="stylesheet" href="/assets/css/common.css">
+    <link rel="stylesheet" href="/assets/css/index.css">
+    <link rel="stylesheet" href="/assets/css/import.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+    <style>
+        .vendors-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .vendor-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+        
+        .vendor-card:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .vendor-info h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        
+        .vendor-meta {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .vendor-url {
+            color: #0066cc;
+            text-decoration: none;
+        }
+        
+        .vendor-url:hover {
+            text-decoration: underline;
+        }
+        
+        .view-boxes-btn {
+            background: #0066cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .view-boxes-btn:hover {
+            background: #0052a3;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .error {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c00;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="nav-container"></div>
+    
+    <div class="vendors-container">
+        <h1>Vendor Catalog</h1>
+        <p>Manage box vendor catalogs for all stores.</p>
+        
+        <div id="vendors-list" class="loading">
+            Loading vendors...
+        </div>
+    </div>
+
+    <script src="/js/lib/superadmin-api.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    
+    <script>
+        // Initialize on load
+        async function init() {
+            try {
+                // Verify superadmin auth
+                await SuperadminAPI.getDashboard();
+                // Load vendors
+                await loadVendors();
+            } catch (error) {
+                // Not authenticated
+                window.location.href = '/admin-login.html';
+            }
+        }
+        
+        // Load vendors
+        async function loadVendors() {
+            try {
+                const vendors = await SuperadminAPI.getVendors();
+                displayVendors(vendors);
+            } catch (error) {
+                document.getElementById('vendors-list').innerHTML = `
+                    <div class="error">
+                        Failed to load vendors: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        // Display vendors
+        function displayVendors(vendors) {
+            const container = document.getElementById('vendors-list');
+            
+            if (vendors.length === 0) {
+                container.innerHTML = '<p>No vendors found.</p>';
+                return;
+            }
+            
+            container.innerHTML = vendors.map((vendor, index) => `
+                <div class="vendor-card">
+                    <div class="vendor-info">
+                        <h3>${vendor.name}</h3>
+                        <div class="vendor-meta">
+                            ${vendor.url ? `<a href="${vendor.url}" target="_blank" class="vendor-url">${vendor.url}</a><br>` : ''}
+                            Version: ${vendor.version}<br>
+                            ${vendor.box_count} boxes available<br>
+                            <small style="color: #666;">ID: ${vendor.id}</small>
+                        </div>
+                    </div>
+                    <button class="view-boxes-btn" data-vendor-id="${vendor.id}" data-vendor-name="${vendor.name.replace(/"/g, '&quot;')}" onclick="viewVendorBoxes(this)">
+                        View Boxes
+                    </button>
+                </div>
+            `).join('');
+        }
+        
+        // View vendor boxes - make it global for onclick
+        window.viewVendorBoxes = function(button) {
+            const vendorId = button.getAttribute('data-vendor-id');
+            const vendorName = button.getAttribute('data-vendor-name');
+            window.location.href = `/admin/vendor-boxes.html?vendor=${encodeURIComponent(vendorId)}&name=${encodeURIComponent(vendorName)}`;
+        }
+        
+        // Load on page ready
+        init();
+    </script>
+</body>
+</html>

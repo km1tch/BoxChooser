@@ -32,7 +32,10 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import bcrypt
+import logging
 
+# Set up logging
+logger = logging.getLogger(__name__)
 
 # Database management
 def get_db_path():
@@ -91,6 +94,20 @@ def init_db():
                 store_id TEXT NOT NULL,
                 auth_level TEXT NOT NULL CHECK (auth_level IN ('user', 'admin', 'superadmin')),
                 expires_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (store_id) REFERENCES store_auth(store_id)
+            )
+        ''')
+        
+        # Custom box requests table - for tracking custom boxes added by stores
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS custom_box_requests (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                store_id TEXT NOT NULL,
+                model TEXT NOT NULL,
+                dimensions TEXT NOT NULL,
+                suggested_vendor TEXT,
+                reason TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (store_id) REFERENCES store_auth(store_id)
             )
@@ -719,6 +736,48 @@ def update_email(store_id: str, new_email: str) -> None:
         )
         
         db.commit()
+
+
+def log_custom_box_request(store_id: str, model: str, dimensions: List[float], 
+                          suggested_vendor: Optional[str] = None, reason: Optional[str] = None) -> None:
+    """
+    Safely log a custom box request using parameterized queries
+    
+    Args:
+        store_id: The store ID making the request
+        model: Box model name (max 50 chars)
+        dimensions: List of 3 floats [L, W, H]
+        suggested_vendor: Optional vendor suggestion (max 50 chars)
+        reason: Optional reason for custom box (max 500 chars)
+    """
+    try:
+        with get_db() as db:
+            # Validate inputs
+            if len(model) > 50:
+                raise ValueError("Model name too long")
+            if suggested_vendor and len(suggested_vendor) > 50:
+                raise ValueError("Vendor name too long")
+            if reason and len(reason) > 500:
+                raise ValueError("Reason too long")
+            if len(dimensions) != 3 or not all(0.1 <= d <= 1000 for d in dimensions):
+                raise ValueError("Invalid dimensions")
+            
+            # Store dimensions as JSON string
+            dimensions_json = json.dumps(dimensions)
+            
+            # Use parameterized query to prevent SQL injection
+            db.execute('''
+                INSERT INTO custom_box_requests 
+                (store_id, model, dimensions, suggested_vendor, reason)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (store_id, model, dimensions_json, suggested_vendor, reason))
+            
+            db.commit()
+            logger.info(f"Logged custom box request: store={store_id}, model={model}")
+            
+    except Exception as e:
+        logger.error(f"Failed to log custom box request: {e}")
+        # Don't raise - this is just logging, shouldn't break the main flow
 
 
 # This module is a library and should not be executed directly.

@@ -1,5 +1,10 @@
 """
 FastAPI authentication middleware and decorators
+
+IMPORTANT: All new endpoints MUST use the standard dependency injection pattern.
+See docs/authentication-api-patterns.md for the required authentication patterns.
+
+The @require_auth decorator is DEPRECATED and should not be used in new code.
 """
 
 from fastapi import Depends, HTTPException, status, Request
@@ -118,12 +123,28 @@ def get_current_store(
 
 def require_auth(admin: bool = False):
     """
-    Decorator to require authentication
+    DEPRECATED: DO NOT USE THIS DECORATOR!
+    
+    This decorator is deprecated and should not be used in new code.
+    Instead, use the standard dependency injection pattern:
+    
+    @router.get("/endpoint")
+    async def endpoint(
+        store_id: str = Path(..., regex=r"^\d{1,6}$"),
+        auth_info: Tuple[str, str] = get_current_auth()
+    ):
+        auth_store_id, auth_level = auth_info
+        if auth_level != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        if auth_store_id != store_id:
+            raise HTTPException(status_code=403, detail=f"Not authorized to access store {store_id}")
+    
+    See docs/06-authentication-standards.md for the required patterns.
     
     Args:
         admin: If True, requires admin auth level
     
-    Usage:
+    Old usage (DEPRECATED):
         @app.get("/api/store/{store_id}/data")
         @require_auth()  # User or admin can access
         def get_data(store_id: str):

@@ -85,6 +85,7 @@ async function createAdminNav(storeId, activePage = 'prices') {
   const adminItems = [
     { id: 'wizard', label: 'Wizard', href: '/wizard' },
     { id: 'packing', label: 'Packing Calc', href: '/packing' },
+    { id: 'boxes', label: 'Box Inventory', href: '/boxes' },
     { id: 'prices', label: 'Edit Prices', href: '/prices' },
     { id: 'import', label: 'Import Prices', href: '/import' },
     { id: 'floorplan', label: 'Floorplan', href: '/floorplan' },

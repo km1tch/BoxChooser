@@ -179,6 +179,169 @@ async function updateLocations(storeId, changes, csrfToken) {
   }
 }
 
+/**
+ * Updates a single box location
+ * @param {string} storeId - The store ID
+ * @param {string} model - The box model
+ * @param {Object} location - The new location data
+ * @returns {Promise<Object>} - The response data
+ */
+async function updateBoxLocation(storeId, model, location) {
+  try {
+    const response = await apiUtils.authenticatedFetch(
+      `/api/store/${storeId}/box/${encodeURIComponent(model)}/location`,
+      storeId,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ location: location })
+      }
+    );
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(`Failed to update location: ${response.status} - ${errorData?.detail || response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error("Error updating box location:", error);
+    throw error;
+  }
+}
+
+/**
+ * Deletes a box from inventory
+ * @param {string} storeId - The store ID
+ * @param {string} model - The box model to delete
+ * @returns {Promise<Object>} - The response data
+ */
+async function deleteBox(storeId, model) {
+  try {
+    const response = await apiUtils.authenticatedFetch(
+      `/api/store/${storeId}/box/${encodeURIComponent(model)}`,
+      storeId,
+      { method: 'DELETE' }
+    );
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(`Failed to delete box: ${response.status} - ${errorData?.detail || response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error("Error deleting box:", error);
+    throw error;
+  }
+}
+
+/**
+ * Creates a new box in inventory
+ * @param {string} storeId - The store ID
+ * @param {Object} boxData - The box data including model, supplier, dimensions, prices, etc.
+ * @returns {Promise<Object>} - The response data
+ */
+async function createBox(storeId, boxData) {
+  try {
+    const response = await apiUtils.authenticatedFetch(
+      `/api/store/${storeId}/box`,
+      storeId,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(boxData)
+      }
+    );
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(`Failed to create box: ${response.status} - ${errorData?.detail || response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error("Error creating box:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get list of all vendors
+ * @param {string} storeId - The store ID (for auth)
+ * @returns {Promise<Array>} - List of vendors
+ */
+async function getVendors(storeId) {
+  try {
+    const response = await apiUtils.authenticatedFetch(
+      '/api/vendors',
+      storeId
+    );
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(`Failed to get vendors: ${response.status} - ${errorData?.detail || response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error("Error getting vendors:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get boxes for a specific vendor
+ * @param {string} storeId - The store ID (for auth)
+ * @param {string} vendorIdOrName - The vendor ID or name (backend accepts both)
+ * @returns {Promise<Array>} - List of vendor boxes
+ */
+async function getVendorBoxes(storeId, vendorIdOrName) {
+  try {
+    const response = await apiUtils.authenticatedFetch(
+      `/api/vendors/${encodeURIComponent(vendorIdOrName)}/boxes`,
+      storeId
+    );
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(`Failed to get vendor boxes: ${response.status} - ${errorData?.detail || response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error("Error getting vendor boxes:", error);
+    throw error;
+  }
+}
+
+/**
+ * Compare vendor catalog with store inventory
+ * @param {string} storeId - The store ID (for auth)
+ * @param {string} vendorIdOrName - The vendor ID or name (backend accepts both)
+ * @returns {Promise<Object>} - Comparison results with new/existing/updated boxes
+ */
+async function compareVendorWithStore(storeId, vendorIdOrName) {
+  try {
+    const response = await apiUtils.authenticatedFetch(
+      `/api/vendors/${encodeURIComponent(vendorIdOrName)}/compare`,
+      storeId
+    );
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(`Failed to compare vendor catalog: ${response.status} - ${errorData?.detail || response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error("Error comparing vendor catalog:", error);
+    throw error;
+  }
+}
+
 // Browser compatibility - export to window object
 if (typeof window !== 'undefined') {
   window.api = {
@@ -188,7 +351,13 @@ if (typeof window !== 'undefined') {
     fetchAllBoxes,
     updateStandardPrices,
     updateItemizedPrices,
-    updateLocations
+    updateLocations,
+    updateBoxLocation,
+    deleteBox,
+    createBox,
+    getVendors,
+    getVendorBoxes,
+    compareVendorWithStore
   };
 }
 

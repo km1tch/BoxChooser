@@ -78,7 +78,7 @@ PackingWebsite uses a modern web architecture with clear separation between fron
 
 ### FastAPI (API Backend)
 - RESTful API endpoints
-- Authentication and authorization
+- Authentication and authorization (see [Authentication API Patterns](authentication-api-patterns.md))
 - Database operations
 - YAML file access with auth checks
 - Business logic processing

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Superadmin Dashboard - Packing Website</title>
     <link rel="stylesheet" href="/assets/css/common.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
     <style>
       body {
         background-color: #2c3e50;
@@ -102,10 +103,10 @@
 
       .stores-table {
         width: 100%;
-        background: #34495e;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        background: transparent;
+        border-radius: 0;
+        overflow: visible;
+        box-shadow: none;
       }
 
       .stores-table table {
@@ -364,6 +365,108 @@
         outline: none;
         border-color: #3498db;
       }
+      
+      /* Vendor styles */
+      .vendor-card {
+        background: #34495e;
+        border: 1px solid #2c3e50;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.2s;
+      }
+      
+      .vendor-card:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        background: #3a526b;
+      }
+      
+      .vendor-info h3 {
+        margin: 0 0 0.5rem 0;
+        color: #3498db;
+      }
+      
+      .vendor-meta {
+        color: #95a5a6;
+        font-size: 0.875rem;
+      }
+      
+      .vendor-url {
+        color: #3498db;
+        text-decoration: none;
+      }
+      
+      .vendor-url:hover {
+        text-decoration: underline;
+      }
+      
+      /* DataTables dark theme overrides */
+      .dataTables_wrapper {
+        color: #ecf0f1;
+      }
+      
+      .dataTables_wrapper .dataTables_length,
+      .dataTables_wrapper .dataTables_filter,
+      .dataTables_wrapper .dataTables_info,
+      .dataTables_wrapper .dataTables_paginate {
+        color: #ecf0f1;
+        margin: 0.5rem 0;
+      }
+      
+      .dataTables_wrapper .dataTables_length label,
+      .dataTables_wrapper .dataTables_filter label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      
+      .dataTables_wrapper .dataTables_filter input,
+      .dataTables_wrapper .dataTables_length select {
+        background: #2c3e50;
+        border: 1px solid #34495e;
+        color: #ecf0f1;
+        padding: 0.5rem;
+        border-radius: 4px;
+      }
+      
+      .dataTables_wrapper .dataTables_paginate .paginate_button {
+        color: #3498db !important;
+        background: transparent;
+        border: none;
+      }
+      
+      .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+        background: #34495e !important;
+        border: none;
+      }
+      
+      .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+        background: #3498db !important;
+        color: white !important;
+      }
+      
+      .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+        color: #7f8c8d !important;
+      }
+      
+      table.dataTable thead th {
+        border-bottom: 1px solid #34495e;
+      }
+      
+      table.dataTable tbody tr {
+        background-color: transparent;
+      }
+      
+      table.dataTable tbody tr:hover {
+        background-color: #3a526b !important;
+      }
+      
+      table.dataTable.no-footer {
+        border-bottom: none;
+      }
     </style>
   </head>
   <body>
@@ -381,6 +484,9 @@
       <nav class="tab-navigation">
         <button class="tab-button active" onclick="switchTab('stores')">
           Stores
+        </button>
+        <button class="tab-button" onclick="switchTab('vendors')">
+          Vendors
         </button>
         <button class="tab-button" onclick="switchTab('audit')">
           Audit Trail
@@ -417,6 +523,17 @@
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- Vendors Tab -->
+      <div id="vendors-tab" class="tab-content">
+        <h2 style="color: #3498db; margin-bottom: 1.5rem;">Box Vendor Catalog</h2>
+        <p style="color: #95a5a6; margin-bottom: 2rem;">
+          Manage vendor box catalogs that stores can use to build their inventory.
+        </p>
+        <div id="vendors-list" class="loading">
+          Loading vendors...
         </div>
       </div>
 
@@ -606,6 +723,8 @@
       </div>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
     <script src="/js/lib/superadmin-api.js"></script>
     <script>
       // Check auth on load
@@ -618,6 +737,7 @@
       let currentAuditLogs = [];
       let auditRefreshInterval = null;
       let totpSetupData = null;
+      let currentDataTable = null; // Track current DataTable instance
 
       // Tab switching
       function switchTab(tabName) {
@@ -633,11 +753,23 @@
         });
         document.getElementById(`${tabName}-tab`).classList.add("active");
 
+        // Clean up any existing DataTable when switching tabs
+        if (currentDataTable) {
+          currentDataTable.destroy();
+          currentDataTable = null;
+        }
+
         // Handle tab-specific loading
         if (tabName === "audit") {
           loadAuditLog();
+          // Clear any existing interval first
+          if (auditRefreshInterval) {
+            clearInterval(auditRefreshInterval);
+          }
           // Start auto-refresh every 5 seconds
           auditRefreshInterval = setInterval(loadAuditLog, 5000);
+        } else if (tabName === "vendors") {
+          loadVendors();
         } else {
           // Clear auto-refresh when leaving audit tab
           if (auditRefreshInterval) {
@@ -1192,6 +1324,153 @@
         totpSetupData = null;
       }
 
+      // Load vendors
+      async function loadVendors() {
+        const container = document.getElementById('vendors-list');
+        container.innerHTML = '<div class="loading">Loading vendors...</div>';
+        
+        try {
+          const vendors = await SuperadminAPI.getVendors();
+          displayVendors(vendors);
+        } catch (error) {
+          container.innerHTML = `
+            <div class="error-message">
+              Failed to load vendors: ${error.message}
+            </div>
+          `;
+        }
+      }
+      
+      // Display vendors
+      function displayVendors(vendors) {
+        const container = document.getElementById('vendors-list');
+        
+        if (vendors.length === 0) {
+          container.innerHTML = '<p style="color: #95a5a6;">No vendors found.</p>';
+          return;
+        }
+        
+        container.innerHTML = vendors.map((vendor, index) => `
+          <div class="vendor-card">
+            <div class="vendor-info">
+              <h3>${vendor.name}</h3>
+              <div class="vendor-meta">
+                ${vendor.url ? `<a href="${vendor.url}" target="_blank" class="vendor-url">${vendor.url}</a><br>` : ''}
+                Version: ${vendor.version}<br>
+                ${vendor.box_count} boxes available
+              </div>
+            </div>
+            <button class="btn btn-primary" data-vendor-name="${vendor.name.replace(/"/g, '&quot;')}" onclick="viewVendorBoxes(this)">
+              View Boxes
+            </button>
+          </div>
+        `).join('');
+      }
+      
+      // View vendor boxes
+      function viewVendorBoxes(button) {
+        const vendorName = button.getAttribute('data-vendor-name');
+        // Store current vendor for navigation
+        sessionStorage.setItem('superadmin_current_vendor', vendorName);
+        // Navigate to vendor boxes within dashboard
+        loadVendorBoxes(vendorName);
+      }
+      
+      // Load vendor boxes
+      async function loadVendorBoxes(vendorName) {
+        // Update the vendors tab content to show boxes
+        const vendorsTab = document.getElementById('vendors-tab');
+        vendorsTab.innerHTML = `
+          <div style="margin-bottom: 1rem;">
+            <button class="btn btn-secondary" onclick="backToVendors()">← Back to Vendors</button>
+          </div>
+          <h2 style="color: #3498db; margin-bottom: 1.5rem;">${vendorName} Boxes</h2>
+          <div id="vendor-boxes-content" class="loading">
+            Loading boxes...
+          </div>
+        `;
+        
+        try {
+          const boxes = await SuperadminAPI.getVendorBoxes(vendorName);
+          displayVendorBoxes(boxes);
+        } catch (error) {
+          document.getElementById('vendor-boxes-content').innerHTML = `
+            <div class="error-message">
+              Failed to load boxes: ${error.message}
+            </div>
+          `;
+        }
+      }
+      
+      // Display vendor boxes
+      function displayVendorBoxes(boxes) {
+        const container = document.getElementById('vendor-boxes-content');
+        
+        if (boxes.length === 0) {
+          container.innerHTML = '<p style="color: #95a5a6;">No boxes found for this vendor.</p>';
+          return;
+        }
+        
+        // Create table
+        container.innerHTML = `
+          <div class="stores-table">
+            <table id="vendor-boxes-table">
+              <thead>
+                <tr>
+                  <th>Model</th>
+                  <th>Dimensions (L×W×D)</th>
+                  <th>Alternate Depths</th>
+                  <th>Category</th>
+                  <th>Volume (cu in)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${boxes.map(box => {
+                  const [l, w, d] = box.dimensions;
+                  const volume = Math.round(l * w * d);
+                  return `
+                    <tr>
+                      <td>${box.model}</td>
+                      <td style="font-family: monospace;">${l} × ${w} × ${d}</td>
+                      <td style="color: white; font-size: 0.875rem;">
+                        ${box.alternate_depths ? box.alternate_depths.join(', ') : '-'}
+                      </td>
+                      <td>${box.category}</td>
+                      <td data-order="${volume}">${volume.toLocaleString()}</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+        
+        // Destroy any existing DataTable first
+        if (currentDataTable) {
+          currentDataTable.destroy();
+        }
+        
+        // Initialize DataTable and store reference
+        currentDataTable = $('#vendor-boxes-table').DataTable({
+          pageLength: 50,
+          order: [[0, 'asc']], // Sort by model
+          language: {
+            search: "Search boxes:"
+          }
+        });
+      }
+      
+      // Back to vendors list
+      function backToVendors() {
+        // Clean up DataTable before navigating away
+        if (currentDataTable) {
+          currentDataTable.destroy();
+          currentDataTable = null;
+        }
+        sessionStorage.removeItem('superadmin_current_vendor');
+        loadVendors();
+      }
+
       // Initialize on load
       async function init() {
         try {
@@ -1250,6 +1529,19 @@
           alert(`Error updating metadata: ${error.message}`);
         }
       }
+
+      // Clean up on page unload
+      window.addEventListener('beforeunload', function() {
+        // Clear any running intervals
+        if (auditRefreshInterval) {
+          clearInterval(auditRefreshInterval);
+        }
+        
+        // Destroy any DataTable instances
+        if (currentDataTable) {
+          currentDataTable.destroy();
+        }
+      });
 
       // Start the app
       init();

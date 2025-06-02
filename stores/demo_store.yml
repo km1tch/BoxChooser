@@ -21,6 +21,7 @@ boxes:
     coords:
     - 0.42541666666666667
     - 0.63375
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: 10C-UPS
@@ -45,6 +46,7 @@ boxes:
     coords:
     - 0.42541666666666667
     - 0.63375
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: 14C-UPS
@@ -69,6 +71,7 @@ boxes:
     coords:
     - 0.42541666666666667
     - 0.63375
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: 18C-UPS
@@ -93,6 +96,7 @@ boxes:
     coords:
     - 0.3854166666666667
     - 0.22625
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: 24C-UPS
@@ -118,6 +122,7 @@ boxes:
     coords:
     - 0.3854166666666667
     - 0.22625
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: 12 X 12 X 6 - UPS
@@ -142,6 +147,7 @@ boxes:
     coords:
     - 0.3854166666666667
     - 0.22625
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: 15 X 15 X 48 - UPS
@@ -166,6 +172,7 @@ boxes:
     coords:
     - 0.035416666666666666
     - 0.20875
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: 17 X 11 X 8 - UPS
@@ -190,6 +197,7 @@ boxes:
     coords:
     - 0.035416666666666666
     - 0.20875
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: 20 X 20 X 12 - UPS
@@ -215,6 +223,7 @@ boxes:
     coords:
     - 0.035416666666666666
     - 0.20875
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: 24 X 18 X 18 - UPS
@@ -241,6 +250,7 @@ boxes:
     coords:
     - 0.035416666666666666
     - 0.20875
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: 08C-UPS
@@ -264,6 +274,7 @@ boxes:
     coords:
     - 0.42541666666666667
     - 0.63375
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: 12C-UPS
@@ -288,6 +299,7 @@ boxes:
     coords:
     - 0.32375
     - 0.64625
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: 16C-UPS
@@ -312,6 +324,7 @@ boxes:
     coords:
     - 0.32375
     - 0.64625
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: 20C-UPS
@@ -336,6 +349,7 @@ boxes:
     coords:
     - 0.32375
     - 0.64625
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: 6 X 6 X 48 - UPS
@@ -357,6 +371,7 @@ boxes:
     coords:
     - 0.24041666666666667
     - 0.22375
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: 15 X 12 X 10 - UPS
@@ -380,6 +395,7 @@ boxes:
     coords:
     - 0.10875
     - 0.21125
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: 16 X 16 X 4 - UPS
@@ -401,6 +417,7 @@ boxes:
     coords:
     - 0.10875
     - 0.21125
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: 20 X 12 X 12 - UPS
@@ -426,6 +443,7 @@ boxes:
     coords:
     - 0.10875
     - 0.21125
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: 24 X 18 X 6 - UPS
@@ -447,6 +465,7 @@ boxes:
     coords:
     - 0.10875
     - 0.21125
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: UMBRELLA
@@ -468,6 +487,7 @@ boxes:
     coords:
     - 0.17541666666666667
     - 0.19875
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: SKI BTM
@@ -489,6 +509,7 @@ boxes:
     coords:
     - 0.17541666666666667
     - 0.19875
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: J-14
@@ -510,6 +531,7 @@ boxes:
     coords:
     - 0.32375
     - 0.64625
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: J-15
@@ -531,6 +553,7 @@ boxes:
     coords:
     - 0.32375
     - 0.64625
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: Golf Box 2
@@ -555,6 +578,7 @@ boxes:
     coords:
     - 0.15375
     - 0.91375
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: S. WREATH
@@ -576,6 +600,7 @@ boxes:
     coords:
     - 0.17541666666666667
     - 0.19875
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: Guitar Box
@@ -597,6 +622,7 @@ boxes:
     coords:
     - 0.24041666666666667
     - 0.22375
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: VCR
@@ -621,6 +647,7 @@ boxes:
     coords:
     - 0.24041666666666667
     - 0.22375
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: CHAIR
@@ -645,6 +672,7 @@ boxes:
     coords:
     - 0.24041666666666667
     - 0.22375
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: BB-130
@@ -669,6 +697,7 @@ boxes:
     coords:
     - 0.24041666666666667
     - 0.22375
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: LG BIKE BOX
@@ -693,6 +722,7 @@ boxes:
     coords:
     - 0.24041666666666667
     - 0.22375
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: SNW BRD
@@ -714,6 +744,7 @@ boxes:
     coords:
     - 0.24041666666666667
     - 0.22375
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: J-11
@@ -735,6 +766,7 @@ boxes:
     coords:
     - 0.32375
     - 0.64625
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: '101048'
@@ -758,6 +790,7 @@ boxes:
     coords:
     - 0.40375
     - 0.51125
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: 12 X 9 X 3
@@ -779,6 +812,7 @@ boxes:
     coords:
     - 0.40375
     - 0.51125
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: LAMP
@@ -803,6 +837,7 @@ boxes:
     coords:
     - 0.40375
     - 0.51125
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: J-16
@@ -824,6 +859,7 @@ boxes:
     coords:
     - 0.32375
     - 0.64625
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: J-20
@@ -845,6 +881,7 @@ boxes:
     coords:
     - 0.32375
     - 0.64625
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: WREATH-1
@@ -866,6 +903,7 @@ boxes:
     coords:
     - 0.3154166666666667
     - 0.49625
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: J-64
@@ -890,6 +928,7 @@ boxes:
     coords:
     - 0.24041666666666667
     - 0.22375
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: SUITCASE
@@ -913,6 +952,7 @@ boxes:
     coords:
     - 0.17541666666666667
     - 0.19875
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: UPS-3
@@ -937,6 +977,7 @@ boxes:
     coords:
     - 0.17541666666666667
     - 0.19875
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: '3688'
@@ -961,6 +1002,7 @@ boxes:
     coords:
     - 0.10875
     - 0.21125
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: SHIRTB
@@ -982,6 +1024,7 @@ boxes:
     coords:
     - 0.40375
     - 0.51125
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: ST-6
@@ -1003,6 +1046,7 @@ boxes:
     coords:
     - 0.40375
     - 0.51125
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: MIR-8
@@ -1024,6 +1068,7 @@ boxes:
     coords:
     - 0.3070833333333333
     - 0.22875
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: MIR-9
@@ -1045,6 +1090,7 @@ boxes:
     coords:
     - 0.3070833333333333
     - 0.22875
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: MIR-10
@@ -1066,6 +1112,7 @@ boxes:
     coords:
     - 0.3070833333333333
     - 0.22875
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: MIR-11
@@ -1087,6 +1134,7 @@ boxes:
     coords:
     - 0.3070833333333333
     - 0.22875
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: 25.75C
@@ -1108,6 +1156,7 @@ boxes:
     coords:
     - 0.10875
     - 0.21125
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: Heavy Duty Mirror Box
@@ -1129,6 +1178,7 @@ boxes:
     coords:
     - 0.3070833333333333
     - 0.22875
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: 36C
@@ -1153,6 +1203,7 @@ boxes:
     coords:
     - 0.3154166666666667
     - 0.49625
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: 22C275
@@ -1177,6 +1228,7 @@ boxes:
     coords:
     - 0.3154166666666667
     - 0.49625
+  supplier_version: '2025-05-30'
 - type: NormalBox
   supplier: ABC
   model: MIR-3
@@ -1198,4 +1250,5 @@ boxes:
     coords:
     - 0.3070833333333333
     - 0.22875
+  supplier_version: '2025-05-30'
 demo_last_reset: '2025-05-28T18:27:03.451107+00:00'

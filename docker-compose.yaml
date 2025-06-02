@@ -25,6 +25,7 @@ services:
     volumes:
       - ./backend:/code/backend
       - ./stores:/code/stores
+      - ./vendors:/code/vendors
       - ./floorplans:/code/floorplans
       - ./db:/db
       - ./tools:/code/tools

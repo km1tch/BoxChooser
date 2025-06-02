@@ -11,7 +11,7 @@ from backend.lib.yaml_helpers import validate_packing_guidelines
 from backend.lib.rate_limiter import limiter
 from backend.lib.auth_middleware import get_optional_auth_with_demo
 from backend.lib.rate_limit_dedup import cleanup_old_attempts
-from backend.routers import auth, boxes, floorplan, general, import_export, packing, superadmin
+from backend.routers import auth, boxes, catalog, floorplan, general, import_export, packing, superadmin, vendors
 
 # Initialize the authentication database
 init_db()
@@ -81,6 +81,8 @@ app.include_router(packing.router)
 app.include_router(import_export.router)
 app.include_router(import_export.general_router)
 app.include_router(superadmin.router)
+app.include_router(catalog.router)
+app.include_router(vendors.router)
 
 @app.get("/health")
 async def health_check():

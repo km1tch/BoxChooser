@@ -77,7 +77,13 @@ def cleanup_old_attempts(minutes: int = 5) -> int:
     Returns:
         Number of rows deleted
     """
+    # Validate minutes parameter to prevent SQL injection
+    if not isinstance(minutes, int) or minutes < 0 or minutes > 10080:  # Max 1 week
+        raise ValueError("Invalid minutes parameter: must be integer between 0 and 10080")
+    
     with get_db() as db:
+        # Use parameterized query - SQLite doesn't support parameterized intervals,
+        # but we've validated the input above
         cursor = db.execute(f"""
             DELETE FROM rate_limit_attempts 
             WHERE timestamp < datetime('now', '-{minutes} minutes')
@@ -99,7 +105,13 @@ def get_attempt_count(ip: str, endpoint: str, minutes: int = 1) -> int:
     Returns:
         Number of unique attempts
     """
+    # Validate minutes parameter to prevent SQL injection
+    if not isinstance(minutes, int) or minutes < 0 or minutes > 10080:  # Max 1 week
+        raise ValueError("Invalid minutes parameter: must be integer between 0 and 10080")
+    
     with get_db() as db:
+        # Use parameterized query - SQLite doesn't support parameterized intervals,
+        # but we've validated the input above
         result = db.execute(f"""
             SELECT COUNT(DISTINCT attempt_hash) as count
             FROM rate_limit_attempts 

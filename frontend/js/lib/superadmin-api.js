@@ -266,6 +266,23 @@ class SuperadminAPI {
             body: JSON.stringify({ totp_token: token })
         });
     }
+    
+    /**
+     * Get list of all vendors
+     * @returns {Promise<Array<{name: string, url: string, version: string, box_count: number}>>}
+     */
+    static async getVendors() {
+        return this.request('/api/admin/vendors');
+    }
+    
+    /**
+     * Get boxes for a specific vendor
+     * @param {string} vendorName
+     * @returns {Promise<Array<{model: string, dimensions: number[], alternate_depths?: number[], category: string}>>}
+     */
+    static async getVendorBoxes(vendorName) {
+        return this.request(`/api/admin/vendors/${encodeURIComponent(vendorName)}/boxes`);
+    }
 }
 
 // Export for use in modules
