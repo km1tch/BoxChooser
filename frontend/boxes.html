@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Box Inventory - Packing Website</title>
+    <link rel="stylesheet" href="/assets/css/common.css">
+    <link rel="stylesheet" href="/assets/css/index.css">
+    <link rel="stylesheet" href="/assets/css/import.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+    <style>
+        .boxes-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .add-box-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .add-box-btn:hover {
+            background: #229954;
+        }
+        
+        #boxes-table {
+            width: 100% !important;
+        }
+        
+        .dataTables_wrapper {
+            margin-top: 20px;
+        }
+        
+        .dimension-cell {
+            font-family: monospace;
+            white-space: nowrap;
+        }
+        
+        .supplier-cell {
+            font-weight: 500;
+        }
+        
+        .location-cell {
+            cursor: pointer;
+            color: #0066cc;
+            text-decoration: underline;
+        }
+        
+        .location-cell:hover {
+            color: #0052a3;
+        }
+        
+        .no-location {
+            color: #999;
+            font-style: italic;
+            cursor: pointer;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px;
+            border-radius: 3px;
+            transition: background 0.2s;
+        }
+        
+        .action-btn:hover {
+            background: #f0f0f0;
+        }
+        
+        .action-btn.delete {
+            color: #e74c3c;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .error {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c00;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+        }
+        
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: black;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+        
+        .wizard-step {
+            min-height: 300px;
+        }
+        
+        .vendor-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .vendor-card:hover {
+            background: #f8f9fa;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .box-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .box-card:hover {
+            background: #f8f9fa;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .box-info h4 {
+            margin: 0 0 5px 0;
+            color: #333;
+        }
+        
+        .box-dimensions {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .box-alt-depths {
+            color: #999;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        .box-card.selected {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+        
+        .box-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .bulk-add-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 20px 0;
+            width: 100%;
+        }
+        
+        .bulk-add-btn:hover {
+            background: #229954;
+        }
+        
+        .bulk-add-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div id="nav-container"></div>
+    
+    <div class="boxes-container">
+        <div class="page-header">
+            <h1>Box Inventory</h1>
+            <button class="add-box-btn" onclick="addNewBox()">
+                + Add New Box
+            </button>
+        </div>
+        
+        <div id="boxes-content" class="loading">
+            Loading boxes...
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Delete Box</h2>
+                <span class="close" onclick="closeDeleteModal()">&times;</span>
+            </div>
+            <p>Are you sure you want to remove this box from your inventory?</p>
+            <p><strong id="delete-box-model"></strong></p>
+            <p style="color: #e74c3c;">This action cannot be undone.</p>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="confirmDelete()">Delete Box</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Box Wizard -->
+    <div id="add-modal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2>Add New Box</h2>
+                <span class="close" onclick="closeAddModal()">&times;</span>
+            </div>
+            
+            <!-- Step 1: Choose Source -->
+            <div id="step-source" class="wizard-step">
+                <h3>Choose Box Source</h3>
+                <p>Select a box from a vendor catalog or create a custom box.</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px;">
+                    <button class="btn" style="padding: 30px; font-size: 18px; background: #3498db; color: white;" onclick="showVendorSelection()">
+                        📦 Select from Vendor Catalog
+                    </button>
+                    <button class="btn" style="padding: 30px; font-size: 18px; background: #27ae60; color: white;" onclick="showCustomForm()">
+                        ✏️ Create Custom Box
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Step 2A: Vendor Selection -->
+            <div id="step-vendor" class="wizard-step" style="display: none;">
+                <button class="btn btn-secondary" onclick="backToSource()">← Back</button>
+                <h3>Select Vendor</h3>
+                <div id="vendor-list" style="margin-top: 20px;">
+                    <p>Loading vendors...</p>
+                </div>
+            </div>
+            
+            <!-- Step 2B: Vendor Boxes -->
+            <div id="step-vendor-boxes" class="wizard-step" style="display: none;">
+                <button class="btn btn-secondary" onclick="backToVendorList()">← Back</button>
+                <h3 id="vendor-boxes-title">Select Box</h3>
+                <div id="vendor-summary" style="background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 8px; font-size: 14px;"></div>
+                <div style="margin: 20px 0; display: flex; gap: 10px; align-items: center;">
+                    <input type="text" id="box-search" placeholder="Search boxes..." style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <button class="btn btn-secondary" onclick="selectAllBoxes()" style="padding: 8px 16px;">Select All</button>
+                    <button class="btn btn-secondary" onclick="selectNoneBoxes()" style="padding: 8px 16px;">Select None</button>
+                </div>
+                <div id="vendor-boxes-list" style="max-height: 400px; overflow-y: auto;">
+                    <p>Loading boxes...</p>
+                </div>
+                <button id="bulk-add-btn" class="bulk-add-btn" onclick="addSelectedBoxes()" disabled>
+                    Add Selected Boxes (0)
+                </button>
+            </div>
+            
+            <!-- Step 2C: Custom Form -->
+            <div id="step-custom" class="wizard-step" style="display: none;">
+                <button class="btn btn-secondary" onclick="backToSource()">← Back</button>
+                <h3>Create Custom Box</h3>
+                <form id="custom-box-form" style="margin-top: 20px;">
+                    <div style="display: grid; gap: 15px;">
+                        <div>
+                            <label for="custom-model">Model Name <span style="color: red;">*</span></label>
+                            <input type="text" id="custom-model" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        
+                        <div>
+                            <label for="custom-supplier">Supplier Name <span style="color: red;">*</span></label>
+                            <input type="text" id="custom-supplier" placeholder="Where did you get this box from?" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <small style="color: #666; font-size: 12px;">Where did you get this box from?</small>
+                        </div>
+                        
+                        <div>
+                            <label>Dimensions (inches) <span style="color: red;">*</span></label>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                                <div>
+                                    <label for="custom-length" style="font-size: 12px;">Length</label>
+                                    <input type="number" id="custom-length" min="0.1" step="0.1" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+                                <div>
+                                    <label for="custom-width" style="font-size: 12px;">Width</label>
+                                    <input type="number" id="custom-width" min="0.1" step="0.1" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+                                <div>
+                                    <label for="custom-depth" style="font-size: 12px;">Depth</label>
+                                    <input type="number" id="custom-depth" min="0.1" step="0.1" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="custom-alternate-depths">Alternate Depths (comma-separated, optional)</label>
+                            <input type="text" id="custom-alternate-depths" placeholder="e.g., 4.5, 3.0" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        
+                        <div>
+                            <label for="custom-notes">Notes (optional)</label>
+                            <textarea id="custom-notes" rows="3" placeholder="Any additional information about this box..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-buttons" style="margin-top: 20px;">
+                        <button type="submit" class="btn add-box-btn">Add Custom Box</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script src="/js/lib/auth.js"></script>
+    <script src="/js/lib/api-utils.js"></script>
+    <script src="/js/lib/api.js"></script>
+    <script src="/js/lib/superadmin-api.js"></script>
+    <script src="/js/lib/location-utils.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    
+    <script>
+        // Get store ID from auth
+        const storeId = AuthManager.getCurrentStoreId();
+        
+        // Initialize navigation
+        initAdminNav('nav-container', storeId, 'boxes');
+        
+        // Check admin access
+        AuthManager.requireAuth(storeId, true);
+        
+        // Initialize location utilities
+        LocationUtils.init(storeId);
+        
+        let currentBoxes = [];
+        let boxToDelete = null;
+        let vendors = [];
+        let selectedVendor = null;
+        let selectedVendorName = null;
+        let vendorBoxes = [];
+        let vendorComparison = null;
+        let selectedBoxModels = new Set();
+        
+        // Load boxes
+        async function loadBoxes() {
+            try {
+                const response = await window.api.fetchAllBoxes(storeId);
+                currentBoxes = response.boxes;
+                displayBoxes(response.boxes);
+            } catch (error) {
+                document.getElementById('boxes-content').innerHTML = `
+                    <div class="error">
+                        Failed to load boxes: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        // Display boxes in DataTable
+        function displayBoxes(boxes) {
+            const container = document.getElementById('boxes-content');
+            
+            if (boxes.length === 0) {
+                container.innerHTML = '<p>No boxes found in inventory.</p>';
+                return;
+            }
+            
+            // Create table structure
+            let tableHtml = `
+                <table id="boxes-table" class="display">
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Supplier</th>
+                            <th>Dimensions (L×W×D)</th>
+                            <th>Alternate Depths</th>
+                            <th>Location 📍</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            // Build rows
+            boxes.forEach((box, index) => {
+                const [l, w, d] = box.dimensions || [0, 0, 0];
+                const supplier = box.supplier || 'Custom';
+                const hasCoords = box.location && box.location.coords && box.location.coords.length > 0;
+                
+                // Store location data for this box
+                if (box.location) {
+                    LocationUtils.locationData[box.model] = box.location;
+                }
+                
+                tableHtml += `
+                    <tr>
+                        <td>${box.model || ''}</td>
+                        <td class="supplier-cell">${supplier}</td>
+                        <td class="dimension-cell">${l} × ${w} × ${d}</td>
+                        <td style="color: #666; font-size: 0.9em;">
+                            ${box.alternate_depths ? box.alternate_depths.join(', ') : '-'}
+                        </td>
+                        <td>
+                            ${LocationUtils.renderLocationButtons(box.model, box.location)}
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="action-btn delete" 
+                                        data-box-index="${index}"
+                                        title="Delete box">
+                                    🗑️
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableHtml += `
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = tableHtml;
+            
+            // Initialize DataTable
+            $('#boxes-table').DataTable({
+                pageLength: 50,
+                order: [[0, 'asc']], // Sort by model
+                columnDefs: [
+                    { orderable: false, targets: 5 } // Actions column not sortable
+                ],
+                language: {
+                    search: "Search boxes:"
+                }
+            });
+        }
+        
+        // Edit location
+        async function editLocation(index) {
+            const box = currentBoxes[index];
+            
+            const onSave = async (locationData) => {
+                try {
+                    // Update box location
+                    const updatedBox = {
+                        ...box,
+                        location: locationData
+                    };
+                    
+                    // Save to backend
+                    await window.api.updateBoxLocation(storeId, box.model, locationData);
+                    
+                    // Reload boxes
+                    await loadBoxes();
+                } catch (error) {
+                    alert(`Failed to update location: ${error.message}`);
+                }
+            };
+            
+            LocationUtils.editLocation(box.model, box.location, onSave);
+        }
+        
+        // Delete box
+        function deleteBox(index) {
+            boxToDelete = currentBoxes[index];
+            document.getElementById('delete-box-model').textContent = boxToDelete.model;
+            document.getElementById('delete-modal').style.display = 'block';
+        }
+        
+        // Close delete modal
+        function closeDeleteModal() {
+            document.getElementById('delete-modal').style.display = 'none';
+            boxToDelete = null;
+        }
+        
+        // Confirm delete
+        async function confirmDelete() {
+            if (!boxToDelete) return;
+            
+            try {
+                await window.api.deleteBox(storeId, boxToDelete.model);
+                
+                closeDeleteModal();
+                await loadBoxes();
+            } catch (error) {
+                alert(`Failed to delete box: ${error.message}`);
+            }
+        }
+        
+        // Add new box
+        async function addNewBox() {
+            // Load vendors if not already loaded
+            if (vendors.length === 0) {
+                try {
+                    vendors = await window.api.getVendors(storeId);
+                } catch (error) {
+                    console.error('Failed to load vendors:', error);
+                    vendors = [];
+                }
+            }
+            
+            // Show the modal with source selection
+            showStep('source');
+            document.getElementById('add-modal').style.display = 'block';
+        }
+        
+        // Show wizard step
+        function showStep(stepName) {
+            // Hide all steps
+            document.querySelectorAll('.wizard-step').forEach(step => {
+                step.style.display = 'none';
+            });
+            // Show requested step
+            document.getElementById(`step-${stepName}`).style.display = 'block';
+        }
+        
+        // Show vendor selection
+        function showVendorSelection() {
+            showStep('vendor');
+            displayVendors();
+        }
+        
+        // Show custom form
+        function showCustomForm() {
+            showStep('custom');
+            document.getElementById('custom-model').focus();
+        }
+        
+        // Back to source selection
+        function backToSource() {
+            showStep('source');
+        }
+        
+        // Display vendor list with comparison info
+        async function displayVendors() {
+            const vendorList = document.getElementById('vendor-list');
+            
+            if (vendors.length === 0) {
+                vendorList.innerHTML = '<p>No vendors available. Use custom box option.</p>';
+                return;
+            }
+            
+            vendorList.innerHTML = '<p style="color: #666;">Loading vendor information...</p>';
+            
+            // Get comparison data for each vendor
+            const vendorPromises = vendors.map(async vendor => {
+                try {
+                    const comparison = await window.api.compareVendorWithStore(storeId, vendor.id);
+                    return { vendor, comparison };
+                } catch (error) {
+                    console.error(`Failed to compare vendor ${vendor.name}:`, error);
+                    return { vendor, comparison: null };
+                }
+            });
+            
+            const vendorData = await Promise.all(vendorPromises);
+            
+            vendorList.innerHTML = vendorData.map(({ vendor, comparison }) => {
+                const newCount = comparison ? comparison.new_count : '?';
+                const newBoxText = comparison 
+                    ? `<span style="color: #27ae60; font-weight: bold;">${newCount} new boxes</span> not in your store`
+                    : `${vendor.box_count} boxes available`;
+                    
+                return `
+                    <div class="vendor-card" data-vendor-id="${vendor.id}" data-vendor-name="${vendor.name}">\
+                        <h4>${vendor.name}</h4>
+                        <p style="margin: 5px 0; color: #666;">
+                            ${vendor.box_count} total boxes • ${newBoxText}
+                        </p>
+                        ${vendor.url ? `<p style="margin: 0; font-size: 12px; color: #999;">${vendor.url}</p>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Close add modal
+        function closeAddModal() {
+            document.getElementById('add-modal').style.display = 'none';
+            document.getElementById('custom-box-form').reset();
+            document.getElementById('box-search').value = '';
+            selectedBoxModels.clear(); // Clear selections
+            showStep('source'); // Reset to source selection
+        }
+        
+        
+        // Show wizard step
+        function showStep(stepName) {
+            // Hide all steps
+            document.querySelectorAll('.wizard-step').forEach(step => {
+                step.style.display = 'none';
+            });
+            // Show requested step
+            document.getElementById(`step-${stepName}`).style.display = 'block';
+        }
+        
+        // Show vendor selection
+        function showVendorSelection() {
+            showStep('vendor');
+            displayVendors();
+        }
+        
+        // Show custom form
+        function showCustomForm() {
+            showStep('custom');
+            document.getElementById('custom-model').focus();
+        }
+        
+        // Back to source selection
+        function backToSource() {
+            showStep('source');
+        }
+        
+        // Display vendor list with comparison info
+        async function displayVendors() {
+            const vendorList = document.getElementById('vendor-list');
+            
+            if (vendors.length === 0) {
+                vendorList.innerHTML = '<p>No vendors available. Use custom box option.</p>';
+                return;
+            }
+            
+            vendorList.innerHTML = '<p style="color: #666;">Loading vendor information...</p>';
+            
+            // Get comparison data for each vendor
+            const vendorPromises = vendors.map(async vendor => {
+                try {
+                    const comparison = await window.api.compareVendorWithStore(storeId, vendor.id);
+                    return { vendor, comparison };
+                } catch (error) {
+                    console.error(`Failed to compare vendor ${vendor.name}:`, error);
+                    return { vendor, comparison: null };
+                }
+            });
+            
+            const vendorData = await Promise.all(vendorPromises);
+            
+            vendorList.innerHTML = vendorData.map(({ vendor, comparison }) => {
+                const newCount = comparison ? comparison.new_count : '?';
+                const newBoxText = comparison 
+                    ? `<span style="color: #27ae60; font-weight: bold;">${newCount} new boxes</span> not in your store`
+                    : `${vendor.box_count} boxes available`;
+                    
+                return `
+                    <div class="vendor-card" data-vendor-id="${vendor.id}" data-vendor-name="${vendor.name}">\
+                        <h4>${vendor.name}</h4>
+                        <p style="margin: 5px 0; color: #666;">
+                            ${vendor.box_count} total boxes • ${newBoxText}
+                        </p>
+                        ${vendor.url ? `<p style="margin: 0; font-size: 12px; color: #999;">${vendor.url}</p>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Select vendor
+        async function selectVendor(vendorId, vendorName) {
+            selectedVendor = vendorId;
+            selectedVendorName = vendorName;
+            document.getElementById('vendor-boxes-title').textContent = `${vendorName} Boxes`;
+            
+            try {
+                // Get comparison data
+                vendorComparison = await window.api.compareVendorWithStore(storeId, vendorId);
+                
+                // Only show new boxes (not already in store)
+                vendorBoxes = vendorComparison.new_boxes;
+                
+                // Update title to show filtering
+                const titleEl = document.getElementById('vendor-boxes-title');
+                const summaryEl = document.getElementById('vendor-summary');
+                
+                if (vendorComparison.new_count === 0) {
+                    titleEl.innerHTML = `${vendorName} - <span style="color: #666;">No new boxes to add</span>`;
+                    summaryEl.innerHTML = `
+                        <div style="color: #666;">
+                            All ${vendorComparison.total_boxes} boxes from this vendor are already in your inventory.
+                        </div>
+                    `;
+                } else {
+                    titleEl.innerHTML = `${vendorName} - <span style="color: #27ae60;">${vendorComparison.new_count} new boxes available</span>`;
+                    summaryEl.innerHTML = `
+                        <div>
+                            <strong>Vendor catalog:</strong> ${vendorComparison.total_boxes} total boxes<br>
+                            <span style="color: #27ae60;">✓ ${vendorComparison.new_count} new boxes</span> can be added to your inventory<br>
+                            ${vendorComparison.existing_count > 0 ? `<span style="color: #666;">• ${vendorComparison.existing_count} boxes already in your inventory</span><br>` : ''}
+                            ${vendorComparison.updated_count > 0 ? `<span style="color: #e67e22;">• ${vendorComparison.updated_count} boxes with updated specifications</span>` : ''}
+                        </div>
+                    `;
+                }
+                
+                displayVendorBoxes();
+                showStep('vendor-boxes');
+            } catch (error) {
+                alert(`Failed to load vendor boxes: ${error.message}`);
+            }
+        }
+        
+        // Back to vendor list
+        function backToVendorList() {
+            showStep('vendor');
+        }
+        
+        // Display vendor boxes
+        function displayVendorBoxes() {
+            const boxesList = document.getElementById('vendor-boxes-list');
+            const searchTerm = document.getElementById('box-search').value.toLowerCase();
+            
+            const filteredBoxes = vendorBoxes.filter(box => 
+                !searchTerm || 
+                box.model.toLowerCase().includes(searchTerm) ||
+                box.dimensions.join('x').includes(searchTerm)
+            );
+            
+            if (filteredBoxes.length === 0) {
+                boxesList.innerHTML = '<p>No boxes found matching your search.</p>';
+                updateBulkAddButton();
+                return;
+            }
+            
+            boxesList.innerHTML = filteredBoxes.map(box => {
+                const [l, w, d] = box.dimensions;
+                const isSelected = selectedBoxModels.has(box.model);
+                return `
+                    <div class="box-card ${isSelected ? 'selected' : ''}" data-model="${box.model.replace(/"/g, '&quot;')}">\
+                        <div class="box-info" style="flex: 1;">
+                            <h4>${box.model}</h4>
+                            <div class="box-dimensions">${l}" × ${w}" × ${d}"</div>
+                            ${box.alternate_depths ? `<div class="box-alt-depths">Alt depths: ${box.alternate_depths.join(', ')}"</div>` : ''}
+                        </div>
+                        <input type="checkbox" 
+                               class="box-checkbox" 
+                               data-model="${box.model.replace(/"/g, '&quot;')}"
+                               ${isSelected ? 'checked' : ''}
+                               onchange="toggleBoxSelection('${box.model.replace(/'/g, "\\'")}')"
+                               onclick="event.stopPropagation()">
+                    </div>
+                `;
+            }).join('');
+            
+            // Add click handlers to box cards
+            boxesList.querySelectorAll('.box-card').forEach(card => {
+                card.addEventListener('click', function(e) {
+                    if (e.target.type !== 'checkbox') {
+                        const checkbox = this.querySelector('.box-checkbox');
+                        checkbox.checked = !checkbox.checked;
+                        toggleBoxSelection(checkbox.dataset.model);
+                    }
+                });
+            });
+            
+            updateBulkAddButton();
+        }
+        
+        // Search handler
+        document.getElementById('box-search').addEventListener('input', displayVendorBoxes);
+        
+        // Event delegation for vendor card clicks
+        document.addEventListener('click', function(e) {
+            // Check if clicked element is a vendor card or its child
+            const vendorCard = e.target.closest('.vendor-card');
+            if (vendorCard && vendorCard.dataset.vendorId) {
+                const vendorId = vendorCard.dataset.vendorId;
+                const vendorName = vendorCard.dataset.vendorName;
+                selectVendor(vendorId, vendorName);
+            }
+            
+            // Check if clicked element is a delete button
+            const deleteBtn = e.target.closest('.action-btn.delete');
+            if (deleteBtn && deleteBtn.dataset.boxIndex) {
+                const index = parseInt(deleteBtn.dataset.boxIndex, 10);
+                deleteBox(index);
+            }
+        });
+        
+        // Toggle box selection
+        function toggleBoxSelection(model) {
+            if (selectedBoxModels.has(model)) {
+                selectedBoxModels.delete(model);
+            } else {
+                selectedBoxModels.add(model);
+            }
+            
+            // Update visual state
+            const card = document.querySelector(`.box-card[data-model="${model.replace(/"/g, '&quot;')}"]`);
+            if (card) {
+                card.classList.toggle('selected', selectedBoxModels.has(model));
+            }
+            
+            updateBulkAddButton();
+        }
+        
+        // Update bulk add button state
+        function updateBulkAddButton() {
+            const btn = document.getElementById('bulk-add-btn');
+            const count = selectedBoxModels.size;
+            
+            btn.textContent = count === 0 
+                ? 'Add Selected Boxes (0)' 
+                : `Add Selected Boxes (${count})`;
+            btn.disabled = count === 0;
+        }
+        
+        // Select all visible boxes
+        function selectAllBoxes() {
+            const checkboxes = document.querySelectorAll('.box-checkbox');
+            checkboxes.forEach(cb => {
+                const model = cb.dataset.model;
+                selectedBoxModels.add(model);
+                cb.checked = true;
+                const card = cb.closest('.box-card');
+                if (card) card.classList.add('selected');
+            });
+            updateBulkAddButton();
+        }
+        
+        // Deselect all boxes
+        function selectNoneBoxes() {
+            selectedBoxModels.clear();
+            const checkboxes = document.querySelectorAll('.box-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = false;
+                const card = cb.closest('.box-card');
+                if (card) card.classList.remove('selected');
+            });
+            updateBulkAddButton();
+        }
+        
+        // Add selected boxes in bulk
+        async function addSelectedBoxes() {
+            if (selectedBoxModels.size === 0) return;
+            
+            const boxesToAdd = vendorBoxes.filter(box => selectedBoxModels.has(box.model));
+            
+            // Show confirmation
+            const confirmMsg = `Add ${boxesToAdd.length} box${boxesToAdd.length > 1 ? 'es' : ''} to your inventory?`;
+            if (!confirm(confirmMsg)) return;
+            
+            let successCount = 0;
+            let errors = [];
+            
+            // Add boxes one by one (could be optimized with bulk endpoint)
+            for (const box of boxesToAdd) {
+                const boxData = {
+                    model: box.model,
+                    supplier: selectedVendor,
+                    dimensions: box.dimensions,
+                    alternate_depths: box.alternate_depths
+                };
+                
+                try {
+                    await window.api.createBox(storeId, boxData);
+                    successCount++;
+                } catch (error) {
+                    errors.push(`${box.model}: ${error.message}`);
+                }
+            }
+            
+            // Show results
+            if (errors.length === 0) {
+                alert(`Successfully added ${successCount} boxes to inventory!`);
+                closeAddModal();
+                await loadBoxes();
+            } else {
+                alert(`Added ${successCount} boxes. Errors:\n${errors.join('\n')}`);
+            }
+        }
+        
+        // Select vendor box
+        async function selectVendorBox(model) {
+            const box = vendorBoxes.find(b => b.model === model);
+            if (!box) return;
+            
+            const boxData = {
+                model: box.model,
+                supplier: selectedVendor,
+                dimensions: box.dimensions,
+                alternate_depths: box.alternate_depths
+            };
+            
+            try {
+                await window.api.createBox(storeId, boxData);
+                closeAddModal();
+                await loadBoxes();
+            } catch (error) {
+                alert(`Failed to add box: ${error.message}`);
+            }
+        }
+        
+        // Handle custom box form
+        document.getElementById('custom-box-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const boxData = {
+                model: document.getElementById('custom-model').value.trim(),
+                supplier: document.getElementById('custom-supplier').value.trim(),
+                dimensions: [
+                    parseFloat(document.getElementById('custom-length').value),
+                    parseFloat(document.getElementById('custom-width').value),
+                    parseFloat(document.getElementById('custom-depth').value)
+                ]
+            };
+            
+            // Handle alternate depths
+            const altDepthsValue = document.getElementById('custom-alternate-depths').value.trim();
+            if (altDepthsValue) {
+                boxData.alternate_depths = altDepthsValue.split(',')
+                    .map(d => parseFloat(d.trim()))
+                    .filter(d => !isNaN(d));
+            }
+            
+            // Handle notes
+            const notesValue = document.getElementById('custom-notes').value.trim();
+            if (notesValue) {
+                boxData.notes = notesValue;
+            }
+            
+            try {
+                await window.api.createBox(storeId, boxData);
+                closeAddModal();
+                await loadBoxes();
+            } catch (error) {
+                alert(`Failed to add box: ${error.message}`);
+            }
+        });
+        
+        // Close modal on outside click
+        window.onclick = function(event) {
+            if (event.target.className === 'modal') {
+                event.target.style.display = 'none';
+            }
+        }
+        
+        // Handle location edit requests using event-based approach
+        document.addEventListener('location-edit-requested', function(event) {
+            const model = event.detail.model;
+            const index = currentBoxes.findIndex(box => box.model === model);
+            if (index !== -1) {
+                editLocation(index);
+            }
+        });
+        
+        // Keep global function for backward compatibility
+        window.editLocationForModel = function(model) {
+            const index = currentBoxes.findIndex(box => box.model === model);
+            if (index !== -1) {
+                editLocation(index);
+            }
+        };
+        
+        // Make wizard functions global
+        window.showVendorSelection = showVendorSelection;
+        window.showCustomForm = showCustomForm;
+        window.backToSource = backToSource;
+        window.selectVendor = selectVendor;
+        window.backToVendorList = backToVendorList;
+        window.selectVendorBox = selectVendorBox;
+        window.toggleBoxSelection = toggleBoxSelection;
+        window.selectAllBoxes = selectAllBoxes;
+        window.selectNoneBoxes = selectNoneBoxes;
+        window.addSelectedBoxes = addSelectedBoxes;
+        
+        // Load on page ready
+        loadBoxes();
+    </script>
+</body>
+</html>

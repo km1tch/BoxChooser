@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Floorplan Editor</title>
+    <link rel="stylesheet" href="/assets/css/common.css">
+    <link rel="stylesheet" href="/assets/css/mobile.css">
+    <link rel="stylesheet" href="/assets/css/floorplan-controls.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        
+        #app-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+        }
+        
+        /* Mode controls */
+        .mode-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 20px;
+        }
+        
+        .mode-controls.disabled {
+            display: none !important;
+        }
+        
+        /* Toggle switch */
+        .mode-toggle {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .toggle-label {
+            font-weight: 500;
+            color: #666;
+            transition: color 0.3s ease;
+        }
+        
+        .toggle-label.active {
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background-color: #ddd;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        .toggle-switch.active {
+            background-color: #4CAF50;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(30px);
+        }
+        
+        .filter-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        /* No floorplan message */
+        .no-floorplan-message {
+            text-align: center;
+            padding: 30px 20px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            margin: 10px auto;
+            max-width: 600px;
+        }
+        
+        .no-floorplan-message h3 {
+            color: #666;
+            margin-bottom: 8px;
+            font-size: 18px;
+        }
+        
+        .no-floorplan-message p {
+            color: #888;
+            margin: 0;
+            font-size: 14px;
+        }
+        
+        /* Floorplan viewer */
+        .floorplan-viewer {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 30px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .floorplan-viewer.has-floorplan {
+            display: block;
+            min-height: 400px;
+        }
+        
+        .floorplan-container {
+            position: relative;
+            width: 100%;
+        }
+        
+        .floorplan-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .marker-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .marker-layer.edit-mode {
+            pointer-events: auto;
+            cursor: crosshair;
+        }
+        
+        .location-marker {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            margin-left: -40px;
+            margin-top: -40px;
+            color: #FF0000;
+            font-size: 72px;
+            font-weight: 900;
+            text-align: center;
+            line-height: 80px;
+            pointer-events: auto;
+            cursor: pointer;
+            text-shadow: 
+                3px 3px 0px #000,
+                -3px -3px 0px #000,
+                3px -3px 0px #000,
+                -3px 3px 0px #000,
+                0px 0px 8px rgba(0,0,0,0.5);
+            z-index: 10;
+            transition: transform 0.2s ease;
+            transform-origin: center;
+            animation: markerFadeIn 0.3s ease-out;
+        }
+        
+        @keyframes markerFadeIn {
+            from {
+                transform: scale(0) rotate(-180deg);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+        
+        .location-marker:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+        
+        .location-marker.selected {
+            color: #FFA500; /* Orange when selected */
+            transform: scale(1.2);
+            animation: pulse 0.5s infinite alternate;
+        }
+        
+        .location-marker.marker-temp {
+            color: #FFD700; /* Gold color for temporary markers */
+            animation: bounce 0.5s infinite alternate;
+        }
+        
+        @keyframes pulse {
+            from { transform: scale(1.2); }
+            to { transform: scale(1.3); }
+        }
+        
+        @keyframes bounce {
+            from { transform: translateY(0) scale(1); }
+            to { transform: translateY(-10px) scale(1.05); }
+        }
+        
+        .marker-tooltip {
+            display: none; /* Tooltips disabled - using panel instead */
+        }
+        
+        /* Upload section */
+        .upload-section {
+            margin-bottom: 30px;
+        }
+        
+        .upload-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-toggle:hover {
+            background: #efefef;
+        }
+        
+        .upload-toggle .arrow {
+            transition: transform 0.3s ease;
+        }
+        
+        .upload-toggle.expanded .arrow {
+            transform: rotate(180deg);
+        }
+        
+        .upload-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .upload-content.expanded {
+            max-height: 500px;
+            margin-top: 20px;
+        }
+        
+        .upload-zone {
+            border: 3px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .upload-zone:hover {
+            border-color: #999;
+            background-color: #f9f9f9;
+        }
+        
+        .upload-zone.drag-over {
+            border-color: #4CAF50;
+            background-color: #f0f8ff;
+        }
+        
+        /* Box selector panel */
+        .box-selector-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: white;
+            border-left: 2px solid #ddd;
+            box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+            transition: right 0.3s ease;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .box-selector-panel.open {
+            right: 0;
+        }
+        
+        .box-selector-header {
+            position: sticky;
+            top: 0;
+            background: white;
+            border-bottom: 1px solid #ddd;
+            padding: 20px;
+            z-index: 10;
+        }
+        
+        .box-selector-close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+        
+        .box-search {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        
+        .box-list {
+            padding: 20px;
+        }
+        
+        .box-item {
+            padding: 12px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .box-item:hover {
+            background: #f9f9f9;
+            border-color: #ddd;
+        }
+        
+        .box-item.selected {
+            background: #e3f2fd;
+            border-color: #2196F3;
+        }
+        
+        .box-item.assigned {
+            opacity: 0.6;
+        }
+        
+        .box-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .box-details {
+            flex: 1;
+        }
+        
+        .box-model {
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        
+        .box-dimensions {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .box-status {
+            font-size: 12px;
+            color: #888;
+            margin-left: 10px;
+        }
+        
+        .box-selector-actions {
+            position: sticky;
+            bottom: 0;
+            background: white;
+            border-top: 1px solid #ddd;
+            padding: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            flex: 1;
+        }
+        
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #45a049;
+        }
+        
+        .btn-secondary {
+            background: #666;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #555;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        
+        /* Mode indicator */
+        .mode-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 4px;
+            font-weight: bold;
+            z-index: 100;
+            display: none;
+        }
+        
+        .mode-indicator.visible {
+            display: block;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .mode-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .box-selector-panel {
+                width: 100%;
+                right: -100%;
+            }
+            
+            .floorplan-viewer {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <!-- The navigation bar will be inserted here by initAdminNav -->
+        
+        <div class="container">
+            <h1 id="page-title">Floorplan Editor</h1>
+            
+            <!-- Content wrapper that can be hidden -->
+            <div id="floorplan-content">
+                <!-- Mode controls -->
+                <div class="mode-controls" id="mode-controls">
+                    <div class="mode-toggle">
+                        <span class="toggle-label active" id="view-label">View</span>
+                        <div class="toggle-switch" id="mode-toggle-switch">
+                            <div class="toggle-slider"></div>
+                        </div>
+                        <span class="toggle-label" id="edit-label">Edit</span>
+                    </div>
+                    <div class="filter-controls">
+                        <!-- Removed show unassigned button -->
+                    </div>
+                </div>
+            
+                <!-- Floorplan viewer -->
+                <div id="floorplan-viewer" class="floorplan-viewer">
+                    <div class="no-floorplan-message" id="no-floorplan-message">
+                        <h3>No Floorplan Available</h3>
+                        <p>Upload a floorplan to start managing box locations</p>
+                    </div>
+                </div>
+                
+                <!-- Upload section (collapsible) -->
+                <div class="upload-section">
+                    <div class="upload-toggle" id="upload-toggle">
+                        <span>Upload New Floorplan</span>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="upload-content" id="upload-content">
+                        <div id="upload-container"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- No floorplan upload section - shown when no floorplan exists -->
+            <div id="no-floorplan-content" style="display: none;">
+                <div id="upload-container-main"></div>
+            </div>
+        
+        <!-- Box selector panel (slides in from right) -->
+        <div class="box-selector-panel" id="box-selector-panel">
+            <div class="box-selector-header">
+                <h3>Select Boxes for Location</h3>
+                <button class="box-selector-close" id="close-box-selector">×</button>
+                <input type="text" class="box-search" id="box-search" placeholder="Search boxes...">
+            </div>
+            <div class="box-list" id="box-list">
+                <!-- Dynamically loaded -->
+            </div>
+            <div class="box-selector-actions">
+                <button class="btn btn-primary" id="save-location">Save Location</button>
+                <button class="btn btn-secondary" id="cancel-location">Cancel</button>
+            </div>
+        </div>
+        
+        
+        <!-- Mode indicator -->
+        <div class="mode-indicator" id="mode-indicator">Edit Mode Active</div>
+    </div>
+    </div>
+    
+    <script src="/js/lib/auth.js"></script>
+    <script src="/js/lib/api-utils.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    
+    <script type="module">
+        // Imports must be at the top of the module
+        import { FloorplanUpload } from '/js/components/floorplan-upload.js';
+        import { FloorplanViewer } from '/js/components/floorplan-viewer.js';
+        import { FloorplanLocationEditor } from '/js/components/floorplan-location-editor.js';
+        
+        // Initialize the floorplan page
+        async function initializeFloorplan() {
+            // Get store ID from auth context
+            const storeId = AuthManager.getCurrentStoreId();
+            
+            // Redirect to login if no store selected
+            if (!storeId) {
+                window.location.href = '/login';
+                return;
+            }
+        
+            // Update page title
+            document.getElementById('page-title').textContent = `Floorplan Editor - Store ${storeId}`;
+            
+            // Initialize the navigation bar
+            await window.initAdminNav('app-container', storeId, 'floorplan');
+            
+            // Check if authentication is required
+            await AuthManager.requireAuth(storeId);
+            
+            // Initialize location editor (which manages viewer, upload, and modes)
+            const locationEditor = new FloorplanLocationEditor(storeId);
+            
+            // Upload toggle
+            const uploadToggle = document.getElementById('upload-toggle');
+            const uploadContent = document.getElementById('upload-content');
+            
+            if (uploadToggle && uploadContent) {
+                uploadToggle.addEventListener('click', () => {
+                    uploadToggle.classList.toggle('expanded');
+                    uploadContent.classList.toggle('expanded');
+                });
+            }
+        }
+        
+        // Call the initialization function when the page loads
+        initializeFloorplan();
+    </script>
+</body>
+</html>

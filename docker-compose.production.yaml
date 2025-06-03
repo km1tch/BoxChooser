@@ -1,0 +1,45 @@
+services:
+  caddy:
+    build:
+      context: .
+      dockerfile: dockerfile.caddy
+    container_name: packingsite_caddy
+    ports:
+      - "127.0.0.1:5893:80"
+      - "127.0.0.1:5443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+      # Persistent access logs for production
+      - ./logs:/data:rw
+    environment:
+      - SITE_URL=${SITE_URL}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      - ACME_EMAIL=${ACME_EMAIL}
+    depends_on:
+      - backend
+    restart: always
+
+  backend:
+    build: .
+    container_name: packingsite_backend
+    volumes:
+      - ./backend:/code/backend:ro # Read-only in production
+      - ./stores:/code/stores:rw
+      - ./floorplans:/code/floorplans:rw # Read-write for uploads
+      - ./vendors:/code/vendors:rw
+      - ./db:/db:rw # Read-write for database
+      - ./tools:/code/tools:ro # Read-only for auth management
+    env_file:
+      - .env
+    environment:
+      # Override specific values for production
+      - SQLITE_DB_PATH=/db/packingwebsite.db
+    restart: always
+
+  # No mailhog in production
+  # No test service in production
+
+volumes:
+  caddy_data:
+  caddy_config:

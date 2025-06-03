@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Boxes - Packing Site Admin</title>
+    <link rel="stylesheet" href="/assets/css/common.css">
+    <link rel="stylesheet" href="/assets/css/index.css">
+    <link rel="stylesheet" href="/assets/css/import.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+    <style>
+        .boxes-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .vendor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .back-link {
+            color: #0066cc;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .error {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c00;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        #boxes-table {
+            width: 100% !important;
+        }
+        
+        .dataTables_wrapper {
+            margin-top: 20px;
+        }
+        
+        .dimension-cell {
+            font-family: monospace;
+            white-space: nowrap;
+        }
+        
+        .category-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .category-cube { background: #e3f2fd; color: #1976d2; }
+        .category-small { background: #f3e5f5; color: #7b1fa2; }
+        .category-medium { background: #e8f5e9; color: #388e3c; }
+        .category-large { background: #fff3e0; color: #f57c00; }
+        .category-specialty { background: #fce4ec; color: #c2185b; }
+        
+        .alternate-depths {
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div id="nav-container"></div>
+    
+    <div class="boxes-container">
+        <a href="/admin/vendors.html" class="back-link">
+            ← Back to Vendors
+        </a>
+        
+        <div class="vendor-header">
+            <h1 id="vendor-title">Loading...</h1>
+        </div>
+        
+        <div id="boxes-content" class="loading">
+            Loading boxes...
+        </div>
+    </div>
+
+    <script src="/js/lib/superadmin-api.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    
+    <script>
+        // Get vendor from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const vendorId = decodeURIComponent(urlParams.get('vendor') || '');
+        const vendorName = decodeURIComponent(urlParams.get('name') || vendorId); // Use ID as fallback
+        
+        // Initialize on load
+        async function init() {
+            if (!vendorId) {
+                window.location.href = '/admin/vendors.html';
+                return;
+            }
+            
+            try {
+                // Verify superadmin auth
+                await SuperadminAPI.getDashboard();
+                // Load vendor boxes
+                await loadVendorBoxes();
+            } catch (error) {
+                // Not authenticated
+                window.location.href = '/admin-login.html';
+            }
+        }
+        
+        // Load vendor boxes
+        async function loadVendorBoxes() {
+            document.getElementById('vendor-title').textContent = vendorName + ' Boxes';
+            
+            try {
+                const boxes = await SuperadminAPI.getVendorBoxes(vendorId);
+                displayBoxes(boxes);
+            } catch (error) {
+                document.getElementById('boxes-content').innerHTML = `
+                    <div class="error">
+                        Failed to load boxes: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        // Display boxes in DataTable
+        function displayBoxes(boxes) {
+            const container = document.getElementById('boxes-content');
+            
+            if (boxes.length === 0) {
+                container.innerHTML = '<p>No boxes found for this vendor.</p>';
+                return;
+            }
+            
+            // Create table
+            container.innerHTML = `
+                <table id="boxes-table" class="display">
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Dimensions (L×W×D)</th>
+                            <th>Alternate Depths</th>
+                            <th>Category</th>
+                            <th>Volume (cu in)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${boxes.map(box => {
+                            const [l, w, d] = box.dimensions;
+                            const volume = Math.round(l * w * d);
+                            return `
+                                <tr>
+                                    <td>${box.model}</td>
+                                    <td class="dimension-cell">${l} × ${w} × ${d}</td>
+                                    <td class="alternate-depths">
+                                        ${box.alternate_depths ? box.alternate_depths.join(', ') : '-'}
+                                    </td>
+                                    <td>
+                                        <span class="category-badge category-${box.category}">
+                                            ${box.category}
+                                        </span>
+                                    </td>
+                                    <td data-order="${volume}">${volume.toLocaleString()}</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            // Initialize DataTable
+            $('#boxes-table').DataTable({
+                pageLength: 50,
+                order: [[0, 'asc']], // Sort by model
+                language: {
+                    search: "Search boxes:"
+                }
+            });
+        }
+        
+        // Load on page ready
+        init();
+    </script>
+</body>
+</html>
