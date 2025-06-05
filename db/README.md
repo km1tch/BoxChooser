@@ -4,7 +4,7 @@ This directory is used to store SQLite database files for the Packing Website ap
 
 ## Authentication Database
 
-The authentication database is stored here as `packingwebsite.db`. This database is automatically initialized when the Docker container starts.
+The authentication database is stored here as `packing.db`. This database is automatically initialized when the Docker container starts.
 
 ## Managing Authentication
 

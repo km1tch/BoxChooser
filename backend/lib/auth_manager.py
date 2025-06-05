@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 # Database management
 def get_db_path():
     """Get the database path from the environment variable or use the default."""
-    default_path = str(Path(__file__).resolve().parent.parent / 'db' / 'packingwebsite.db')
+    default_path = str(Path(__file__).resolve().parent.parent / 'db' / 'packing.db')
     return os.environ.get('SQLITE_DB_PATH', default_path)
 
 @contextmanager

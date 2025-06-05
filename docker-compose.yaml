@@ -1,7 +1,7 @@
 services:
   caddy:
     image: caddy:2-alpine
-    container_name: packingsite_caddy
+    container_name: boxchooser_caddy
     ports:
       - "5893:80"
       - "5443:443"
@@ -19,7 +19,7 @@ services:
 
   backend:
     build: .
-    container_name: packingsite_backend
+    container_name: boxchooser_backend
     ports:
       - "8000:8000"
     volumes:
@@ -31,18 +31,13 @@ services:
       - ./tools:/code/tools
     env_file:
       - .env
-    environment:
-      # Override specific values for development
-      - SQLITE_DB_PATH=/db/packingwebsite.db
-      - SMTP_HOST=${SMTP_HOST:-mailhog}
-      - SMTP_PORT=${SMTP_PORT:-1025}
     depends_on:
       - mailhog
     restart: unless-stopped
 
   mailhog:
     image: mailhog/mailhog:latest
-    container_name: packingsite_mailhog
+    container_name: boxchooser_mailhog
     ports:
       - "8026:8025" # Web UI (8026 on host, 8025 in container)
       - "1026:1025" # SMTP Server (1026 on host, 1025 in container)

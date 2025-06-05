@@ -62,9 +62,6 @@ def save_store_yaml(store_id: str, data: dict) -> bool:
             if "description" in data and data["description"]:
                 f.write(f"description: \"{data['description']}\"\n")
             
-            # Write pricing mode if present
-            if "pricing-mode" in data:
-                f.write(f"pricing-mode: {data['pricing-mode']}\n")
             
             # Write price group if present
             if "price-group" in data:
@@ -76,9 +73,6 @@ def save_store_yaml(store_id: str, data: dict) -> bool:
                 return True
             
             f.write("boxes:\n")
-
-            # Determine pricing mode
-            pricing_mode = data.get("pricing-mode", "standard")
 
             # Write each box in a nice format
             for box in data["boxes"]:
@@ -117,17 +111,8 @@ def save_store_yaml(store_id: str, data: dict) -> bool:
                     alt_depths_str = str(alt_depths).replace(" ", "")
                     f.write(f"    alternate_depths: {alt_depths_str}\n")
 
-                # Write prices or itemized-prices based on pricing mode
-                if pricing_mode == "standard" and "prices" in box:
-                    # Safely format prices with square brackets and commas, no spaces
-                    if isinstance(box['prices'], list) and len(box['prices']) == 4:
-                        # Validate prices are numeric and in reasonable range
-                        prices = [float(p) if isinstance(p, (int, float)) and 0 <= p <= 10000 else 0 for p in box['prices']]
-                        prices_str = str(prices).replace(" ", "")
-                        f.write(f"    prices: {prices_str}\n")
-                    else:
-                        f.write(f"    prices: [0.0,0.0,0.0,0.0]\n")
-                elif pricing_mode == "itemized" and "itemized-prices" in box:
+                # Write itemized prices (only pricing mode now)
+                if "itemized-prices" in box:
                     # Write itemized prices
                     ip = box["itemized-prices"]
                     f.write(f"    itemized-prices:\n")
@@ -221,7 +206,7 @@ def get_box_section(model: str, box_type: Optional[str] = None) -> str:
     return "OTHER"
 
 
-def validate_box_data(box_data: dict, store_id: str, pricing_mode: str = "standard") -> None:
+def validate_box_data(box_data: dict, store_id: str) -> None:
     """Validate box data before saving"""
     # Validate required fields
     if "type" not in box_data:
@@ -230,28 +215,18 @@ def validate_box_data(box_data: dict, store_id: str, pricing_mode: str = "standa
     if "dimensions" not in box_data or not isinstance(box_data["dimensions"], list) or len(box_data["dimensions"]) != 3:
         raise ValueError("Box has invalid 'dimensions' (must be list of 3 numbers)")
     
-    # Validate pricing data based on pricing mode
-    if pricing_mode == "standard":
-        if "prices" not in box_data or not isinstance(box_data["prices"], list) or len(box_data["prices"]) != 4:
-            raise ValueError("Box has invalid 'prices' (must be list of 4 numbers)")
-        
-        if "itemized-prices" in box_data:
-            raise ValueError("Box has 'itemized-prices' but store is in standard pricing mode")
-    else:  # itemized pricing mode
-        if "itemized-prices" not in box_data or not isinstance(box_data["itemized-prices"], dict):
-            raise ValueError("Box missing 'itemized-prices' (must be an object)")
-        
-        # Validate required itemized pricing fields
-        required_fields = ["box-price", "standard-materials", "standard-services", 
-                          "fragile-materials", "fragile-services", 
-                          "custom-materials", "custom-services"]
-        
-        for field in required_fields:
-            if field not in box_data["itemized-prices"]:
-                raise ValueError(f"Box missing required field '{field}' in itemized-prices")
-        
-        if "prices" in box_data:
-            raise ValueError("Box has 'prices' but store is in itemized pricing mode")
+    # Validate itemized pricing (only pricing mode now)
+    if "itemized-prices" not in box_data or not isinstance(box_data["itemized-prices"], dict):
+        raise ValueError("Box missing 'itemized-prices' (must be an object)")
+    
+    # Validate required itemized pricing fields
+    required_fields = ["box-price", "standard-materials", "standard-services", 
+                      "fragile-materials", "fragile-services", 
+                      "custom-materials", "custom-services"]
+    
+    for field in required_fields:
+        if field not in box_data["itemized-prices"]:
+            raise ValueError(f"Box missing required field '{field}' in itemized-prices")
     
     if box_data["type"] == "CustomBox" and "open_dim" not in box_data:
         raise ValueError("Box is CustomBox but missing 'open_dim' field")

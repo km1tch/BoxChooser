@@ -474,7 +474,7 @@
       <h1>Superadmin Dashboard</h1>
       <div class="header-right">
         <span class="superadmin-badge" id="username-badge">SUPERADMIN</span>
-        <button class="logout-btn" onclick="SuperadminAPI.logout()">
+        <button class="logout-btn" id="logout-btn">
           Logout
         </button>
       </div>
@@ -675,18 +675,12 @@
               placeholder="admin@example.com"
             />
           </div>
-          <div class="form-group">
-            <label for="copy-from-store">Copy Configuration From:</label>
-            <select id="copy-from-store">
-              <option value="">-- Use Default Template --</option>
-            </select>
-          </div>
           <div class="action-buttons">
             <button type="submit" class="btn btn-primary">Create Store</button>
             <button
               type="button"
               class="btn btn-secondary"
-              onclick="closeModal('create-store-modal')"
+              onclick="cancelCreateStore()"
             >
               Cancel
             </button>
@@ -727,17 +721,28 @@
     <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
     <script src="/js/lib/superadmin-api.js"></script>
     <script>
-      // Check auth on load
-      if (!SuperadminAPI.getToken()) {
-        window.location.href = "/admin-login.html";
-      }
-
       // Global state
       let currentStores = [];
       let currentAuditLogs = [];
       let auditRefreshInterval = null;
       let totpSetupData = null;
       let currentDataTable = null; // Track current DataTable instance
+
+      // Check auth and setup logout button on load
+      document.addEventListener('DOMContentLoaded', function() {
+        if (!SuperadminAPI.getToken()) {
+          window.location.href = "/admin-login.html";
+          return;
+        }
+
+        // Setup logout button
+        document.getElementById('logout-btn').addEventListener('click', function() {
+          SuperadminAPI.logout();
+        });
+
+        // Initialize the app
+        init();
+      });
 
       // Tab switching
       function switchTab(tabName) {
@@ -852,16 +857,7 @@
           )
           .join("");
 
-        // Update copy-from dropdown
-        const copyFromSelect = document.getElementById("copy-from-store");
-        copyFromSelect.innerHTML =
-          '<option value="">-- Use Default Template --</option>' +
-          currentStores
-            .map(
-              (store) =>
-                `<option value="${store.store_id}">Copy from Store ${store.store_id}</option>`
-            )
-            .join("");
+        // No longer need to update copy-from dropdown
       }
 
       // View store details
@@ -1112,6 +1108,17 @@
         }
       }
 
+      // Cancel create store and clear form
+      function cancelCreateStore() {
+        // Clear the form
+        document.getElementById("new-store-id").value = "";
+        document.getElementById("new-store-name").value = "";
+        document.getElementById("new-admin-email").value = "";
+        
+        // Close the modal
+        closeModal('create-store-modal');
+      }
+
       // Handle create store
       async function handleCreateStore(event) {
         event.preventDefault();
@@ -1119,17 +1126,20 @@
         const storeId = document.getElementById("new-store-id").value;
         const storeName = document.getElementById("new-store-name").value;
         const adminEmail = document.getElementById("new-admin-email").value;
-        const copyFromStore = document.getElementById("copy-from-store").value;
 
         try {
           const result = await SuperadminAPI.createStore({
             store_id: storeId,
             admin_email: adminEmail,
-            store_name: storeName || undefined,
-            copy_from_store: copyFromStore || undefined,
+            store_name: storeName || undefined
           });
 
           closeModal("create-store-modal");
+          
+          // Clear the form for next time
+          document.getElementById("new-store-id").value = "";
+          document.getElementById("new-store-name").value = "";
+          document.getElementById("new-admin-email").value = "";
 
           // Show success modal with PIN
           document.getElementById("store-created-content").innerHTML = `
@@ -1483,7 +1493,12 @@
           await loadStores();
         } catch (error) {
           console.error("Initialization error:", error);
-          // If auth fails, the API will redirect to login
+          // If we get a superadmin access error, redirect to login
+          if (error.message && (error.message.includes('Superadmin access required') || 
+                               error.message.includes('Not authenticated') ||
+                               error.message.includes('Session expired'))) {
+            window.location.href = '/admin-login.html';
+          }
         }
       }
 
@@ -1542,9 +1557,6 @@
           currentDataTable.destroy();
         }
       });
-
-      // Start the app
-      init();
     </script>
   </body>
 </html>

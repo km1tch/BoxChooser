@@ -6,7 +6,6 @@ class PriceTable {
         this.containerId = containerId;
         this.storeId = options.storeId;
         this.isEditable = options.isEditable || false;
-        this.pricingMode = options.pricingMode || 'standard';
         this.onSave = options.onSave || (() => {});
         
         // Data management

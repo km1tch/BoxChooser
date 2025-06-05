@@ -200,7 +200,6 @@ class SuperadminAPI {
      * @param {string} data.store_id
      * @param {string} data.admin_email
      * @param {string} data.store_name
-     * @param {string} data.copy_from_store
      * @returns {Promise<{status: string, store_id: string, pin: string}>}
      */
     static async createStore(data) {

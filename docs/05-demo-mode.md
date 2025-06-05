@@ -26,7 +26,7 @@ Demo mode provides a zero-friction way for potential users to explore the packin
 - ✅ Recommendation engine tuning (admin)
 - ✅ Floorplan viewing with box locations
 - ✅ Vendor catalog browsing and import (admin)
-- ✅ Both standard and itemized pricing modes
+- ✅ Itemized pricing with materials and services breakdown
 - ✅ Box management - add/edit custom boxes (admin)
 
 **Restricted Features:**

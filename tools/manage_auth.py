@@ -58,8 +58,6 @@ def cmd_create(args):
 # Auto-generated minimal configuration
 # Please edit this file to add your box inventory
 
-pricing-mode: itemized  # or 'standard' for simple total pricing
-
 boxes: []  # Add your box definitions here
 
 # Example box with itemized pricing:

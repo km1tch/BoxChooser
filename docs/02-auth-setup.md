@@ -3,6 +3,7 @@
 ## Overview
 
 The Packing Website uses a two-tier authentication system:
+
 - **User Access (PIN)**: 6-digit PIN for store associates with read-only access
 - **Admin Access (Email)**: Email-based verification for managers with full access
 
@@ -29,6 +30,7 @@ Each store has its own authentication configuration with both a PIN for users an
 6. Stores hashed PIN and admin email in database
 
 **Example Output:**
+
 ```
 Authentication configured for Store 1
 Admin Email: admin@example.com
@@ -114,7 +116,7 @@ Shows store info and prompts for the PIN to verify it's correct.
 1. **PIN Generation**: System generates cryptographically secure 6-digit PINs using `secrets` module
 2. **Storage**: PINs are bcrypt-hashed in SQLite database along with admin email addresses
 3. **Sessions**: 24-hour sessions created after successful login
-4. **Auth Levels**: 
+4. **Auth Levels**:
    - User (PIN): Read-only access to wizard, packing calculator, and price viewer
    - Admin (Email): Full access to all features including price editing and settings
 5. **Audit Trail**: All login attempts and actions are logged
@@ -205,7 +207,7 @@ AuthManager.logout(storeId);
 The navigation component (`/components/navigation.js`) automatically integrates with AuthManager to show:
 
 - Nothing if no auth configured
-- "Sign In" button if auth required but not logged in  
+- "Sign In" button if auth required but not logged in
 - Auth badge with crown (👑) for admin or unlock (🔓) for user access
 - Different navigation items based on auth level:
   - User: Wizard, Packing Calculator, View Prices
@@ -227,6 +229,7 @@ The system uses SMTP for sending verification codes to administrators.
 ### Development (MailHog)
 
 The docker-compose includes MailHog for local email testing:
+
 - SMTP: `localhost:1025`
 - Web UI: `http://localhost:8026`
 
@@ -267,8 +270,6 @@ If the database is corrupted, restart the Docker container to reinitialize:
 docker compose restart
 ```
 
-Note: The database is persisted in `./db/packingwebsite.db`, so auth data survives container restarts.
-
 ### Frontend Auth Issues
 
 - **Token persists after logout**: Clear localStorage manually in browser console
@@ -278,6 +279,7 @@ Note: The database is persisted in `./db/packingwebsite.db`, so auth data surviv
 ### Legacy Mode
 
 Stores with YAML files but no auth configuration operate in "legacy mode":
+
 - Only the packing calculator (`/{store_id}/`) is accessible
 - No navigation menu or other features
 - To enable full features, create authentication for the store

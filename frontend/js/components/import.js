@@ -38,11 +38,13 @@ async function loadStorePriceGroup() {
         // Get price group from store config
         const priceGroup = data['price-group'] || 'Not Set';
         document.getElementById('price-group').textContent = priceGroup;
+        
     } catch (error) {
         console.error('Error loading store info:', error);
         document.getElementById('price-group').textContent = 'N/A';
     }
 }
+
 
 // Setup file upload handlers
 function setupFileUpload() {

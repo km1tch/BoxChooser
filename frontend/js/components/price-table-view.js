@@ -19,38 +19,13 @@ class PriceTableView {
         
         let html = '<table id="priceTable" class="display price-table read-only" style="width:100%">';
         
-        if (this.priceTable.pricingMode === 'standard') {
-            html += this.buildStandardHeader();
-        } else {
-            html += this.buildItemizedHeader();
-        }
+        // Always use itemized pricing header
+        html += this.buildItemizedHeader();
         
         html += '<tbody></tbody></table>';
         return html;
     }
     
-    // Build header for standard pricing mode
-    buildStandardHeader() {
-        let html = '<thead><tr>';
-        
-        // Section column (hidden via CSS in view mode)
-        html += '<th>Section</th>';
-        
-        // Combined column for view mode
-        html += '<th>Box Details</th>';
-        
-        // Price columns
-        html += '<th>Box Price</th>';
-        html += '<th><img src="/assets/icons/total.png" width="24" height="24" alt="Basic Total" title="Basic Total"></th>';
-        html += '<th><img src="/assets/icons/total.png" width="24" height="24" alt="Standard Total" title="Standard Total"></th>';
-        html += '<th><img src="/assets/icons/total.png" width="24" height="24" alt="Fragile Total" title="Fragile Total"></th>';
-        html += '<th><img src="/assets/icons/total.png" width="24" height="24" alt="Custom Total" title="Custom Total"></th>';
-        
-        // No location column in view mode
-        
-        html += '</tr></thead>';
-        return html;
-    }
     
     // Build header for itemized pricing mode
     buildItemizedHeader() {
@@ -144,36 +119,8 @@ class PriceTableView {
             }
         ];
         
-        if (this.priceTable.pricingMode === 'standard') {
-            columns.push(
-                { 
-                    data: 'box_price',
-                    render: (data) => parseFloat(data).toFixed(2)
-                },
-                { 
-                    data: 'basic',
-                    render: (data) => parseFloat(data).toFixed(2),
-                    className: 'basic-group'
-                },
-                { 
-                    data: 'standard',
-                    render: (data) => parseFloat(data).toFixed(2),
-                    className: 'standard-group'
-                },
-                { 
-                    data: 'fragile',
-                    render: (data) => parseFloat(data).toFixed(2),
-                    className: 'fragile-group'
-                },
-                { 
-                    data: 'custom',
-                    render: (data) => parseFloat(data).toFixed(2),
-                    className: 'custom-group'
-                }
-            );
-        } else {
-            // Itemized pricing columns
-            columns.push(
+        // Always use itemized pricing columns
+        columns.push(
                 { 
                     data: 'box_price',
                     render: (data) => parseFloat(data).toFixed(2)
@@ -243,7 +190,6 @@ class PriceTableView {
                     className: 'total-cell custom-group'
                 }
             );
-        }
         
         // No location column in view mode - eyeball is in box details
         

@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: dockerfile.caddy
-    container_name: packingsite_caddy
+    container_name: boxchooser_caddy
     ports:
       - "127.0.0.1:5893:80"
       - "127.0.0.1:5443:443"
@@ -22,7 +22,7 @@ services:
 
   backend:
     build: .
-    container_name: packingsite_backend
+    container_name: boxchooser_backend
     volumes:
       - ./backend:/code/backend:ro # Read-only in production
       - ./stores:/code/stores:rw
@@ -32,9 +32,6 @@ services:
       - ./tools:/code/tools:ro # Read-only for auth management
     env_file:
       - .env
-    environment:
-      # Override specific values for production
-      - SQLITE_DB_PATH=/db/packingwebsite.db
     restart: always
 
   # No mailhog in production

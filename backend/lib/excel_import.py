@@ -19,22 +19,16 @@ from openpyxl.utils import get_column_letter
 def export_prices_to_excel(store_id: str, store_data: dict) -> FileResponse:
     """Export store prices to Excel file"""
     
-    pricing_mode = store_data.get("pricing-mode", "standard")
-    
     # Create workbook and sheet
     wb = Workbook()
     ws = wb.active
     ws.title = f'Store {store_id} Prices'
     
-    # Define headers based on pricing mode
-    if pricing_mode == "standard":
-        headers = ["Model", "Dimensions", "Type", "Box Price", "Standard Total", 
-                  "Fragile Total", "Custom Total", "Location"]
-    else:
-        headers = ["Model", "Dimensions", "Type", "Box Price", 
-                  "Standard Materials", "Standard Services", "Standard Total",
-                  "Fragile Materials", "Fragile Services", "Fragile Total",
-                  "Custom Materials", "Custom Services", "Custom Total", "Location"]
+    # Define headers for itemized pricing
+    headers = ["Model", "Dimensions", "Type", "Box Price", 
+              "Standard Materials", "Standard Services", "Standard Total",
+              "Fragile Materials", "Fragile Services", "Fragile Total",
+              "Custom Materials", "Custom Services", "Custom Total", "Location"]
     
     # Write headers
     for col_idx, header in enumerate(headers, 1):
@@ -51,19 +45,7 @@ def export_prices_to_excel(store_id: str, store_data: dict) -> FileResponse:
         ws.cell(row=row_idx, column=2, value=dimensions)
         ws.cell(row=row_idx, column=3, value=box["type"])
         
-        if pricing_mode == "standard":
-            prices = box.get("prices", [0, 0, 0, 0])
-            ws.cell(row=row_idx, column=4, value=prices[0])
-            ws.cell(row=row_idx, column=5, value=prices[1])
-            ws.cell(row=row_idx, column=6, value=prices[2])
-            ws.cell(row=row_idx, column=7, value=prices[3])
-            
-            # Location
-            location = box.get("location", "")
-            if isinstance(location, dict):
-                location = location.get("label", "")
-            ws.cell(row=row_idx, column=8, value=location)
-        else:  # itemized pricing
+        # Itemized pricing
             ip = box.get("itemized-prices", {})
             box_price = ip.get("box-price", 0)
             
@@ -144,7 +126,6 @@ async def import_prices_from_excel(
         ws = wb.active
         
         # Load current store data
-        pricing_mode = current_data.get("pricing-mode", "standard")
         
         # Get headers from first row
         headers = {}
@@ -180,49 +161,28 @@ async def import_prices_from_excel(
                 box_idx = box_map[model]
                 box = current_data["boxes"][box_idx]
                 
-                if pricing_mode == "standard":
-                    # Update standard prices
-                    if "Box Price" in headers:
-                        if "prices" not in box:
-                            box["prices"] = [0, 0, 0, 0]
-                        val = row[headers["Box Price"] - 1]
+                # Update itemized prices
+                if "itemized-prices" not in box:
+                    box["itemized-prices"] = {}
+                
+                ip = box["itemized-prices"]
+                
+                # Map header names to price fields
+                field_map = {
+                    "Box Price": "box-price",
+                    "Standard Materials": "standard-materials",
+                    "Standard Services": "standard-services",
+                    "Fragile Materials": "fragile-materials",
+                    "Fragile Services": "fragile-services",
+                    "Custom Materials": "custom-materials",
+                    "Custom Services": "custom-services"
+                }
+                
+                for header_name, field_name in field_map.items():
+                    if header_name in headers:
+                        val = row[headers[header_name] - 1]
                         if val is not None:
-                            box["prices"][0] = float(val)
-                    if "Standard Total" in headers:
-                        val = row[headers["Standard Total"] - 1]
-                        if val is not None:
-                            box["prices"][1] = float(val)
-                    if "Fragile Total" in headers:
-                        val = row[headers["Fragile Total"] - 1]
-                        if val is not None:
-                            box["prices"][2] = float(val)
-                    if "Custom Total" in headers:
-                        val = row[headers["Custom Total"] - 1]
-                        if val is not None:
-                            box["prices"][3] = float(val)
-                else:
-                    # Update itemized prices
-                    if "itemized-prices" not in box:
-                        box["itemized-prices"] = {}
-                    
-                    ip = box["itemized-prices"]
-                    
-                    # Map header names to price fields
-                    field_map = {
-                        "Box Price": "box-price",
-                        "Standard Materials": "standard-materials",
-                        "Standard Services": "standard-services",
-                        "Fragile Materials": "fragile-materials",
-                        "Fragile Services": "fragile-services",
-                        "Custom Materials": "custom-materials",
-                        "Custom Services": "custom-services"
-                    }
-                    
-                    for header_name, field_name in field_map.items():
-                        if header_name in headers:
-                            val = row[headers[header_name] - 1]
-                            if val is not None:
-                                ip[field_name] = float(val)
+                            ip[field_name] = float(val)
                 
                 updated_count += 1
                 
@@ -500,7 +460,6 @@ async def analyze_import_for_matching(
         temp_file.close()
         
         # Load store data
-        pricing_mode = store_data.get("pricing-mode", "standard")
         price_group = store_data.get("price-group", "")
         
         # Read Excel file
@@ -695,7 +654,6 @@ async def analyze_import_for_matching(
         # Return analysis results
         return {
             'store_id': store_id,
-            'pricing_mode': pricing_mode,
             'price_group': price_group,
             'summary': {
                 'total_boxes': len(store_data['boxes']),

@@ -780,59 +780,42 @@
                     // Build admin-style header
                     let headerHtml = '<thead>';
                     
-                    if (priceTable.pricingMode === 'standard') {
-                        // Standard mode - single header row
-                        headerHtml += '<tr>';
-                        headerHtml += '<th>Section</th>';
-                        
-                        if (priceTable.renderer.hasRealModels) {
-                            headerHtml += '<th>Model</th>';
-                        }
-                        headerHtml += '<th>Dimensions</th>';
-                        headerHtml += '<th>Box Price</th>';
-                        headerHtml += '<th><img src="/assets/icons/total.png" width="24" height="24" alt="Basic Total" title="Basic Total"></th>';
-                        headerHtml += '<th><img src="/assets/icons/total.png" width="24" height="24" alt="Standard Total" title="Standard Total"></th>';
-                        headerHtml += '<th><img src="/assets/icons/total.png" width="24" height="24" alt="Fragile Total" title="Fragile Total"></th>';
-                        headerHtml += '<th><img src="/assets/icons/total.png" width="24" height="24" alt="Custom Total" title="Custom Total"></th>';
-                        headerHtml += '</tr>';
-                    } else {
-                        // Itemized mode - two header rows with proper rowspan
-                        headerHtml += '<tr>';
-                        headerHtml += '<th rowspan="2">Section</th>';
-                        
-                        if (priceTable.renderer.hasRealModels) {
-                            headerHtml += '<th rowspan="2">Model</th>';
-                        }
-                        headerHtml += '<th rowspan="2">Dimensions</th>';
-                        headerHtml += '<th rowspan="2">Box Price</th>';
-                        
-                        // Group headers
-                        headerHtml += '<th colspan="3" class="group-header basic-group">Basic Pack</th>';
-                        headerHtml += '<th colspan="3" class="group-header standard-group">Standard Pack</th>';
-                        headerHtml += '<th colspan="3" class="group-header fragile-group">Fragile Pack</th>';
-                        headerHtml += '<th colspan="3" class="group-header custom-group">Custom Pack</th>';
-                        headerHtml += '</tr>';
-                        
-                        // Second row with individual columns
-                        headerHtml += '<tr>';
-                        // Basic group
-                        headerHtml += '<th class="basic-group"><img src="/assets/icons/materials.png" width="24" height="24" alt="Materials" title="Basic Materials"></th>';
-                        headerHtml += '<th class="basic-group"><img src="/assets/icons/services.png" width="24" height="24" alt="Services" title="Basic Services"></th>';
-                        headerHtml += '<th class="basic-group"><img src="/assets/icons/total.png" width="24" height="24" alt="Total" title="Basic Total"></th>';
-                        // Standard group
-                        headerHtml += '<th class="standard-group"><img src="/assets/icons/materials.png" width="24" height="24" alt="Materials" title="Standard Materials"></th>';
-                        headerHtml += '<th class="standard-group"><img src="/assets/icons/services.png" width="24" height="24" alt="Services" title="Standard Services"></th>';
-                        headerHtml += '<th class="standard-group"><img src="/assets/icons/total.png" width="24" height="24" alt="Total" title="Standard Total"></th>';
-                        // Fragile group
-                        headerHtml += '<th class="fragile-group"><img src="/assets/icons/materials.png" width="24" height="24" alt="Materials" title="Fragile Materials"></th>';
-                        headerHtml += '<th class="fragile-group"><img src="/assets/icons/services.png" width="24" height="24" alt="Services" title="Fragile Services"></th>';
-                        headerHtml += '<th class="fragile-group"><img src="/assets/icons/total.png" width="24" height="24" alt="Total" title="Fragile Total"></th>';
-                        // Custom group
-                        headerHtml += '<th class="custom-group"><img src="/assets/icons/materials.png" width="24" height="24" alt="Materials" title="Custom Materials"></th>';
-                        headerHtml += '<th class="custom-group"><img src="/assets/icons/services.png" width="24" height="24" alt="Services" title="Custom Services"></th>';
-                        headerHtml += '<th class="custom-group"><img src="/assets/icons/total.png" width="24" height="24" alt="Total" title="Custom Total"></th>';
-                        headerHtml += '</tr>';
+                    // Always use itemized mode - two header rows with proper rowspan
+                    headerHtml += '<tr>';
+                    headerHtml += '<th rowspan="2">Section</th>';
+                    
+                    if (priceTable.renderer.hasRealModels) {
+                        headerHtml += '<th rowspan="2">Model</th>';
                     }
+                    headerHtml += '<th rowspan="2">Dimensions</th>';
+                    headerHtml += '<th rowspan="2">Box Price</th>';
+                    
+                    // Group headers
+                    headerHtml += '<th colspan="3" class="group-header basic-group">Basic Pack</th>';
+                    headerHtml += '<th colspan="3" class="group-header standard-group">Standard Pack</th>';
+                    headerHtml += '<th colspan="3" class="group-header fragile-group">Fragile Pack</th>';
+                    headerHtml += '<th colspan="3" class="group-header custom-group">Custom Pack</th>';
+                    headerHtml += '</tr>';
+                    
+                    // Second row with individual columns
+                    headerHtml += '<tr>';
+                    // Basic group
+                    headerHtml += '<th class="basic-group"><img src="/assets/icons/materials.png" width="24" height="24" alt="Materials" title="Basic Materials"></th>';
+                    headerHtml += '<th class="basic-group"><img src="/assets/icons/services.png" width="24" height="24" alt="Services" title="Basic Services"></th>';
+                    headerHtml += '<th class="basic-group"><img src="/assets/icons/total.png" width="24" height="24" alt="Total" title="Basic Total"></th>';
+                    // Standard group
+                    headerHtml += '<th class="standard-group"><img src="/assets/icons/materials.png" width="24" height="24" alt="Materials" title="Standard Materials"></th>';
+                    headerHtml += '<th class="standard-group"><img src="/assets/icons/services.png" width="24" height="24" alt="Services" title="Standard Services"></th>';
+                    headerHtml += '<th class="standard-group"><img src="/assets/icons/total.png" width="24" height="24" alt="Total" title="Standard Total"></th>';
+                    // Fragile group
+                    headerHtml += '<th class="fragile-group"><img src="/assets/icons/materials.png" width="24" height="24" alt="Materials" title="Fragile Materials"></th>';
+                    headerHtml += '<th class="fragile-group"><img src="/assets/icons/services.png" width="24" height="24" alt="Services" title="Fragile Services"></th>';
+                    headerHtml += '<th class="fragile-group"><img src="/assets/icons/total.png" width="24" height="24" alt="Total" title="Fragile Total"></th>';
+                    // Custom group
+                    headerHtml += '<th class="custom-group"><img src="/assets/icons/materials.png" width="24" height="24" alt="Materials" title="Custom Materials"></th>';
+                    headerHtml += '<th class="custom-group"><img src="/assets/icons/services.png" width="24" height="24" alt="Services" title="Custom Services"></th>';
+                    headerHtml += '<th class="custom-group"><img src="/assets/icons/total.png" width="24" height="24" alt="Total" title="Custom Total"></th>';
+                    headerHtml += '</tr>';
                     
                     headerHtml += '</thead><tbody></tbody>';
                     $table.html(headerHtml);
@@ -848,17 +831,8 @@
                     
                     columns.push({ data: 'dimensions' });
                     
-                    if (priceTable.pricingMode === 'standard') {
-                        columns.push(
-                            { data: 'box_price', render: (data) => parseFloat(data).toFixed(2) },
-                            { data: 'basic', render: (data) => parseFloat(data).toFixed(2), className: 'basic-group' },
-                            { data: 'standard', render: (data) => parseFloat(data).toFixed(2), className: 'standard-group' },
-                            { data: 'fragile', render: (data) => parseFloat(data).toFixed(2), className: 'fragile-group' },
-                            { data: 'custom', render: (data) => parseFloat(data).toFixed(2), className: 'custom-group' }
-                        );
-                    } else {
-                        // Itemized columns
-                        columns.push(
+                    // Always use itemized columns
+                    columns.push(
                             { data: 'box_price', render: (data) => parseFloat(data).toFixed(2) },
                             { data: 'basic_materials', render: (data) => parseFloat(data).toFixed(2), className: 'basic-group' },
                             { data: 'basic_services', render: (data) => parseFloat(data).toFixed(2), className: 'basic-group' },
@@ -873,7 +847,6 @@
                             { data: 'custom_services', render: (data) => parseFloat(data).toFixed(2), className: 'custom-group' },
                             { data: 'custom_total', render: (data) => parseFloat(data).toFixed(2), className: 'total-cell custom-group' }
                         );
-                    }
                     
                     // Recreate DataTable with admin layout
                     priceTable.printDataTable = $table.DataTable({
@@ -983,8 +956,6 @@
                     }
                 }
                 
-                // Get pricing mode
-                const pricingMode = await window.api.fetchPricingMode(storeId);
                 
                 // Determine if editable
                 const isEditable = authStatus.isAuthenticated && authStatus.authLevel === 'admin';
@@ -1015,13 +986,12 @@
                 // Load box data
                 const response = await window.api.fetchAllBoxes(storeId);
                 
-                const processedData = processBoxesData(response.boxes, pricingMode);
+                const processedData = processBoxesData(response.boxes);
                 
                 // Create price table
                 priceTable = new PriceTable('priceTableContainer', {
                     storeId: storeId,
                     isEditable: isEditable,
-                    pricingMode: pricingMode,
                     onSave: saveChanges
                 });
                 
@@ -1034,7 +1004,7 @@
         }
         
         // Process boxes data into table format
-        function processBoxesData(boxes, mode) {
+        function processBoxesData(boxes) {
             const result = [];
             
             for (const box of boxes) {
@@ -1042,47 +1012,29 @@
                 const dimensions = box.dimensions.join('x');
                 const section = PriceTable.getBoxSection(model, box.type);
                 
-                let boxData;
+                // Always use itemized pricing
+                const ip = box['itemized-prices'] || {};
+                const boxPrice = ip['box-price'] || 0;
                 
-                if (mode === 'standard') {
-                    const prices = box.prices || [0, 0, 0, 0];
-                    boxData = {
-                        section: section,
-                        model: model,
-                        dimensions: dimensions,
-                        box_price: prices[0],
-                        basic: prices[0],
-                        standard: prices[1],
-                        fragile: prices[2],
-                        custom: prices[3],
-                        location: box.location || '???',
-                        pricing_mode: 'standard'
-                    };
-                } else {
-                    const ip = box['itemized-prices'] || {};
-                    const boxPrice = ip['box-price'] || 0;
-                    
-                    boxData = {
-                        section: section,
-                        model: model,
-                        dimensions: dimensions,
-                        box_price: boxPrice,
-                        basic_materials: ip['basic-materials'] || 0,
-                        basic_services: ip['basic-services'] || 0,
-                        basic_total: boxPrice + (ip['basic-materials'] || 0) + (ip['basic-services'] || 0),
-                        standard_materials: ip['standard-materials'] || 0,
-                        standard_services: ip['standard-services'] || 0,
-                        standard_total: boxPrice + (ip['standard-materials'] || 0) + (ip['standard-services'] || 0),
-                        fragile_materials: ip['fragile-materials'] || 0,
-                        fragile_services: ip['fragile-services'] || 0,
-                        fragile_total: boxPrice + (ip['fragile-materials'] || 0) + (ip['fragile-services'] || 0),
-                        custom_materials: ip['custom-materials'] || 0,
-                        custom_services: ip['custom-services'] || 0,
-                        custom_total: boxPrice + (ip['custom-materials'] || 0) + (ip['custom-services'] || 0),
-                        location: box.location || '???',
-                        pricing_mode: 'itemized'
-                    };
-                }
+                const boxData = {
+                    section: section,
+                    model: model,
+                    dimensions: dimensions,
+                    box_price: boxPrice,
+                    basic_materials: ip['basic-materials'] || 0,
+                    basic_services: ip['basic-services'] || 0,
+                    basic_total: boxPrice + (ip['basic-materials'] || 0) + (ip['basic-services'] || 0),
+                    standard_materials: ip['standard-materials'] || 0,
+                    standard_services: ip['standard-services'] || 0,
+                    standard_total: boxPrice + (ip['standard-materials'] || 0) + (ip['standard-services'] || 0),
+                    fragile_materials: ip['fragile-materials'] || 0,
+                    fragile_services: ip['fragile-services'] || 0,
+                    fragile_total: boxPrice + (ip['fragile-materials'] || 0) + (ip['fragile-services'] || 0),
+                    custom_materials: ip['custom-materials'] || 0,
+                    custom_services: ip['custom-services'] || 0,
+                    custom_total: boxPrice + (ip['custom-materials'] || 0) + (ip['custom-services'] || 0),
+                    location: box.location || '???'
+                };
                 
                 result.push(boxData);
             }
@@ -1116,7 +1068,7 @@
             showStatus('Saving changes...', 'loading');
             
             try {
-                // Format changes for API based on pricing mode
+                // Format changes for API
                 const updates = {};
                 for (const change of changes) {
                     if (!updates[change.model]) {
@@ -1125,12 +1077,8 @@
                     updates[change.model][change.field] = change.newValue;
                 }
                 
-                // Save via API - use the correct function based on pricing mode
-                if (priceTable.pricingMode === 'standard') {
-                    await window.api.updateStandardPrices(storeId, updates, window.csrfToken);
-                } else {
-                    await window.api.updateItemizedPrices(storeId, updates, window.csrfToken);
-                }
+                // Save via API - always use itemized pricing
+                await window.api.updateItemizedPrices(storeId, updates, window.csrfToken);
                 
                 showStatus('Changes saved successfully!', 'success');
                 

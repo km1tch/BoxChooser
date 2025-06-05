@@ -71,7 +71,7 @@ All store endpoints follow the pattern `/api/store/{store_id}/...`
 GET /api/store/{store_id}/boxes
 ```
 
-Returns complete store configuration including pricing mode and all boxes.
+Returns complete store configuration including all boxes.
 
 #### Get Boxes with Sections
 ```
@@ -80,24 +80,18 @@ GET /api/store/{store_id}/boxes_with_sections
 
 Returns boxes organized by supplier/type sections for the editor UI.
 
-#### Get Pricing Mode
+#### Get Store Info
 ```
-GET /api/store/{store_id}/pricing_mode
+GET /api/store/{store_id}/info
 ```
 
-Returns: `{ "mode": "standard" }` or `{ "mode": "itemized" }`
-
-#### Update Prices (Admin Only)
-```
-POST /api/store/{store_id}/update_prices
-Content-Type: application/json
-
-[
-  {
-    "model": "10C-UPS",
-    "prices": [1.50, 3.50, 5.50, 7.50]
-  }
-]
+Returns store configuration information:
+```json
+{
+  "store_id": "100",
+  "name": "Downtown Store",
+  "price-group": "Group A"
+}
 ```
 
 #### Update Itemized Prices (Admin Only)

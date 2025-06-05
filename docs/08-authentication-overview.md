@@ -1,6 +1,6 @@
 # Authentication System Overview
 
-The Packing Website uses a two-tier authentication system providing role-based access control. This document covers the system architecture, login flows, and database schema.
+BoxChooser uses a two-tier authentication system providing role-based access control. This document covers the system architecture, login flows, and database schema.
 
 ## Authentication Levels
 

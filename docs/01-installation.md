@@ -1,6 +1,6 @@
 # Installation Guide
 
-This guide covers installing PackingWebsite for development and production use.
+This guide covers installing BoxChooser for development and production use.
 
 ## Prerequisites
 

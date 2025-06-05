@@ -17,7 +17,7 @@ SMTP_PORT = int(os.getenv("SMTP_PORT", "1025"))
 SMTP_USE_TLS = os.getenv("SMTP_USE_TLS", "false").lower() == "true"
 SMTP_USERNAME = os.getenv("SMTP_USERNAME", "")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
-SMTP_FROM = os.getenv("SMTP_FROM", "noreply@packingsite.com")
+SMTP_FROM = os.getenv("SMTP_FROM", "noreply@boxchooser.com")
 
 # Site configuration
 SITE_NAME = os.getenv("SITE_NAME", "Packing Site")

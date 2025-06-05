@@ -48,7 +48,6 @@ class CreateStoreRequest(BaseModel):
     store_id: str
     admin_email: str
     store_name: Optional[str] = None
-    copy_from_store: Optional[str] = None
 
 
 class UpdateStoreMetadataRequest(BaseModel):
@@ -554,25 +553,12 @@ async def create_store(request: CreateStoreRequest, current_admin: dict = Depend
             raise HTTPException(status_code=400, detail=f"Store {request.store_id} already has authentication")
     
     try:
-        # Create YAML file
-        if request.copy_from_store:
-            # Copy from existing store
-            source_yaml = Path(f"stores/store{request.copy_from_store}.yml")
-            if not source_yaml.exists():
-                raise HTTPException(status_code=400, detail=f"Source store {request.copy_from_store} not found")
-            shutil.copy(source_yaml, yaml_path)
-        else:
-            # Use template
-            template_path = Path("stores/store1.yml")  # Default template
-            if not template_path.exists():
-                raise HTTPException(status_code=500, detail="No template store found")
-            shutil.copy(template_path, yaml_path)
-        
-        # If store name was provided, update the YAML
-        if request.store_name:
-            yaml_data = load_store_yaml(request.store_id)
-            yaml_data["name"] = request.store_name
-            save_store_yaml(request.store_id, yaml_data)
+        # Create YAML file (always itemized pricing now)
+        yaml_data = {
+            "name": request.store_name or "",
+            "boxes": []
+        }
+        save_store_yaml(request.store_id, yaml_data)
         
         # Create authentication
         pin = create_store_auth(request.store_id, request.admin_email)
@@ -584,7 +570,7 @@ async def create_store(request: CreateStoreRequest, current_admin: dict = Depend
             request.store_id,
             {
                 "admin_email": request.admin_email,
-                "copied_from": request.copy_from_store
+                "store_name": request.store_name
             }
         )
         

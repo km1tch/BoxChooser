@@ -20,41 +20,13 @@ class PriceTableEdit {
         
         let html = '<table id="priceTable" class="display price-table editable-mode" style="width:100%">';
         
-        if (this.priceTable.pricingMode === 'standard') {
-            html += this.buildStandardHeader();
-        } else {
-            html += this.buildItemizedHeader();
-        }
+        // Always use itemized pricing header
+        html += this.buildItemizedHeader();
         
         html += '<tbody></tbody></table>';
         return html;
     }
     
-    // Build header for standard pricing mode
-    buildStandardHeader() {
-        let html = '<thead><tr>';
-        
-        // All columns visible in edit mode
-        html += '<th>Section</th>';
-        
-        if (this.hasRealModels) {
-            html += '<th>Model</th>';
-        }
-        
-        html += '<th>Dimensions</th>';
-        html += '<th>Box Price</th>';
-        html += '<th><img src="/assets/icons/total.png" width="24" height="24" alt="Basic Total" title="Basic Total"></th>';
-        html += '<th><img src="/assets/icons/total.png" width="24" height="24" alt="Standard Total" title="Standard Total"></th>';
-        html += '<th><img src="/assets/icons/total.png" width="24" height="24" alt="Fragile Total" title="Fragile Total"></th>';
-        html += '<th><img src="/assets/icons/total.png" width="24" height="24" alt="Custom Total" title="Custom Total"></th>';
-        
-        if (this.hasLocations) {
-            html += '<th title="Location">📍</th>';
-        }
-        
-        html += '</tr></thead>';
-        return html;
-    }
     
     // Build header for itemized pricing mode
     buildItemizedHeader() {
@@ -125,37 +97,8 @@ class PriceTableEdit {
         
         columns.push({ data: 'dimensions' });
         
-        if (this.priceTable.pricingMode === 'standard') {
-            columns.push(
-                { 
-                    data: 'box_price',
-                    render: (data) => parseFloat(data).toFixed(2),
-                    className: 'editable box-price-cell'
-                },
-                { 
-                    data: 'basic',
-                    render: (data) => parseFloat(data).toFixed(2),
-                    className: 'editable basic-group'
-                },
-                { 
-                    data: 'standard',
-                    render: (data) => parseFloat(data).toFixed(2),
-                    className: 'editable standard-group'
-                },
-                { 
-                    data: 'fragile',
-                    render: (data) => parseFloat(data).toFixed(2),
-                    className: 'editable fragile-group'
-                },
-                { 
-                    data: 'custom',
-                    render: (data) => parseFloat(data).toFixed(2),
-                    className: 'editable custom-group'
-                }
-            );
-        } else {
-            // Itemized pricing columns
-            columns.push(
+        // Always use itemized pricing columns
+        columns.push(
                 { 
                     data: 'box_price',
                     render: (data) => parseFloat(data).toFixed(2),
@@ -226,7 +169,6 @@ class PriceTableEdit {
                     className: 'total-cell custom-group'
                 }
             );
-        }
         
         // Location column if needed
         if (this.hasLocations) {
@@ -465,10 +407,8 @@ class PriceTableEdit {
         const rowData = row.data();
         rowData[field] = newValue;
         
-        // Update totals if needed
-        if (this.priceTable.pricingMode === 'itemized') {
-            this.updateTotals(rowData);
-        }
+        // Update totals (always itemized now)
+        this.updateTotals(rowData);
         
         // Track change
         if (newValue !== originalValue) {
@@ -607,13 +547,11 @@ class PriceTableEdit {
         if (columnIndex === baseIndex) return null; // Dimensions column
         baseIndex++;
         
-        // Price columns
-        const priceColumns = this.priceTable.pricingMode === 'standard' 
-            ? ['box_price', 'basic', 'standard', 'fragile', 'custom']
-            : ['box_price', 'basic_materials', 'basic_services', 'basic_total',
-               'standard_materials', 'standard_services', 'standard_total',
-               'fragile_materials', 'fragile_services', 'fragile_total',
-               'custom_materials', 'custom_services', 'custom_total'];
+        // Price columns (always itemized now)
+        const priceColumns = ['box_price', 'basic_materials', 'basic_services', 'basic_total',
+                            'standard_materials', 'standard_services', 'standard_total',
+                            'fragile_materials', 'fragile_services', 'fragile_total',
+                            'custom_materials', 'custom_services', 'custom_total'];
         
         const fieldIndex = columnIndex - baseIndex;
         if (fieldIndex >= 0 && fieldIndex < priceColumns.length) {

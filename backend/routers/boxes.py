@@ -27,20 +27,25 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/store/{store_id}", tags=["boxes"])
 
 
-@router.get("/pricing_mode", response_class=JSONResponse)
-async def get_pricing_mode(
+
+
+@router.get("/info", response_class=JSONResponse)
+async def get_store_info(
     store_id: str = Path(..., regex=r"^\d{1,6}$"),
     auth_info: Tuple[str, str] = get_current_auth()
 ):
-    """Get the pricing mode for a store"""
+    """Get store configuration info including price group"""
     auth_store_id, auth_level = auth_info
     # Verify user has access to this store
     if auth_store_id != store_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     data = load_store_yaml(store_id)
-    pricing_mode = data.get("pricing-mode", "standard")
-    return {"mode": pricing_mode}
+    return {
+        "store_id": store_id,
+        "name": data.get("name", ""),
+        "price-group": data.get("price-group", "")
+    }
 
 
 @router.get("/boxes", response_class=JSONResponse)
@@ -70,13 +75,10 @@ async def get_boxes(
         error_msg = "Invalid YAML structure: must contain a 'boxes' list"
         raise HTTPException(status_code=500, detail=error_msg)
 
-    # Determine pricing mode
-    pricing_mode = boxes_data.get("pricing-mode", "standard")
-
     # Validate each box entry
     for i, box in enumerate(boxes_data["boxes"]):
         try:
-            validate_box_data(box, store_id, pricing_mode)
+            validate_box_data(box, store_id)
         except ValueError as e:
             raise HTTPException(status_code=500, detail=f"Box at index {i}: {str(e)}")
 
@@ -95,9 +97,6 @@ async def get_boxes_with_sections(
         raise HTTPException(status_code=403, detail="Access denied")
     data = load_store_yaml(store_id)
     result = []
-    
-    # Determine pricing mode
-    pricing_mode = data.get("pricing-mode", "standard")
 
     for box in data["boxes"]:
         # Handle legacy format (missing model and location)
@@ -110,50 +109,36 @@ async def get_boxes_with_sections(
 
         dimensions_str = "x".join(str(d) for d in box["dimensions"])
         
-        # Process based on pricing mode
-        if pricing_mode == "standard":
-            prices = box.get("prices", [0, 0, 0, 0])
-            box_data = {
-                "section": section,
-                "model": model,
-                "dimensions": dimensions_str,
-                "box_price": prices[0],
-                "standard": prices[1],
-                "fragile": prices[2],
-                "custom": prices[3],
-                "location": box.get("location", "???"),
-                "pricing_mode": "standard"
-            }
-        else:  # itemized pricing mode
-            ip = box.get("itemized-prices", {})
-            
-            # Calculate totals for each level
-            box_price = ip.get("box-price", 0)
-            basic_total = box_price + ip.get("basic-materials", 0) + ip.get("basic-services", 0)
-            standard_total = box_price + ip.get("standard-materials", 0) + ip.get("standard-services", 0)
-            fragile_total = box_price + ip.get("fragile-materials", 0) + ip.get("fragile-services", 0) 
-            custom_total = box_price + ip.get("custom-materials", 0) + ip.get("custom-services", 0)
-            
-            box_data = {
-                "section": section,
-                "model": model,
-                "dimensions": dimensions_str,
-                "box_price": box_price,
-                "basic_materials": ip.get("basic-materials", 0),
-                "basic_services": ip.get("basic-services", 0),
-                "basic_total": basic_total,
-                "standard_materials": ip.get("standard-materials", 0),
-                "standard_services": ip.get("standard-services", 0),
-                "standard_total": standard_total,
-                "fragile_materials": ip.get("fragile-materials", 0),
-                "fragile_services": ip.get("fragile-services", 0),
-                "fragile_total": fragile_total,
-                "custom_materials": ip.get("custom-materials", 0),
-                "custom_services": ip.get("custom-services", 0),
-                "custom_total": custom_total,
-                "location": box.get("location", "???"),
-                "pricing_mode": "itemized"
-            }
+        # Always use itemized pricing
+        ip = box.get("itemized-prices", {})
+        
+        # Calculate totals for each level
+        box_price = ip.get("box-price", 0)
+        basic_total = box_price + ip.get("basic-materials", 0) + ip.get("basic-services", 0)
+        standard_total = box_price + ip.get("standard-materials", 0) + ip.get("standard-services", 0)
+        fragile_total = box_price + ip.get("fragile-materials", 0) + ip.get("fragile-services", 0) 
+        custom_total = box_price + ip.get("custom-materials", 0) + ip.get("custom-services", 0)
+        
+        box_data = {
+            "section": section,
+            "model": model,
+            "dimensions": dimensions_str,
+            "box_price": box_price,
+            "basic_materials": ip.get("basic-materials", 0),
+            "basic_services": ip.get("basic-services", 0),
+            "basic_total": basic_total,
+            "standard_materials": ip.get("standard-materials", 0),
+            "standard_services": ip.get("standard-services", 0),
+            "standard_total": standard_total,
+            "fragile_materials": ip.get("fragile-materials", 0),
+            "fragile_services": ip.get("fragile-services", 0),
+            "fragile_total": fragile_total,
+            "custom_materials": ip.get("custom-materials", 0),
+            "custom_services": ip.get("custom-services", 0),
+            "custom_total": custom_total,
+            "location": box.get("location", "???"),
+            "pricing_mode": "itemized"
+        }
 
         result.append(box_data)
 
@@ -180,7 +165,7 @@ async def get_all_boxes(
         if "model" not in box:
             box["model"] = f"Unknown-{len(box['dimensions'])}-{box['dimensions'][0]}-{box['dimensions'][1]}-{box['dimensions'][2]}"
     
-    return {"pricing_mode": data.get("pricing-mode", "standard"), "boxes": data["boxes"]}
+    return {"boxes": data["boxes"]}
 
 
 @router.get("/box/{model}", response_class=JSONResponse)
@@ -196,7 +181,6 @@ async def get_box_by_model(
         raise HTTPException(status_code=403, detail="Access denied")
     
     data = load_store_yaml(store_id)
-    pricing_mode = data.get("pricing-mode", "standard")
 
     for box in data["boxes"]:
         # Handle legacy format and compare with the provided model
@@ -210,19 +194,12 @@ async def get_box_by_model(
                 box["supplier"] = "Unknown"
             if "location" not in box:
                 box["location"] = "???"
-                
-            # Add pricing mode to the response
-            box["pricing_mode"] = pricing_mode
             
             return box
 
     raise HTTPException(status_code=404, detail=f"Box with model {model} not found")
 
 
-class PriceUpdateRequest(BaseModel):
-    """Request model for standard price updates"""
-    changes: Dict[str, Dict[str, float]]
-    csrf_token: str
 
 
 class ItemizedPriceUpdateRequest(BaseModel):
@@ -231,68 +208,6 @@ class ItemizedPriceUpdateRequest(BaseModel):
     csrf_token: str
 
 
-@router.post("/update_prices", response_class=JSONResponse)
-async def update_prices(
-    store_id: str = Path(..., regex=r"^\d{1,6}$"),
-    update_data: PriceUpdateRequest = Body(...),
-    auth_info: Tuple[str, str] = get_current_auth()
-):
-    """Update prices for multiple boxes (standard pricing mode)"""
-    auth_store_id, auth_level = auth_info
-    
-    # Check admin access
-    if auth_level != "admin":
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
-    # Verify access to this store
-    if auth_store_id != store_id:
-        raise HTTPException(status_code=403, detail=f"Not authorized to access store {store_id}")
-    
-    # Extract data from the request
-    changes = update_data.changes
-
-    # Validate CSRF token - normally you would check against a server-stored token
-    # This is a simple check to ensure the token is present
-    if not update_data.csrf_token or len(update_data.csrf_token) < 10:
-        raise HTTPException(status_code=403, detail="Invalid CSRF token")
-
-    data = load_store_yaml(store_id)
-    
-    # Check pricing mode
-    pricing_mode = data.get("pricing-mode", "standard")
-    if pricing_mode != "standard":
-        raise HTTPException(status_code=400, detail="This endpoint is for standard pricing mode only. Use /update_itemized_prices for itemized pricing.")
-
-    # Authentication has been verified above
-
-    updated_count = 0
-
-    # Update prices for each box in the changes dict
-    for box in data["boxes"]:
-        # Get the actual model or generate a default one for legacy boxes
-        box_model = box.get("model", f"Unknown-{len(box['dimensions'])}-{box['dimensions'][0]}-{box['dimensions'][1]}-{box['dimensions'][2]}")
-
-        if box_model in changes:
-            price_changes = changes[box_model]
-
-            for index, new_price in price_changes.items():
-                idx = int(index)
-                # Validate price - must be a positive number within a reasonable range
-                if 0 <= idx < 4 and isinstance(new_price, (int, float)) and 0 <= new_price <= 10000:
-                    box["prices"][idx] = new_price
-                    updated_count += 1
-                else:
-                    raise HTTPException(status_code=400, detail=f"Invalid price value: {new_price}. Prices must be between 0 and 10000.")
-
-            # If this is a legacy box and we're updating it, add the model field
-            # so we can reference it again in the future
-            if "model" not in box:
-                box["model"] = box_model
-
-    # Save the updated YAML file
-    save_store_yaml(store_id, data)
-
-    return {"message": f"Updated {updated_count} prices successfully"}
 
 
 @router.post("/update_itemized_prices", response_class=JSONResponse)
@@ -301,7 +216,7 @@ async def update_itemized_prices(
     update_data: ItemizedPriceUpdateRequest = Body(...),
     auth_info: Tuple[str, str] = get_current_auth()
 ):
-    """Update itemized prices for multiple boxes (itemized pricing mode)"""
+    """Update itemized prices for multiple boxes"""
     auth_store_id, auth_level = auth_info
     
     # Check admin access
@@ -321,13 +236,6 @@ async def update_itemized_prices(
         raise HTTPException(status_code=403, detail="Invalid CSRF token")
 
     data = load_store_yaml(store_id)
-    
-    # Check pricing mode
-    pricing_mode = data.get("pricing-mode", "standard")
-    if pricing_mode != "itemized":
-        raise HTTPException(status_code=400, detail="This endpoint is for itemized pricing mode only. Use /update_prices for standard pricing.")
-
-    # Authentication has been verified above
 
     updated_count = 0
 
@@ -507,7 +415,6 @@ async def create_box(
         raise HTTPException(status_code=403, detail=f"Not authorized to access store {store_id}")
     
     data = load_store_yaml(store_id)
-    pricing_mode = data.get("pricing-mode", "standard")
     
     # Check if box model already exists
     existing_models = [box.get("model", "") for box in data["boxes"]]
@@ -543,25 +450,22 @@ async def create_box(
     if box_data.notes:
         new_box["notes"] = box_data.notes
     
-    # Add default pricing based on mode (zeros for now, admin can update later)
-    if pricing_mode == "standard":
-        new_box["prices"] = [0, 0, 0, 0]  # Basic, Standard, Fragile, Custom
-    else:  # itemized
-        new_box["itemized-prices"] = {
-            "box-price": 0,
-            "basic-materials": 0,
-            "basic-services": 0,
-            "standard-materials": 0,
-            "standard-services": 0,
-            "fragile-materials": 0,
-            "fragile-services": 0,
-            "custom-materials": 0,
-            "custom-services": 0
-        }
+    # Add default itemized pricing (zeros for now, admin can update later)
+    new_box["itemized-prices"] = {
+        "box-price": 0,
+        "basic-materials": 0,
+        "basic-services": 0,
+        "standard-materials": 0,
+        "standard-services": 0,
+        "fragile-materials": 0,
+        "fragile-services": 0,
+        "custom-materials": 0,
+        "custom-services": 0
+    }
     
     # Validate the new box
     try:
-        validate_box_data(new_box, store_id, pricing_mode)
+        validate_box_data(new_box, store_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     

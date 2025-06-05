@@ -174,6 +174,11 @@ class WizardUI {
       if (input) {
         input.addEventListener("input", () => this.validateStep1());
         
+        // Select all text when field receives focus
+        input.addEventListener("focus", (e) => {
+          e.target.select();
+        });
+        
         // Add Enter key listener to advance to next field
         input.addEventListener("keypress", (e) => {
           if (e.key === "Enter") {
@@ -526,7 +531,6 @@ class WizardUI {
         }
       }
     }
-    // For standard pricing, we don't show box-only price since we can't separate it
 
     // Generate unique ID for this recommendation
     const recId = `rec-${index}-${Date.now()}`;

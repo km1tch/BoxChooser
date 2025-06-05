@@ -13,9 +13,6 @@ Each store's configuration is stored in `stores/store{id}.yml` where `{id}` is t
 ## Basic Structure
 
 ```yaml
-# Store pricing mode
-pricing-mode: itemized  # or 'standard'
-
 # Box inventory
 boxes:
   - type: NormalBox
@@ -25,30 +22,11 @@ boxes:
     # ... pricing details
 ```
 
-## Pricing Modes
+## Pricing Structure
 
-### Standard Pricing
-
-Simple total price for each protection level:
+BoxChooser uses itemized pricing that breaks down costs into box, materials, and services:
 
 ```yaml
-pricing-mode: standard
-
-boxes:
-  - type: NormalBox
-    supplier: ULINE
-    model: "S-4344"
-    dimensions: [12, 9, 6]
-    prices: [1.50, 3.50, 5.50, 7.50]  # Basic, Standard, Fragile, Custom
-```
-
-### Itemized Pricing (Recommended)
-
-Breaks down costs into box, materials, and services:
-
-```yaml
-pricing-mode: itemized
-
 boxes:
   - type: NormalBox
     supplier: ULINE
@@ -178,19 +156,17 @@ recommendation_engine:
 
 ## Best Practices
 
-1. **Use itemized pricing** - Provides better cost tracking and flexibility
-2. **Keep models consistent** - Use the same model numbers as your suppliers
-3. **Version control** - Commit changes to git with descriptive messages
-4. **Test changes** - Use the packing calculator after making changes
-5. **Document custom boxes** - Add comments for non-standard boxes
+1. **Keep models consistent** - Use the same model numbers as your suppliers
+2. **Version control** - Commit changes to git with descriptive messages
+3. **Test changes** - Use the packing calculator after making changes
+4. **Document custom boxes** - Add comments for non-standard boxes
 
 ## Validation
 
 The system validates YAML files on startup. Common errors:
 
-- Missing required fields (type, dimensions, prices)
+- Missing required fields (type, dimensions, itemized-prices)
 - Invalid dimensions (must be positive numbers)
-- Wrong number of prices (must be 4 for standard mode)
 - Missing itemized price fields
 
 ## Example: Complete Store Configuration
@@ -199,8 +175,6 @@ The system validates YAML files on startup. Common errors:
 # Store 100 Configuration
 # Last updated: 2025-01-06
 # Contact: manager@store100.com
-
-pricing-mode: itemized
 
 boxes:
   # Small boxes

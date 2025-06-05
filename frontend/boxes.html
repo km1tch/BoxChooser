@@ -268,6 +268,11 @@
             background: #95a5a6;
             cursor: not-allowed;
         }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -927,23 +932,39 @@
         async function addSelectedBoxes() {
             if (selectedBoxModels.size === 0) return;
             
+            const btn = document.getElementById('bulk-add-btn');
+            const originalText = btn.textContent;
+            
+            // Disable button immediately to prevent double-clicks
+            btn.disabled = true;
+            
             const boxesToAdd = vendorBoxes.filter(box => selectedBoxModels.has(box.model));
             
             // Show confirmation
             const confirmMsg = `Add ${boxesToAdd.length} box${boxesToAdd.length > 1 ? 'es' : ''} to your inventory?`;
-            if (!confirm(confirmMsg)) return;
+            if (!confirm(confirmMsg)) {
+                btn.disabled = false;
+                return;
+            }
+            
+            // Update button to show progress
+            btn.innerHTML = '<span style="display: inline-block; animation: spin 1s linear infinite;">⟳</span> Adding boxes...';
             
             let successCount = 0;
             let errors = [];
             
-            // Add boxes one by one (could be optimized with bulk endpoint)
-            for (const box of boxesToAdd) {
+            // Add boxes one by one with progress updates
+            for (let i = 0; i < boxesToAdd.length; i++) {
+                const box = boxesToAdd[i];
                 const boxData = {
                     model: box.model,
                     supplier: selectedVendor,
                     dimensions: box.dimensions,
                     alternate_depths: box.alternate_depths
                 };
+                
+                // Update progress
+                btn.innerHTML = `<span style="display: inline-block; animation: spin 1s linear infinite;">⟳</span> Adding ${i + 1} of ${boxesToAdd.length}...`;
                 
                 try {
                     await window.api.createBox(storeId, boxData);
@@ -955,10 +976,14 @@
             
             // Show results
             if (errors.length === 0) {
-                alert(`Successfully added ${successCount} boxes to inventory!`);
-                closeAddModal();
-                await loadBoxes();
+                btn.innerHTML = '✓ Added successfully!';
+                setTimeout(() => {
+                    closeAddModal();
+                    loadBoxes();
+                }, 1000);
             } else {
+                btn.textContent = originalText;
+                btn.disabled = false;
                 alert(`Added ${successCount} boxes. Errors:\n${errors.join('\n')}`);
             }
         }
@@ -988,6 +1013,13 @@
         document.getElementById('custom-box-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            
+            // Disable button immediately
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span style="display: inline-block; animation: spin 1s linear infinite;">⟳</span> Adding box...';
+            
             const boxData = {
                 model: document.getElementById('custom-model').value.trim(),
                 supplier: document.getElementById('custom-supplier').value.trim(),
@@ -1014,9 +1046,14 @@
             
             try {
                 await window.api.createBox(storeId, boxData);
-                closeAddModal();
-                await loadBoxes();
+                submitBtn.innerHTML = '✓ Added successfully!';
+                setTimeout(() => {
+                    closeAddModal();
+                    loadBoxes();
+                }, 1000);
             } catch (error) {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
                 alert(`Failed to add box: ${error.message}`);
             }
         });
