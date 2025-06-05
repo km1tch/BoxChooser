@@ -46,25 +46,25 @@ def export_prices_to_excel(store_id: str, store_data: dict) -> FileResponse:
         ws.cell(row=row_idx, column=3, value=box["type"])
         
         # Itemized pricing
-            ip = box.get("itemized-prices", {})
-            box_price = ip.get("box-price", 0)
-            
-            ws.cell(row=row_idx, column=4, value=box_price)
-            ws.cell(row=row_idx, column=5, value=ip.get("standard-materials", 0))
-            ws.cell(row=row_idx, column=6, value=ip.get("standard-services", 0))
-            ws.cell(row=row_idx, column=7, value=box_price + ip.get("standard-materials", 0) + ip.get("standard-services", 0))
-            ws.cell(row=row_idx, column=8, value=ip.get("fragile-materials", 0))
-            ws.cell(row=row_idx, column=9, value=ip.get("fragile-services", 0))
-            ws.cell(row=row_idx, column=10, value=box_price + ip.get("fragile-materials", 0) + ip.get("fragile-services", 0))
-            ws.cell(row=row_idx, column=11, value=ip.get("custom-materials", 0))
-            ws.cell(row=row_idx, column=12, value=ip.get("custom-services", 0))
-            ws.cell(row=row_idx, column=13, value=box_price + ip.get("custom-materials", 0) + ip.get("custom-services", 0))
-            
-            # Location
-            location = box.get("location", "")
-            if isinstance(location, dict):
-                location = location.get("label", "")
-            ws.cell(row=row_idx, column=14, value=location)
+        ip = box.get("itemized-prices", {})
+        box_price = ip.get("box-price", 0)
+        
+        ws.cell(row=row_idx, column=4, value=box_price)
+        ws.cell(row=row_idx, column=5, value=ip.get("standard-materials", 0))
+        ws.cell(row=row_idx, column=6, value=ip.get("standard-services", 0))
+        ws.cell(row=row_idx, column=7, value=box_price + ip.get("standard-materials", 0) + ip.get("standard-services", 0))
+        ws.cell(row=row_idx, column=8, value=ip.get("fragile-materials", 0))
+        ws.cell(row=row_idx, column=9, value=ip.get("fragile-services", 0))
+        ws.cell(row=row_idx, column=10, value=box_price + ip.get("fragile-materials", 0) + ip.get("fragile-services", 0))
+        ws.cell(row=row_idx, column=11, value=ip.get("custom-materials", 0))
+        ws.cell(row=row_idx, column=12, value=ip.get("custom-services", 0))
+        ws.cell(row=row_idx, column=13, value=box_price + ip.get("custom-materials", 0) + ip.get("custom-services", 0))
+        
+        # Location
+        location = box.get("location", "")
+        if isinstance(location, dict):
+            location = location.get("label", "")
+        ws.cell(row=row_idx, column=14, value=location)
         
         row_idx += 1
     

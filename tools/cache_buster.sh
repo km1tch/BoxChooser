@@ -41,7 +41,8 @@ done
 
 # Now update all HTML files to reference the new filenames
 echo "Updating HTML references..."
-for html_file in "$FRONTEND_DIR"/*.html; do
+# Update HTML files in root and admin directory
+for html_file in "$FRONTEND_DIR"/*.html "$FRONTEND_DIR"/admin/*.html; do
     if [ -f "$html_file" ]; then
         # Create a temporary file
         temp_file="${html_file}.tmp"

@@ -137,7 +137,17 @@
     
     <script src="/js/lib/superadmin-api.js"></script>
     <script type="module">
-        // Check superadmin auth
+        // Check auth immediately - redirect if no token
+        (function() {
+            // Check localStorage directly to avoid dependency on SuperadminAPI
+            const token = localStorage.getItem('superadmin_token');
+            if (!token) {
+                window.location.href = "/admin-login.html";
+                return;
+            }
+        })();
+        
+        // Double-check with API
         if (!SuperadminAPI.getToken()) {
             window.location.href = '/admin-login.html';
         }
