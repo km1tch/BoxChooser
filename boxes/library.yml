@@ -1,0 +1,1164 @@
+version: '1.0'
+description: Unified box library generated from vendor catalogs
+boxes:
+- dimensions:
+  - 4
+  - 4
+  - 4
+  names:
+  - 03990414
+  category: cube
+  volume: 64
+- dimensions:
+  - 10
+  - 4
+  - 4
+  names:
+  - '03070206'
+  category: small
+  volume: 160
+- dimensions:
+  - 10
+  - 5
+  - 4
+  names:
+  - '03074064'
+  category: small
+  volume: 200
+- dimensions:
+  - 6
+  - 6
+  - 6
+  names:
+  - 06C-UPS
+  category: cube
+  volume: 216
+- dimensions:
+  - 10
+  - 5
+  - 5
+  names:
+  - '03074066'
+  category: small
+  volume: 250
+- dimensions:
+  - 11
+  - 6
+  - 4
+  names:
+  - '03074156'
+  category: small
+  volume: 264
+- dimensions:
+  - 9.5
+  - 7
+  - 4
+  names:
+  - J-11
+  category: small
+  volume: 266.0
+- dimensions:
+  - 10
+  - 7
+  - 4
+  names:
+  - 03074069
+  category: small
+  volume: 280
+- dimensions:
+  - 10
+  - 8
+  - 4
+  names:
+  - '03074106'
+  category: small
+  volume: 320
+- dimensions:
+  - 12
+  - 9
+  - 3
+  names:
+  - 12 X 9 X 3
+  category: medium
+  volume: 324
+- dimensions:
+  - 10.125
+  - 7.5
+  - 4.5
+  names:
+  - J-12
+  category: small
+  volume: 341.72
+- dimensions:
+  - 10
+  - 6
+  - 6
+  names:
+  - 03070338
+  category: small
+  volume: 360
+- dimensions:
+  - 8
+  - 8
+  - 6
+  names:
+  - 03992398
+  category: small
+  volume: 384
+- dimensions:
+  - 10
+  - 10
+  - 4
+  names:
+  - '03070167'
+  category: small
+  volume: 400
+- dimensions:
+  - 10
+  - 8
+  - 6
+  names:
+  - '03010060'
+  - 03013069
+  category: small
+  volume: 480
+- dimensions:
+  - 8
+  - 8
+  - 8
+  alternate_depths:
+  - 4.5
+  names:
+  - 08C-UPS
+  category: cube
+  volume: 512
+- dimensions:
+  - 8
+  - 8
+  - 8
+  names:
+  - '03010045'
+  - 03992353
+  category: cube
+  volume: 512
+- dimensions:
+  - 11
+  - 8
+  - 6
+  names:
+  - 03073852
+  category: small
+  volume: 528
+- dimensions:
+  - 11
+  - 7
+  - 7
+  names:
+  - 03070129
+  category: small
+  volume: 539
+- dimensions:
+  - 10
+  - 8
+  - 7
+  names:
+  - '03074530'
+  category: small
+  volume: 560
+- dimensions:
+  - 12
+  - 9
+  - 5.5
+  names:
+  - J-14
+  category: small
+  volume: 594.0
+- dimensions:
+  - 10
+  - 10
+  - 6
+  names:
+  - '03070007'
+  category: small
+  volume: 600
+- dimensions:
+  - 12
+  - 9
+  - 6
+  names:
+  - '03010071'
+  category: small
+  volume: 648
+- dimensions:
+  - 10
+  - 10
+  - 7
+  names:
+  - 03070308
+  category: small
+  volume: 700
+- dimensions:
+  - 9
+  - 9
+  - 9
+  names:
+  - '03010050'
+  category: cube
+  volume: 729
+- dimensions:
+  - 10
+  - 10
+  - 8
+  names:
+  - 03992399
+  category: small
+  volume: 800
+- dimensions:
+  - 13.5
+  - 10
+  - 6
+  names:
+  - J-15
+  category: small
+  volume: 810.0
+- dimensions:
+  - 12
+  - 12
+  - 6
+  alternate_depths:
+  - 4
+  - 3
+  names:
+  - 12 X 12 X 6 - UPS
+  category: medium
+  volume: 864
+- dimensions:
+  - 16.375
+  - 10.375
+  - 5.5
+  names:
+  - SHIRT-A
+  category: medium
+  volume: 934.4
+- dimensions:
+  - 4
+  - 4
+  - 60
+  names:
+  - UMBRELLA
+  category: specialty
+  volume: 960
+- dimensions:
+  - 12
+  - 10
+  - 8
+  names:
+  - 03010080
+  category: small
+  volume: 960
+- dimensions:
+  - 12
+  - 9
+  - 9
+  alternate_depths:
+  - 7
+  - 4.5
+  names:
+  - PR-3
+  category: small
+  volume: 972
+- dimensions:
+  - 15
+  - 11
+  - 6
+  names:
+  - J-16
+  category: small
+  volume: 990
+- dimensions:
+  - 10
+  - 10
+  - 10
+  alternate_depths:
+  - 7.5
+  - 5
+  names:
+  - 10C-UPS
+  category: cube
+  volume: 1000
+- dimensions:
+  - 10
+  - 10
+  - 10
+  names:
+  - '03010070'
+  - '03010074'
+  - 03010078
+  - '03074566'
+  - 03990461
+  category: cube
+  volume: 1000
+- dimensions:
+  - 16
+  - 16
+  - 4
+  names:
+  - 16 X 16 X 4 - UPS
+  category: medium
+  volume: 1024
+- dimensions:
+  - 11
+  - 11
+  - 9
+  names:
+  - 03073987
+  category: small
+  volume: 1089
+- dimensions:
+  - 18.375
+  - 14.375
+  - 4.125
+  names:
+  - SHIRTB
+  category: small
+  volume: 1089.58
+- dimensions:
+  - 24
+  - 8
+  - 6
+  names:
+  - 03992397
+  category: medium
+  volume: 1152
+- dimensions:
+  - 13
+  - 13
+  - 7
+  names:
+  - '03021265'
+  category: medium
+  volume: 1183
+- dimensions:
+  - 18
+  - 4
+  - 18
+  names:
+  - S. WREATH
+  category: specialty
+  volume: 1296
+- dimensions:
+  - 18
+  - 12
+  - 6
+  names:
+  - '03010140'
+  category: medium
+  volume: 1296
+- dimensions:
+  - 11
+  - 11
+  - 11
+  names:
+  - '03070254'
+  category: cube
+  volume: 1331
+- dimensions:
+  - 14
+  - 10
+  - 10
+  alternate_depths:
+  - 8
+  - 6
+  names:
+  - '141010'
+  category: medium
+  volume: 1400
+- dimensions:
+  - 18
+  - 13
+  - 6
+  names:
+  - J-17
+  category: medium
+  volume: 1404
+- dimensions:
+  - 12
+  - 12
+  - 10
+  names:
+  - '03074320'
+  category: small
+  volume: 1440
+- dimensions:
+  - 17
+  - 11
+  - 8
+  alternate_depths:
+  - 6
+  - 4
+  names:
+  - 17 X 11 X 8 - UPS
+  category: medium
+  volume: 1496
+- dimensions:
+  - 14
+  - 14
+  - 8
+  alternate_depths:
+  - 6
+  - 4
+  names:
+  - '14148'
+  category: medium
+  volume: 1568
+- dimensions:
+  - 20
+  - 10
+  - 8
+  names:
+  - '03074360'
+  category: medium
+  volume: 1600
+- dimensions:
+  - 24.675
+  - 14.675
+  - 4.75
+  names:
+  - SHIRT-C
+  category: large
+  volume: 1720.0
+- dimensions:
+  - 6
+  - 6
+  - 48
+  names:
+  - 6 X 6 X 48 - UPS
+  category: medium
+  volume: 1728
+- dimensions:
+  - 12
+  - 12
+  - 12
+  alternate_depths:
+  - 9.5
+  - 7
+  names:
+  - 12C-UPS
+  category: cube
+  volume: 1728
+- dimensions:
+  - 15
+  - 12
+  - 10
+  alternate_depths:
+  - 8
+  names:
+  - 15 X 12 X 10 - UPS
+  category: medium
+  volume: 1800
+- dimensions:
+  - 12.25
+  - 12.25
+  - 12.25
+  names:
+  - 03010090
+  category: cube
+  volume: 1838.27
+- dimensions:
+  - 16
+  - 12
+  - 10
+  names:
+  - '03010130'
+  category: medium
+  volume: 1920
+- dimensions:
+  - 20
+  - 16
+  - 6
+  names:
+  - 20 X 16 X 6
+  category: medium
+  volume: 1920
+- dimensions:
+  - 15.5
+  - 15.5
+  - 8
+  names:
+  - ST-6
+  category: medium
+  volume: 1922.0
+- dimensions:
+  - 8.5
+  - 6
+  - 42
+  names:
+  - SKI BTM
+  category: specialty
+  volume: 2142.0
+- dimensions:
+  - 18
+  - 13
+  - 9.5
+  names:
+  - J-20
+  category: medium
+  volume: 2223.0
+- dimensions:
+  - 16
+  - 12
+  - 12
+  alternate_depths:
+  - 10
+  - 8
+  names:
+  - '161212'
+  category: medium
+  volume: 2304
+- dimensions:
+  - 36
+  - 8
+  - 8
+  alternate_depths:
+  - 6
+  - 4
+  names:
+  - '3688'
+  category: medium
+  volume: 2304
+- dimensions:
+  - 17
+  - 17
+  - 8
+  names:
+  - '17178'
+  category: medium
+  volume: 2312
+- dimensions:
+  - 20
+  - 6
+  - 20
+  names:
+  - WREATH-1
+  category: specialty
+  volume: 2400
+- dimensions:
+  - 9
+  - 6.5
+  - 42
+  names:
+  - SKI TOP
+  category: specialty
+  volume: 2457.0
+- dimensions:
+  - 18
+  - 12
+  - 12
+  alternate_depths:
+  - 9.5
+  - 7
+  names:
+  - PR-8
+  category: medium
+  volume: 2592
+- dimensions:
+  - 18
+  - 12
+  - 12
+  names:
+  - '03010150'
+  category: medium
+  volume: 2592
+- dimensions:
+  - 24
+  - 6
+  - 18
+  names:
+  - MIR-1
+  category: medium
+  volume: 2592
+- dimensions:
+  - 24
+  - 18
+  - 6
+  names:
+  - 24 X 18 X 6 - UPS
+  category: medium
+  volume: 2592
+- dimensions:
+  - 20
+  - 15
+  - 9
+  alternate_depths:
+  - 6.5
+  - 4
+  names:
+  - J-22
+  category: medium
+  volume: 2700
+- dimensions:
+  - 14
+  - 14
+  - 14
+  alternate_depths:
+  - 11.5
+  - 9
+  names:
+  - 14C-UPS
+  category: cube
+  volume: 2744
+- dimensions:
+  - 20
+  - 12
+  - 12
+  alternate_depths:
+  - 10
+  - 8
+  - 6
+  names:
+  - 20 X 12 X 12 - UPS
+  category: medium
+  volume: 2880
+- dimensions:
+  - 18
+  - 14.5
+  - 12
+  alternate_depths:
+  - 10
+  names:
+  - 18 X 14 1/2 X 12
+  category: medium
+  volume: 3132.0
+- dimensions:
+  - 22
+  - 15
+  - 10
+  names:
+  - '03074716'
+  category: medium
+  volume: 3300
+- dimensions:
+  - 24
+  - 12
+  - 12
+  names:
+  - '03010220'
+  category: medium
+  volume: 3456
+- dimensions:
+  - 28
+  - 12
+  - 11
+  alternate_depths:
+  - 8.5
+  - 6
+  names:
+  - JD-1
+  category: medium
+  volume: 3696
+- dimensions:
+  - 27
+  - 24
+  - 6
+  names:
+  - WREATH-2
+  category: specialty
+  volume: 3888
+- dimensions:
+  - 16
+  - 16
+  - 16
+  alternate_depths:
+  - 13.5
+  - 11
+  names:
+  - 16C-UPS
+  category: cube
+  volume: 4096
+- dimensions:
+  - 16
+  - 16
+  - 16
+  names:
+  - '03010120'
+  category: cube
+  volume: 4096
+- dimensions:
+  - 30
+  - 14
+  - 10
+  alternate_depths:
+  - 8
+  - 6
+  names:
+  - '301410'
+  category: medium
+  volume: 4200
+- dimensions:
+  - 22
+  - 15
+  - 13
+  alternate_depths:
+  - 10
+  - 7
+  names:
+  - J-64
+  category: medium
+  volume: 4290
+- dimensions:
+  - 30
+  - 6
+  - 24
+  names:
+  - MIR-3
+  category: specialty
+  volume: 4320
+- dimensions:
+  - 30
+  - 24
+  - 6
+  names:
+  - 30 X 24 X 6 - UPS
+  category: medium
+  volume: 4320
+- dimensions:
+  - 20
+  - 15
+  - 15
+  alternate_depths:
+  - 12
+  - 9
+  names:
+  - J-70
+  category: medium
+  volume: 4500
+- dimensions:
+  - 10
+  - 10
+  - 48
+  alternate_depths:
+  - 38
+  names:
+  - '101048'
+  category: medium
+  volume: 4800
+- dimensions:
+  - 20
+  - 20
+  - 12
+  alternate_depths:
+  - 10
+  - 8
+  - 6
+  names:
+  - 20 X 20 X 12 - UPS
+  category: medium
+  volume: 4800
+- dimensions:
+  - 20
+  - 20
+  - 12
+  alternate_depths:
+  - 9.5
+  - 7
+  names:
+  - VCR
+  category: medium
+  volume: 4800
+- dimensions:
+  - 24
+  - 16
+  - 13
+  alternate_depths:
+  - 13.5
+  - 11
+  names:
+  - 84C
+  category: medium
+  volume: 4992
+- dimensions:
+  - 30
+  - 6
+  - 30
+  names:
+  - MIR-8
+  category: specialty
+  volume: 5400
+- dimensions:
+  - 18
+  - 18
+  - 18
+  alternate_depths:
+  - 15.5
+  - 13
+  names:
+  - 18C-UPS
+  category: cube
+  volume: 5832
+- dimensions:
+  - 18
+  - 18
+  - 18
+  names:
+  - 03990421
+  category: cube
+  volume: 5832
+- dimensions:
+  - 26
+  - 18
+  - 13
+  alternate_depths:
+  - 10
+  - 7
+  names:
+  - J-57
+  category: medium
+  volume: 6084
+- dimensions:
+  - 11
+  - 11
+  - 52
+  names:
+  - '03070401'
+  category: large
+  volume: 6292
+- dimensions:
+  - 13
+  - 13
+  - 40
+  alternate_depths:
+  - 37
+  - 34
+  names:
+  - LAMP
+  category: specialty
+  volume: 6760
+- dimensions:
+  - 32
+  - 22
+  - 10
+  alternate_depths:
+  - 7.5
+  - 5
+  names:
+  - MG-1
+  category: large
+  volume: 7040
+- dimensions:
+  - 24
+  - 10
+  - 31
+  alternate_depths:
+  - 26
+  names:
+  - SUITCASE
+  category: specialty
+  volume: 7440
+- dimensions:
+  - 24
+  - 18
+  - 18
+  alternate_depths:
+  - 16
+  - 14
+  - 12
+  - 10
+  names:
+  - 24 X 18 X 18 - UPS
+  category: large
+  volume: 7776
+- dimensions:
+  - 36
+  - 6
+  - 36
+  names:
+  - MIR-9
+  category: specialty
+  volume: 7776
+- dimensions:
+  - 20
+  - 20
+  - 20
+  alternate_depths:
+  - 16
+  - 12
+  names:
+  - 20C-UPS
+  category: cube
+  volume: 8000
+- dimensions:
+  - 30
+  - 17
+  - 16
+  alternate_depths:
+  - 14
+  - 12
+  - 10
+  names:
+  - 30 X 17 X 16
+  category: large
+  volume: 8160
+- dimensions:
+  - 8
+  - 16
+  - 65
+  names:
+  - SNW BRD
+  category: specialty
+  volume: 8320
+- dimensions:
+  - 36
+  - 5
+  - 48
+  names:
+  - MIR-11
+  category: specialty
+  volume: 8640
+- dimensions:
+  - 36
+  - 8
+  - 30
+  names:
+  - MIRROR 12
+  category: specialty
+  volume: 8640
+- dimensions:
+  - 36
+  - 24
+  - 10
+  alternate_depths:
+  - 8
+  - 6
+  names:
+  - 36 X 24 X 10
+  category: large
+  volume: 8640
+- dimensions:
+  - 18
+  - 18
+  - 28
+  names:
+  - '03010170'
+  category: large
+  volume: 9072
+- dimensions:
+  - 42
+  - 6
+  - 36
+  names:
+  - MIR-10
+  category: specialty
+  volume: 9072
+- dimensions:
+  - 24
+  - 24
+  - 16
+  alternate_depths:
+  - 14
+  - 12
+  - 10
+  names:
+  - 24 X 24 X 16 - UPS
+  category: medium
+  volume: 9216
+- dimensions:
+  - 46
+  - 19
+  - 11
+  names:
+  - GOLF BOX
+  category: specialty
+  volume: 9614
+- dimensions:
+  - 27
+  - 20
+  - 18
+  names:
+  - TV-Box
+  category: large
+  volume: 9720
+- dimensions:
+  - 24
+  - 24
+  - 17
+  alternate_depths:
+  - 20
+  - 16
+  names:
+  - UPS-2
+  category: medium
+  volume: 9792
+- dimensions:
+  - 20
+  - 10
+  - 50
+  names:
+  - Guitar Box
+  category: specialty
+  volume: 10000
+- dimensions:
+  - 14
+  - 14
+  - 53
+  alternate_depths:
+  - 50
+  - 48
+  names:
+  - Golf Box 2
+  category: specialty
+  volume: 10388
+- dimensions:
+  - 26
+  - 20
+  - 20
+  alternate_depths:
+  - 18
+  - 14
+  - 10
+  names:
+  - '262020'
+  category: large
+  volume: 10400
+- dimensions:
+  - 22
+  - 22
+  - 22
+  alternate_depths:
+  - 12
+  - 17
+  names:
+  - 22C275
+  category: cube
+  volume: 10648
+- dimensions:
+  - 33
+  - 18
+  - 18
+  alternate_depths:
+  - 14
+  - 10
+  names:
+  - UPS-3
+  category: large
+  volume: 10692
+- dimensions:
+  - 15
+  - 15
+  - 48
+  alternate_depths:
+  - 38
+  - 42
+  names:
+  - 15 X 15 X 48 - UPS
+  category: large
+  volume: 10800
+- dimensions:
+  - 24
+  - 24
+  - 24
+  alternate_depths:
+  - 22
+  - 20
+  - 18
+  names:
+  - 24C-UPS
+  category: cube
+  volume: 13824
+- dimensions:
+  - 24
+  - 24
+  - 24
+  names:
+  - '03010240'
+  category: cube
+  volume: 13824
+- dimensions:
+  - 30
+  - 30
+  - 16
+  alternate_depths:
+  - 14
+  - 12
+  names:
+  - 30 X 30 X 16
+  category: large
+  volume: 14400
+- dimensions:
+  - 54.5
+  - 10
+  - 27.5
+  alternate_depths:
+  - 24
+  - 20
+  names:
+  - LG BIKE BOX
+  category: specialty
+  volume: 14987.5
+- dimensions:
+  - 41
+  - 27
+  - 15
+  names:
+  - 03992537
+  category: large
+  volume: 16605
+- dimensions:
+  - 25.75
+  - 25.75
+  - 25.75
+  alternate_depths:
+  - 21.75
+  - 17.75
+  names:
+  - 25.75C
+  category: cube
+  volume: 17073.86
+- dimensions:
+  - 36
+  - 22
+  - 22
+  names:
+  - '362222'
+  category: large
+  volume: 17424
+- dimensions:
+  - 34
+  - 22
+  - 24
+  alternate_depths:
+  - 21
+  - 17
+  names:
+  - BB-130
+  category: large
+  volume: 17952
+- dimensions:
+  - 42
+  - 8
+  - 60
+  names:
+  - Heavy Duty Mirror Box
+  category: large
+  volume: 20160
+- dimensions:
+  - 30
+  - 29
+  - 34
+  alternate_depths:
+  - 30
+  - 26
+  names:
+  - CHAIR
+  category: specialty
+  volume: 29580
+- dimensions:
+  - 36
+  - 36
+  - 36
+  alternate_depths:
+  - 28
+  - 32
+  names:
+  - 36C
+  category: cube
+  volume: 46656

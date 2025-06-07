@@ -474,7 +474,7 @@
             <h1 id="page-title">Floorplan Editor</h1>
             
             <!-- Content wrapper that can be hidden -->
-            <div id="floorplan-content">
+            <div id="floorplan-content" style="display: none;">
                 <!-- Mode controls -->
                 <div class="mode-controls" id="mode-controls">
                     <div class="mode-toggle">
@@ -565,6 +565,9 @@
             
             // Check if authentication is required
             await AuthManager.requireAuth(storeId);
+            
+            // Show content after successful auth
+            document.getElementById('floorplan-content').style.display = 'block';
             
             // Initialize location editor (which manages viewer, upload, and modes)
             const locationEditor = new FloorplanLocationEditor(storeId);

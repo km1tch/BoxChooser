@@ -1,5 +1,7 @@
 # Store Configuration Guide
 
+**Last Updated:** January 2025
+
 This guide covers the YAML configuration format for store box inventories and settings.
 
 ## Configuration File Location
@@ -16,11 +18,14 @@ Each store's configuration is stored in `stores/store{id}.yml` where `{id}` is t
 # Box inventory
 boxes:
   - type: NormalBox
-    supplier: ABC
     model: "10C-UPS"
     dimensions: [10, 10, 10]  # Length, Width, Height
     # ... pricing details
 ```
+
+### Box Source
+
+Boxes are now sourced from the universal box library (`boxes/library.yml`) rather than vendor catalogs. The system tracks whether a box came from the library or was custom-created, but this is handled internally and not stored in the YAML.
 
 ## Pricing Structure
 
@@ -29,7 +34,6 @@ BoxChooser uses itemized pricing that breaks down costs into box, materials, and
 ```yaml
 boxes:
   - type: NormalBox
-    supplier: ULINE
     model: "S-4344"
     dimensions: [12, 9, 6]
     itemized-prices:
@@ -52,34 +56,22 @@ Standard rectangular boxes:
 
 ```yaml
 - type: NormalBox
-  supplier: ABC
   model: "12X10X8"
   dimensions: [12, 10, 8]
 ```
 
-### NormalBoxWithAlt
+### Boxes with Alternate Depths
 
-Boxes with alternate cutting depths:
+Boxes that can be cut down to alternate heights. Use `alternate_depths` field:
 
 ```yaml
-- type: NormalBoxWithAlt
-  supplier: ABC
+- type: NormalBox
   model: "10C-UPS"
   dimensions: [10, 10, 10]
   alternate_depths: [7.5, 5.0]  # Can be cut down to these heights
 ```
 
-### NormalBoxPrescored
-
-Boxes with factory-scored cut lines:
-
-```yaml
-- type: NormalBoxPrescored
-  supplier: ABC
-  model: "VAR5"
-  dimensions: [20, 16, 16]
-  prescored_heights: [12, 8, 4]  # Pre-scored at these heights
-```
+**Note:** The separate `NormalBoxWithAlt` and `NormalBoxPrescored` types are deprecated. All boxes now use `type: NormalBox` with optional `alternate_depths`.
 
 ### FlatRateEnvelope
 
@@ -87,7 +79,6 @@ Flat rate shipping envelopes:
 
 ```yaml
 - type: FlatRateEnvelope
-  supplier: USPS
   model: "EP13F"
   dimensions: [15, 9.5, 0.75]
 ```
@@ -103,12 +94,12 @@ location:
   coords: [0.425, 0.634]  # X, Y coordinates on floorplan
 ```
 
-### Supplier Version
+### Import Metadata
 
-Tracks which vendor catalog version:
+When boxes are imported from Excel files, the system may add metadata:
 
 ```yaml
-supplier_version: "2025-05-30"  # Added automatically when importing
+import_date: "2025-05-30"  # Date of last import
 ```
 
 ## Packing Guidelines
@@ -154,12 +145,33 @@ recommendation_engine:
   extreme_cut_threshold: 0.6
 ```
 
+## Box Library Migration
+
+### What Changed
+
+The vendor system has been replaced with a universal box library:
+- **Before**: Import boxes from specific vendors (ABC, ULINE, etc.)
+- **Now**: Search universal library by dimensions, all boxes are vendor-agnostic
+
+### Migration Process
+
+1. **Existing stores**: No action needed, your boxes continue to work
+2. **Adding new boxes**: Use "Box Library" instead of vendor import
+3. **Supplier field**: Will be ignored for existing boxes, not added to new boxes
+
+### Library Features
+
+- **Dimension matching**: Find boxes by size regardless of supplier
+- **Name aliases**: See all common names for the same box
+- **Pivot feature**: Start with library box, modify specs as needed
+- **Smart filtering**: Hide boxes you already have
+
 ## Best Practices
 
-1. **Keep models consistent** - Use the same model numbers as your suppliers
-2. **Version control** - Commit changes to git with descriptive messages
+1. **Model naming** - Choose descriptive names when importing from library
+2. **Version control** - Commit changes to git with descriptive messages  
 3. **Test changes** - Use the packing calculator after making changes
-4. **Document custom boxes** - Add comments for non-standard boxes
+4. **Skip supplier field** - Don't add supplier to new manual entries
 
 ## Validation
 
@@ -172,14 +184,13 @@ The system validates YAML files on startup. Common errors:
 ## Example: Complete Store Configuration
 
 ```yaml
-# Store 100 Configuration
+# Store 100 Configuration  
 # Last updated: 2025-01-06
 # Contact: manager@store100.com
 
 boxes:
   # Small boxes
   - type: NormalBox
-    supplier: ABC
     model: "06C-UPS"
     dimensions: [6, 6, 6]
     itemized-prices:
@@ -192,11 +203,9 @@ boxes:
       fragile-services: 1.00
       custom-materials: 0.75
       custom-services: 1.50
-    supplier_version: "2025-05-30"
 
   # Medium boxes with cut options
-  - type: NormalBoxWithAlt
-    supplier: ABC
+  - type: NormalBox
     model: "10C-UPS"
     dimensions: [10, 10, 10]
     alternate_depths: [7.5, 5.0]

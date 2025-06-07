@@ -7,11 +7,18 @@ import logging
 import os
 import sys
 import yaml
-from typing import Optional
+from typing import Optional, Union
 from fastapi import HTTPException
 
 # Set up logging
 logger = logging.getLogger(__name__)
+
+
+def normalize_float(value: Union[int, float]) -> Union[int, float]:
+    """Remove unnecessary .0 from floats for cleaner YAML output"""
+    if isinstance(value, float) and value == int(value):
+        return int(value)
+    return value
 
 
 def load_store_yaml(store_id: str) -> dict:
@@ -79,13 +86,7 @@ def save_store_yaml(store_id: str, data: dict) -> bool:
                 # Always write the type
                 f.write(f"  - type: {box['type']}\n")
 
-                # Handle supplier field
-                if store_id == "1" and "supplier" not in box:
-                    # Skip supplier field for store1 if not present to maintain legacy format
-                    pass
-                else:
-                    supplier = box.get('supplier', 'Unknown')
-                    f.write(f"    supplier: {supplier}\n")
+                # Supplier field removed - no longer used
 
                 # Handle model field
                 if store_id == "1" and "model" not in box:
@@ -98,8 +99,9 @@ def save_store_yaml(store_id: str, data: dict) -> bool:
                 # Safely format dimensions with square brackets and commas, no spaces
                 # Use a safer approach to prevent YAML injection
                 if isinstance(box['dimensions'], list) and len(box['dimensions']) == 3:
-                    dimensions = [float(d) if isinstance(d, (int, float)) else 0 for d in box['dimensions']]
-                    dimensions_str = str(dimensions).replace(" ", "")
+                    dimensions = [normalize_float(float(d)) if isinstance(d, (int, float)) else 0 for d in box['dimensions']]
+                    # Format as inline array without spaces for compact format
+                    dimensions_str = "[" + ",".join(str(d) for d in dimensions) + "]"
                     f.write(f"    dimensions: {dimensions_str}\n")
                 else:
                     f.write(f"    dimensions: [0,0,0]\n")
@@ -107,8 +109,9 @@ def save_store_yaml(store_id: str, data: dict) -> bool:
                 # Add alternate_depths if present
                 if "alternate_depths" in box and isinstance(box['alternate_depths'], list):
                     # Validate depths are numeric and reasonable
-                    alt_depths = [float(d) if isinstance(d, (int, float)) and 0 <= d <= 100 else 0 for d in box['alternate_depths']]
-                    alt_depths_str = str(alt_depths).replace(" ", "")
+                    alt_depths = [normalize_float(float(d)) if isinstance(d, (int, float)) and 0 <= d <= 100 else 0 for d in box['alternate_depths']]
+                    # Format as inline array without spaces for compact format
+                    alt_depths_str = "[" + ",".join(str(d) for d in alt_depths) + "]"
                     f.write(f"    alternate_depths: {alt_depths_str}\n")
 
                 # Write itemized prices (only pricing mode now)
@@ -228,12 +231,10 @@ def validate_box_data(box_data: dict, store_id: str) -> None:
         if field not in box_data["itemized-prices"]:
             raise ValueError(f"Box missing required field '{field}' in itemized-prices")
     
-    if box_data["type"] == "CustomBox" and "open_dim" not in box_data:
-        raise ValueError("Box is CustomBox but missing 'open_dim' field")
+    # Note: open_dim requirement for CustomBox has been removed
+    # CustomBox type is now used for user-created custom boxes
 
     # Optional fields validation
-    if "supplier" in box_data and not isinstance(box_data["supplier"], str):
-        raise ValueError("Box has invalid 'supplier' (must be a string)")
     
     if "model" in box_data and not isinstance(box_data["model"], str):
         raise ValueError("Box has invalid 'model' (must be a string)")

@@ -1,103 +1,104 @@
 async function checkAuthStatus(storeId, container) {
-  if (typeof AuthManager !== 'undefined') {
+  if (typeof AuthManager !== "undefined") {
     AuthManager.initAuthUI(container.id, storeId);
   }
 }
 
-async function createAdminNav(storeId, activePage = 'prices') {
-  const nav = document.createElement('nav');
-  nav.className = 'admin-nav';
-  
+async function createAdminNav(storeId, activePage = "prices") {
+  const nav = document.createElement("nav");
+  nav.className = "admin-nav";
+
   // Get auth status first to determine what to show
   let authStatus = { hasAuth: false, isAuthenticated: false, authLevel: null };
-  if (typeof AuthManager !== 'undefined') {
+  if (typeof AuthManager !== "undefined") {
     try {
       authStatus = await AuthManager.getAuthStatus(storeId);
     } catch (error) {
       // Silently handle auth status errors
     }
   }
-  
-  const storeInfo = document.createElement('div');
-  storeInfo.className = 'store-info';
-  
-  const storeLogo = document.createElement('img');
-  storeLogo.src = '/assets/icons/logo.png';
-  storeLogo.alt = 'Store Logo';
-  storeLogo.onerror = function() {
-    this.style.display = 'none';
+
+  const storeInfo = document.createElement("div");
+  storeInfo.className = "store-info";
+
+  const storeLogo = document.createElement("img");
+  storeLogo.src = "/assets/icons/logo.png";
+  storeLogo.alt = "Store Logo";
+  storeLogo.onerror = function () {
+    this.style.display = "none";
   };
-  
-  const storeIdSpan = document.createElement('span');
-  storeIdSpan.className = 'store-id';
+
+  const storeIdSpan = document.createElement("span");
+  storeIdSpan.className = "store-id";
   storeIdSpan.textContent = `Store #${storeId}`;
-  
+
   // Add auth mode indicator
   if (authStatus.isAuthenticated) {
-    const indicator = document.createElement('span');
-    indicator.className = 'admin-mode-indicator';
-    
+    const indicator = document.createElement("span");
+    indicator.className = "admin-mode-indicator";
+
     // Check if this is a sudo session
-    const isSudo = localStorage.getItem(`store_${storeId}_is_sudo`) === 'true';
-    
+    const isSudo = localStorage.getItem(`store_${storeId}_is_sudo`) === "true";
+
     if (isSudo) {
-      indicator.textContent = 'SUPERADMIN SUDO';
-      indicator.style.background = '#e74c3c'; // Red for superadmin
+      indicator.textContent = "SUPERADMIN SUDO";
+      indicator.style.background = "#e74c3c"; // Red for superadmin
     } else if (authStatus.isDemo) {
-      indicator.textContent = authStatus.authLevel === 'admin' ? 'DEMO ADMIN' : 'DEMO';
-      indicator.style.background = '#17a2b8'; // Teal for demo
-    } else if (authStatus.authLevel === 'admin') {
-      indicator.textContent = 'ADMIN';
-      indicator.style.background = '#f093fb'; // Purple for admin
+      indicator.textContent =
+        authStatus.authLevel === "admin" ? "DEMO ADMIN" : "DEMO";
+      indicator.style.background = "#17a2b8"; // Teal for demo
+    } else if (authStatus.authLevel === "admin") {
+      indicator.textContent = "ADMIN";
+      indicator.style.background = "#f093fb"; // Purple for admin
     }
-    
+
     if (indicator.textContent) {
       storeIdSpan.appendChild(indicator);
     }
   }
-  
-  const authDropdown = document.createElement('div');
-  authDropdown.className = 'auth-dropdown';
+
+  const authDropdown = document.createElement("div");
+  authDropdown.className = "auth-dropdown";
   authDropdown.id = `auth-dropdown-${storeId}-${Date.now()}`;
-  
+
   storeInfo.appendChild(storeLogo);
   storeInfo.appendChild(storeIdSpan);
   storeInfo.appendChild(authDropdown);
-  
+
   // Remove click handler for mobile - we now have logout in the menu
-  
+
   // Only show navbar at all if store has auth configured
   if (!authStatus.hasAuth) {
     // No auth configured - return empty div (no navbar)
-    return document.createElement('div');
+    return document.createElement("div");
   }
-  
+
   nav.appendChild(storeInfo);
-  
+
   // Show nav items based on authentication status
-  const navItems = document.createElement('ul');
-  navItems.className = 'nav-items';
-  
+  const navItems = document.createElement("ul");
+  navItems.className = "nav-items";
+
   // Define nav items based on auth level
   const userItems = [
-    { id: 'wizard', label: 'Wizard', href: '/wizard' },
-    { id: 'prices', label: 'Price Table', href: '/prices' }
+    { id: "wizard", label: "Wizard", href: "/wizard" },
+    { id: "prices", label: "Price Table", href: "/prices" },
   ];
-  
+
   const adminItems = [
-    { id: 'wizard', label: 'Wizard', href: '/wizard' },
-    { id: 'packing', label: 'Packing Calc', href: '/packing' },
-    { id: 'boxes', label: 'Box Inventory', href: '/boxes' },
-    { id: 'prices', label: 'Edit Prices', href: '/prices' },
-    { id: 'import', label: 'Import Prices', href: '/import' },
-    { id: 'floorplan', label: 'Floorplan', href: '/floorplan' },
-    { id: 'settings', label: 'Settings', href: '/settings' }
+    { id: "wizard", label: "Wizard", href: "/wizard" },
+    { id: "packing", label: "Packing Calc", href: "/packing" },
+    { id: "boxes", label: "Box Inventory", href: "/boxes" },
+    { id: "prices", label: "Edit Prices", href: "/prices" },
+    { id: "import", label: "Import", href: "/import" },
+    { id: "floorplan", label: "Floorplan", href: "/floorplan" },
+    { id: "settings", label: "Settings", href: "/settings" },
   ];
-  
+
   // Filter items based on auth status and level
   let items;
   if (authStatus.isAuthenticated) {
-    if (authStatus.authLevel === 'admin') {
+    if (authStatus.authLevel === "admin") {
       // Admin - show all items
       items = adminItems;
     } else {
@@ -108,82 +109,81 @@ async function createAdminNav(storeId, activePage = 'prices') {
     // Not authenticated - show no nav items (they should be redirected to login)
     items = [];
   }
-  
-  items.forEach(item => {
-    const li = document.createElement('li');
-    li.className = `nav-item${activePage === item.id ? ' active' : ''}`;
-    
-    const a = document.createElement('a');
+
+  items.forEach((item) => {
+    const li = document.createElement("li");
+    li.className = `nav-item${activePage === item.id ? " active" : ""}`;
+
+    const a = document.createElement("a");
     a.href = item.href;
     a.textContent = item.label;
-    
+
     li.appendChild(a);
     navItems.appendChild(li);
   });
-  
+
   // Add logout option for mobile only (if authenticated)
   if (authStatus.isAuthenticated) {
-    const logoutLi = document.createElement('li');
-    logoutLi.className = 'nav-item mobile-only-logout';
-    
-    const logoutA = document.createElement('a');
-    logoutA.href = '#';
-    logoutA.textContent = 'Sign Out';
-    logoutA.addEventListener('click', (e) => {
+    const logoutLi = document.createElement("li");
+    logoutLi.className = "nav-item mobile-only-logout";
+
+    const logoutA = document.createElement("a");
+    logoutA.href = "#";
+    logoutA.textContent = "Sign Out";
+    logoutA.addEventListener("click", (e) => {
       e.preventDefault();
-      if (typeof AuthManager !== 'undefined') {
+      if (typeof AuthManager !== "undefined") {
         AuthManager.logout(storeId);
       }
     });
-    
+
     logoutLi.appendChild(logoutA);
     navItems.appendChild(logoutLi);
   }
-  
+
   nav.appendChild(navItems);
-  
-  
-  const mobileMenuToggle = document.createElement('button');
-  mobileMenuToggle.className = 'mobile-menu-toggle';
+
+  const mobileMenuToggle = document.createElement("button");
+  mobileMenuToggle.className = "mobile-menu-toggle";
   mobileMenuToggle.innerHTML = '<span class="hamburger-icon">☰</span>';
-  mobileMenuToggle.addEventListener('click', (e) => {
+  mobileMenuToggle.addEventListener("click", (e) => {
     e.stopPropagation();
-    nav.classList.toggle('nav-expanded');
-    
+    nav.classList.toggle("nav-expanded");
+
     // Update hamburger icon
-    const icon = mobileMenuToggle.querySelector('.hamburger-icon');
-    if (nav.classList.contains('nav-expanded')) {
-      icon.textContent = '✕';
+    const icon = mobileMenuToggle.querySelector(".hamburger-icon");
+    if (nav.classList.contains("nav-expanded")) {
+      icon.textContent = "✕";
     } else {
-      icon.textContent = '☰';
+      icon.textContent = "☰";
     }
   });
-  
+
   // Close menu when clicking outside
-  document.addEventListener('click', (e) => {
-    if (!nav.contains(e.target) && nav.classList.contains('nav-expanded')) {
-      nav.classList.remove('nav-expanded');
-      const icon = mobileMenuToggle.querySelector('.hamburger-icon');
-      icon.textContent = '☰';
+  document.addEventListener("click", (e) => {
+    if (!nav.contains(e.target) && nav.classList.contains("nav-expanded")) {
+      nav.classList.remove("nav-expanded");
+      const icon = mobileMenuToggle.querySelector(".hamburger-icon");
+      icon.textContent = "☰";
     }
   });
-  
+
   // Close menu when navigating
-  navItems.addEventListener('click', () => {
-    if (nav.classList.contains('nav-expanded')) {
-      nav.classList.remove('nav-expanded');
-      const icon = mobileMenuToggle.querySelector('.hamburger-icon');
-      icon.textContent = '☰';
+  navItems.addEventListener("click", () => {
+    if (nav.classList.contains("nav-expanded")) {
+      nav.classList.remove("nav-expanded");
+      const icon = mobileMenuToggle.querySelector(".hamburger-icon");
+      icon.textContent = "☰";
     }
   });
-  
+
   nav.appendChild(mobileMenuToggle);
-  
+
   // Add the CSS for the navigation
-  const styleExists = document.getElementById('admin-nav-style');
+  const styleExists = document.getElementById("admin-nav-style");
   if (!styleExists) {
-    const style = document.createElement('style');
-    style.id = 'admin-nav-style';
+    const style = document.createElement("style");
+    style.id = "admin-nav-style";
     style.textContent = `
       .admin-nav {
         display: flex;
@@ -415,11 +415,11 @@ async function createAdminNav(storeId, activePage = 'prices') {
     `;
     document.head.appendChild(style);
   }
-  
+
   setTimeout(() => {
     checkAuthStatus(storeId, authDropdown);
   }, 0);
-  
+
   return nav;
 }
 
@@ -432,7 +432,7 @@ async function createAdminNav(storeId, activePage = 'prices') {
 async function initAdminNav(containerId, storeId, activePage) {
   const container = document.getElementById(containerId);
   if (!container) return;
-  
+
   const nav = await createAdminNav(storeId, activePage);
   container.insertBefore(nav, container.firstChild);
 }

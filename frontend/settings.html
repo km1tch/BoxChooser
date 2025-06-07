@@ -577,7 +577,7 @@
   <body>
     <nav id="nav-container"></nav>
 
-    <div class="rules-container">
+    <div class="rules-container" style="display: none;">
       <div class="rules-header">
         <h1>Settings</h1>
       </div>
@@ -1063,6 +1063,9 @@
         // requireAuth doesn't return a value, it redirects if needed
         // We need admin access for settings
         await AuthManager.requireAuth(storeId, true);
+        
+        // Show container after successful auth
+        document.querySelector('.rules-container').style.display = 'block';
 
         // Check if demo mode and hide logins tab
         const authStatus = await AuthManager.getAuthStatus(storeId);

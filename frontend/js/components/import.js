@@ -37,11 +37,17 @@ async function loadStorePriceGroup() {
         
         // Get price group from store config
         const priceGroup = data['price-group'] || 'Not Set';
-        document.getElementById('price-group').textContent = priceGroup;
+        const priceGroupElement = document.getElementById('price-group');
+        if (priceGroupElement) {
+            priceGroupElement.textContent = priceGroup;
+        }
         
     } catch (error) {
         console.error('Error loading store info:', error);
-        document.getElementById('price-group').textContent = 'N/A';
+        const priceGroupElement = document.getElementById('price-group');
+        if (priceGroupElement) {
+            priceGroupElement.textContent = 'N/A';
+        }
     }
 }
 
@@ -52,32 +58,43 @@ function setupFileUpload() {
     const uploadBtn = document.getElementById('upload-btn');
     const uploadZone = document.getElementById('upload-zone');
     
-    // Button click
-    uploadBtn.addEventListener('click', () => fileInput.click());
-    uploadZone.addEventListener('click', () => fileInput.click());
+    // Only set up button click if it exists (for legacy flow)
+    if (uploadBtn) {
+        uploadBtn.addEventListener('click', () => fileInput.click());
+    }
     
-    // File selection
-    fileInput.addEventListener('change', handleFileSelect);
+    // Only set up upload zone if it exists and isn't already handled
+    if (uploadZone && !uploadZone.dataset.handled) {
+        uploadZone.addEventListener('click', () => fileInput.click());
+        uploadZone.dataset.handled = 'true';
+    }
     
-    // Drag and drop
-    uploadZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadZone.classList.add('dragover');
-    });
+    // File selection - only if fileInput exists
+    if (fileInput) {
+        fileInput.addEventListener('change', handleFileSelect);
+    }
     
-    uploadZone.addEventListener('dragleave', () => {
-        uploadZone.classList.remove('dragover');
-    });
-    
-    uploadZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadZone.classList.remove('dragover');
+    // Drag and drop - only if uploadZone exists
+    if (uploadZone) {
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
         
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            handleFile(files[0]);
-        }
-    });
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+        
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+    }
 }
 
 // Handle file selection
@@ -97,9 +114,20 @@ async function handleFile(file) {
     }
     
     // Show loading
-    document.getElementById('upload-zone').style.display = 'none';
-    document.getElementById('loading').classList.add('active');
-    document.getElementById('results').style.display = 'none';
+    const uploadZone = document.getElementById('upload-zone');
+    if (uploadZone) {
+        uploadZone.style.display = 'none';
+    }
+    
+    const loadingElement = document.getElementById('loading');
+    if (loadingElement) {
+        loadingElement.style.display = 'block';
+    }
+    
+    const resultsElement = document.getElementById('results');
+    if (resultsElement) {
+        resultsElement.style.display = 'none';
+    }
     
     // Create form data
     const formData = new FormData();
@@ -136,7 +164,10 @@ async function handleFile(file) {
         alert('Error analyzing file: ' + error.message);
         resetUpload();
     } finally {
-        document.getElementById('loading').classList.remove('active');
+        const loadingElement = document.getElementById('loading');
+        if (loadingElement) {
+            loadingElement.style.display = 'none';
+        }
     }
 }
 
@@ -1679,9 +1710,25 @@ function cancelImport() {
 
 // Reset upload state
 function resetUpload() {
-    document.getElementById('upload-zone').style.display = 'block';
-    document.getElementById('loading').classList.remove('active');
-    document.getElementById('results').style.display = 'none';
-    document.getElementById('file-input').value = '';
+    const uploadZone = document.getElementById('upload-zone');
+    if (uploadZone) {
+        uploadZone.style.display = 'block';
+    }
+    
+    const loadingElement = document.getElementById('loading');
+    if (loadingElement) {
+        loadingElement.style.display = 'none';
+    }
+    
+    const resultsElement = document.getElementById('results');
+    if (resultsElement) {
+        resultsElement.style.display = 'none';
+    }
+    
+    const fileInput = document.getElementById('file-input');
+    if (fileInput) {
+        fileInput.value = '';
+    }
+    
     importData = null;
 }

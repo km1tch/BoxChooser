@@ -203,8 +203,8 @@ export class LabelGenerator {
   static generateBoxInfo(data) {
     const boxPrice = data.boxPrice !== null ? ` Box: $${data.boxPrice.toFixed(2)}` : '';
     return `
-      <strong>Box: ${data.box.model} (${data.box.dimensions[0]}"×${data.box.dimensions[1]}"×${data.box.dimensions[2]}")</strong><br>
-      Strategy: ${data.result.strategy}<br>
+      <strong>Box: ${data.box.model} (${data.box.dimensions[0]}×${data.box.dimensions[1]}×${data.box.dimensions[2]})</strong><br>
+      Level: ${data.packingLevelApi || 'Basic'} Pack&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Strategy: ${data.result.strategy}<br>
       <strong>Total: $${data.result.price.toFixed(2)}${boxPrice}</strong>
       <br><br>
     `.trim();

@@ -65,7 +65,7 @@ def get_current_auth():
     Raises:
         HTTPException: If token is invalid or expired
     """
-    return Depends(_get_current_auth_impl)
+    return _get_current_auth_impl
 
 def get_current_auth_with_demo():
     """
@@ -260,5 +260,31 @@ def get_optional_auth_with_demo() -> Optional[dict]:
             return None
     
     return Depends(_get_optional_auth_with_demo)
+
+
+def get_current_superadmin():
+    """
+    Verify Bearer token and ensure the user is a superadmin
+    
+    Returns:
+        Tuple[str, str]: (store_id, auth_level) where auth_level is 'superadmin'
+        
+    Raises:
+        HTTPException: If token is invalid, expired, or user is not a superadmin
+    """
+    def _get_current_superadmin_impl(
+        auth_info: Tuple[str, str] = Depends(_get_current_auth_impl)
+    ) -> Tuple[str, str]:
+        store_id, auth_level = auth_info
+        
+        if auth_level != 'superadmin':
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Superadmin access required"
+            )
+        
+        return auth_info
+    
+    return Depends(_get_current_superadmin_impl)
 
 

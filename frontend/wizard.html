@@ -33,7 +33,7 @@
     <div id="app-container">
       <nav id="nav-container"></nav>
 
-      <div class="container" id="wizard-container">
+      <div class="container" id="wizard-container" style="display: none;">
         <!-- Wizard UI will be rendered here -->
       </div>
     </div>
@@ -55,8 +55,16 @@
 
         // Check authentication (user or admin)
         if (typeof AuthManager !== "undefined") {
-          await AuthManager.requireAuth(storeId, false);
+          try {
+            await AuthManager.requireAuth(storeId, false);
+          } catch (error) {
+            // Auth failed, requireAuth will redirect
+            return;
+          }
         }
+        
+        // Show container after successful auth
+        document.getElementById("wizard-container").style.display = "block";
 
         // Load boxes and engine config for this store
         let boxes = [];

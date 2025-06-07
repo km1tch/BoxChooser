@@ -218,77 +218,108 @@ async function createBox(storeId, boxData) {
   }
 }
 
+
 /**
- * Get list of all vendors
- * @param {string} storeId - The store ID (for auth)
- * @returns {Promise<Array>} - List of vendors
+ * Box Library API functions
  */
-async function getVendors(storeId) {
+
+/**
+ * Get all boxes from the library
+ * @param {string} storeId - The store ID for auth
+ * @returns {Promise<Array>} - Array of library boxes
+ */
+async function getLibraryBoxes(storeId) {
   try {
-    const response = await apiUtils.authenticatedFetch(
-      '/api/vendors',
-      storeId
-    );
-    
+    const response = await apiUtils.authenticatedFetch('/api/boxes/library', storeId);
     if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(`Failed to get vendors: ${response.status} - ${errorData?.detail || response.statusText}`);
+      throw new Error(`Failed to fetch library boxes: ${response.status}`);
     }
-    
     return await response.json();
   } catch (error) {
-    console.error("Error getting vendors:", error);
+    console.error("Error fetching library boxes:", error);
+    throw error;
+  }
+}
+
+
+/**
+ * Check if a box exists in the library
+ * @param {string} storeId - The store ID for auth
+ * @param {Array<number>} dimensions - Box dimensions [L, W, D]
+ * @param {Array<number>} alternateDepths - Optional prescored depths
+ * @returns {Promise<Object>} - Check result with exact_match, box, and similar_boxes
+ */
+async function checkLibraryBox(storeId, dimensions, alternateDepths = null) {
+  try {
+    const response = await apiUtils.authenticatedFetch(
+      '/api/boxes/library/check',
+      storeId,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          dimensions: dimensions,
+          alternate_depths: alternateDepths
+        })
+      }
+    );
+    if (!response.ok) {
+      throw new Error(`Failed to check library box: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error checking library box:", error);
     throw error;
   }
 }
 
 /**
- * Get boxes for a specific vendor
- * @param {string} storeId - The store ID (for auth)
- * @param {string} vendorIdOrName - The vendor ID or name (backend accepts both)
- * @returns {Promise<Array>} - List of vendor boxes
+ * Get library statistics
+ * @param {string} storeId - The store ID for auth
+ * @returns {Promise<Object>} - Library statistics
  */
-async function getVendorBoxes(storeId, vendorIdOrName) {
+async function getLibraryStats(storeId) {
   try {
-    const response = await apiUtils.authenticatedFetch(
-      `/api/vendors/${encodeURIComponent(vendorIdOrName)}/boxes`,
-      storeId
-    );
-    
+    const response = await apiUtils.authenticatedFetch('/api/boxes/library/stats', storeId);
     if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(`Failed to get vendor boxes: ${response.status} - ${errorData?.detail || response.statusText}`);
+      throw new Error(`Failed to fetch library stats: ${response.status}`);
     }
-    
     return await response.json();
   } catch (error) {
-    console.error("Error getting vendor boxes:", error);
+    console.error("Error fetching library stats:", error);
     throw error;
   }
 }
 
 /**
- * Compare vendor catalog with store inventory
- * @param {string} storeId - The store ID (for auth)
- * @param {string} vendorIdOrName - The vendor ID or name (backend accepts both)
- * @returns {Promise<Object>} - Comparison results with new/existing/updated boxes
+ * Track box modifications (for analytics)
+ * @param {string} storeId - The store ID for auth
+ * @param {Object} modificationData - Modification details
+ * @returns {Promise<Object>} - Response from server
  */
-async function compareVendorWithStore(storeId, vendorIdOrName) {
+async function trackBoxModification(storeId, modificationData) {
   try {
     const response = await apiUtils.authenticatedFetch(
-      `/api/vendors/${encodeURIComponent(vendorIdOrName)}/compare`,
-      storeId
+      `/api/store/${storeId}/stats/box-modification`,
+      storeId,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(modificationData)
+      }
     );
     
     if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(`Failed to compare vendor catalog: ${response.status} - ${errorData?.detail || response.statusText}`);
+      // Don't throw for stats tracking - just log
+      console.warn(`Failed to track box modification: ${response.status}`);
+      return null;
     }
     
     return await response.json();
   } catch (error) {
-    console.error("Error comparing vendor catalog:", error);
-    throw error;
+    // Don't throw for stats tracking - just log
+    console.warn("Error tracking box modification:", error);
+    return null;
   }
 }
 
@@ -303,9 +334,12 @@ if (typeof window !== 'undefined') {
     updateBoxLocation,
     deleteBox,
     createBox,
-    getVendors,
-    getVendorBoxes,
-    compareVendorWithStore
+    // Box Library functions
+    getLibraryBoxes,
+    checkLibraryBox,
+    getLibraryStats,
+    // Statistics
+    trackBoxModification
   };
 }
 

@@ -1,5 +1,8 @@
 # API Reference
 
+**Last Updated:** January 2025  
+**Status:** Working document tracking implementation and TODOs
+
 ## Overview
 
 All API endpoints require authentication via Bearer token in the Authorization header:
@@ -9,6 +12,13 @@ Authorization: Bearer <token>
 ```
 
 Tokens are obtained through the login endpoints and are valid for 24 hours.
+
+## Implementation Status Legend
+
+- ✅ **Implemented** - Fully working in production
+- 🚧 **Partial** - Core functionality exists but missing features  
+- ❌ **Not Started** - Planned but not implemented
+- 🗑️ **Deprecated** - Removed or being phased out
 
 ## Authentication Endpoints
 
@@ -200,40 +210,172 @@ Content-Type: application/json
 }
 ```
 
-### Vendor Catalog
+### Box Library ✅
 
-#### List Vendors
-```
-GET /api/vendors
-```
+The vendor system has been replaced with a universal box library. All boxes are now vendor-agnostic.
 
-#### Get Vendor Boxes
+#### Get All Library Boxes ✅
 ```
-GET /api/vendors/{vendor_name}/boxes
+GET /api/boxes/library
 ```
 
-#### Compare with Store
+Returns all boxes in the library with dimensions, alternate depths, and name aliases.
+
+**Note:** Library search is performed client-side for better performance. The frontend loads all boxes once and filters them locally.
+
+#### Check Box Exists ✅
 ```
-POST /api/vendors/{vendor_name}/compare
+POST /api/boxes/library/check
 Content-Type: application/json
 
 {
-  "store_id": "100"
+  "dimensions": [10, 10, 10],
+  "alternate_depths": [7.5, 5]
 }
 ```
 
-Returns comparison showing new/existing/updated boxes.
+Returns whether an exact match exists in the library.
 
-#### Import from Vendor (Admin Only)
+#### Get Library Statistics ✅
 ```
-POST /api/store/{store_id}/boxes
+GET /api/boxes/library/stats
+```
+
+Returns statistics about the library (total boxes, categories, etc.).
+
+#### Get Categories ✅
+```
+GET /api/boxes/library/categories
+```
+
+Returns list of available box categories.
+
+#### Get Boxes by Category ✅
+```
+GET /api/boxes/library/category/{category}
+```
+
+Returns all boxes in the specified category.
+
+#### Reload Library (Superadmin Only) ✅
+```
+POST /api/boxes/library/reload
+```
+
+Reloads the box library from disk. Useful after updating the library YAML file.
+
+### Box Management
+
+#### Create Box (Admin Only) ✅
+```
+POST /api/store/{store_id}/box
 Content-Type: application/json
 
 {
-  "models": ["10C-UPS", "12X10X8"],
-  "vendor": "ABC"
+  "model": "10C-CUSTOM",
+  "dimensions": [10, 10, 10],
+  "alternate_depths": [7.5, 5],
+  "from_library": true,   // Indicates box came from library
+  "offered_names": ["10x10x10", "10C-UPS"]  // Names offered during selection
 }
 ```
+
+**Note:** The `supplier` field has been removed from the system. Box type is now determined by the `from_library` flag.
+
+### Statistics Endpoints (Superadmin Only) 🚧
+
+Statistics are collected automatically for box searches, imports, and name selections.
+
+**Note:** These endpoints were renamed from "analytics" to "stats" to avoid ad blocker interference.
+
+#### Get Import Statistics ✅
+```
+GET /api/admin/stats/additions?time_range={time_range}
+```
+
+Returns box import statistics including source (library vs custom) and chosen names.
+- `time_range`: Format like "7d" or "30d"
+
+
+#### Get Name Selection Statistics ✅
+```
+GET /api/admin/stats/selections?time_range={time_range}
+```
+
+Returns data on which names stores choose when importing boxes.
+- `time_range`: Format like "7d" or "30d"
+
+#### Get Statistics Summary ✅
+```
+GET /api/admin/stats/summary
+```
+
+Returns overall statistics summary for all stores.
+
+#### Track Box Modification ✅
+```
+POST /api/store/{store_id}/stats/box-modification
+Content-Type: application/json
+
+{
+  "original_dimensions": [10, 10, 10],
+  "original_alternate_depths": [7.5, 5],
+  "modification_type": "pivot_from_library"
+}
+```
+
+Tracks when users modify box specifications after selecting from library. Data stored in `box_modifications` table for statistics.
+
+#### Batch Create Boxes (Admin Only) ✅
+```
+POST /api/store/{store_id}/boxes/batch
+Content-Type: application/json
+
+[
+  {
+    "model": "10C-UPS",
+    "dimensions": [10, 10, 10],
+    "alternate_depths": [7.5, 5],
+    "from_library": true,
+    "offered_names": ["10x10x10", "10C-UPS"]
+  },
+  {
+    "model": "12C-UPS",
+    "dimensions": [12, 12, 12],
+    "alternate_depths": [9.5, 7],
+    "from_library": true,
+    "offered_names": ["12x12x12", "12C-UPS"]
+  }
+]
+```
+
+Adds multiple boxes in a single request. Used by box discovery feature.
+
+#### Discover Boxes from Excel (Admin Only) ✅
+```
+POST /api/store/{store_id}/discover_boxes
+Content-Type: multipart/form-data
+
+file: [Excel file]
+```
+
+Analyzes an Excel price sheet to discover box dimensions and suggests matches from the library.
+
+### UI Features and Workflows
+
+#### Pivot During Import ✅
+When selecting a box from the library, users can click "I need different specs..." to:
+1. Pre-fill custom form with library box dimensions
+2. Modify any specifications
+3. Create a custom variant
+
+This feature tracks modifications for statistics via the box modification endpoint.
+
+#### Hide Existing Boxes Filter ✅ NEW
+Library search now includes a checkbox to "Hide boxes already in this store" which:
+- Filters out exact matches (dimensions + alternate depths)
+- Helps users find only new boxes to add
+- Enabled by default
 
 ## Response Formats
 

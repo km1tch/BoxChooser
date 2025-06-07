@@ -218,6 +218,50 @@ def init_db():
             CREATE INDEX IF NOT EXISTS idx_audit_superadmin ON superadmin_audit(superadmin_username)
         ''')
         
+        # Box catalog analytics tables (search tracking removed)
+        
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS box_imports (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                store_id TEXT NOT NULL,
+                dimensions TEXT NOT NULL,
+                alternate_depths TEXT,
+                chosen_name TEXT NOT NULL,
+                source TEXT NOT NULL CHECK (source IN ('library', 'custom')),
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS name_selections (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                store_id TEXT NOT NULL,
+                dimensions TEXT NOT NULL,
+                offered_names TEXT NOT NULL,
+                chosen_name TEXT NOT NULL,
+                is_custom BOOLEAN DEFAULT FALSE,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS box_modifications (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                store_id TEXT NOT NULL,
+                original_dimensions TEXT NOT NULL,
+                original_alternate_depths TEXT,
+                modified_dimensions TEXT NOT NULL,
+                modified_alternate_depths TEXT,
+                modification_type TEXT CHECK (modification_type IN ('dimensions', 'depths', 'both')),
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        # Indexes for analytics queries
+        db.execute('CREATE INDEX IF NOT EXISTS idx_box_imports_timestamp ON box_imports(timestamp)')
+        db.execute('CREATE INDEX IF NOT EXISTS idx_name_selections_timestamp ON name_selections(timestamp)')
+        db.execute('CREATE INDEX IF NOT EXISTS idx_box_modifications_timestamp ON box_modifications(timestamp)')
+        
         # Add columns to existing tables if they don't exist
         # Check if columns exist before adding (SQLite doesn't support IF NOT EXISTS for ALTER)
         cursor = db.execute("PRAGMA table_info(store_auth)")

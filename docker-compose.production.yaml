@@ -26,8 +26,8 @@ services:
     volumes:
       - ./backend:/code/backend:ro # Read-only in production
       - ./stores:/code/stores:rw
+      - ./boxes:/code/boxes:rw # Read-write for library updates
       - ./floorplans:/code/floorplans:rw # Read-write for uploads
-      - ./vendors:/code/vendors:rw
       - ./db:/db:rw # Read-write for database
       - ./tools:/code/tools:ro # Read-only for auth management
     env_file:

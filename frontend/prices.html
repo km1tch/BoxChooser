@@ -451,7 +451,7 @@
     <link rel="stylesheet" type="text/css" href="/assets/css/mobile.css">
 </head>
 <body>
-    <div id="app-container">
+    <div id="app-container" style="display: none;">
         <nav id="nav-container"></nav>
         <div class="container">
             <div class="header">
@@ -956,6 +956,9 @@
                     }
                 }
                 
+                
+                // Show container now that auth check is complete
+                document.getElementById('app-container').style.display = 'block';
                 
                 // Determine if editable
                 const isEditable = authStatus.isAuthenticated && authStatus.authLevel === 'admin';

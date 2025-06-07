@@ -15,6 +15,8 @@ from fastapi.responses import FileResponse
 from openpyxl import Workbook, load_workbook
 from openpyxl.utils import get_column_letter
 
+from backend.lib.box_library import BoxLibrary
+
 
 def export_prices_to_excel(store_id: str, store_data: dict) -> FileResponse:
     """Export store prices to Excel file"""
@@ -424,9 +426,9 @@ def categorize_product(product_name: str) -> str:
             return 'custom_materials'
     # Check if it's a box - more flexible now
     elif not any(x in name_lower for x in ['pack material', 'pack mat', 'pack service', 'pack svc']):
-        # If it starts with dimensions (e.g., "10x10x48 Golf club"), consider it a box
+        # If it has dimensions anywhere in the name (e.g., "10x10x48" or "Golf club 10x10x48"), consider it a box
         import re
-        if re.match(r'^\d+x\d+x\d+', product_name):
+        if re.search(r'\d+(?:\.\d+)?\s*[xX]\s*\d+(?:\.\d+)?\s*[xX]\s*\d+(?:\.\d+)?', product_name):
             return 'box'
         elif 'box' in name_lower:
             return 'box'
@@ -748,3 +750,159 @@ def apply_import_updates(
         'updated_count': updated_count,
         'results': results
     }
+
+
+async def discover_boxes_from_prices(file: UploadFile, store_data: dict) -> dict:
+    """
+    Analyze price sheet to discover box dimensions and suggest matches from library
+    
+    Returns:
+        dict with:
+        - discovered_dimensions: List of unique dimensions found
+        - library_matches: Exact matches from box library
+        - unmatched_dimensions: Dimensions with no library match
+        - already_in_store: Dimensions already in the store
+    """
+    # Validate file type
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        raise HTTPException(status_code=400, detail="File must be an Excel file (.xlsx or .xls)")
+    
+    # Check file size (5MB limit)
+    MAX_FILE_SIZE = 5 * 1024 * 1024
+    file_content = await file.read()
+    await file.seek(0)
+    
+    if len(file_content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="File size exceeds 5MB limit")
+    
+    # Save uploaded file temporarily
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx")
+    try:
+        temp_file.write(file_content)
+        temp_file.close()
+        
+        # Read Excel file
+        wb = load_workbook(temp_file.name, read_only=True)
+        ws = wb.active
+        
+        # Get headers
+        headers = {}
+        for col_idx, cell in enumerate(ws[1], 1):
+            if cell.value:
+                headers[cell.value] = col_idx
+        
+        # Read all rows into memory (reusing pattern from analyze_import_for_matching)
+        rows_data = []
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            if row[0] is not None:  # Skip empty rows
+                row_dict = {}
+                for header, col_idx in headers.items():
+                    if col_idx <= len(row):
+                        row_dict[header] = row[col_idx - 1]
+                rows_data.append(row_dict)
+        
+        wb.close()
+        
+        # Group by dimensions (reusing logic from analyze_import_for_matching)
+        discovered_boxes = {}  # dimensions_str -> {count, models, prices}
+        
+        for row in rows_data:
+            product_name = str(row.get('Product name', ''))
+            
+            # Extract dimensions using same regex as analyze_import_for_matching
+            match = re.search(r'(\d+(?:\.\d+)?)\s*[xX]\s*(\d+(?:\.\d+)?)\s*[xX]\s*(\d+(?:\.\d+)?)', product_name)
+            if match:
+                # Convert to floats and sort largest to smallest
+                dims = [float(match.group(i)) for i in range(1, 4)]
+                dims.sort(reverse=True)
+                dims_str = "x".join([str(int(d)) if d.is_integer() else str(d) for d in dims])
+                
+                # Categorize the product
+                category = categorize_product(product_name)
+                
+                # Only process boxes (not services or materials)
+                if category == 'box':
+                    # Extract price
+                    price = float(row.get('Price', 0) or 0)
+                    
+                    # Store discovery info
+                    if dims_str not in discovered_boxes:
+                        discovered_boxes[dims_str] = {
+                            'dimensions': dims,
+                            'count': 0,
+                            'models': [],
+                            'prices': []
+                        }
+                    
+                    discovered_boxes[dims_str]['count'] += 1
+                    discovered_boxes[dims_str]['models'].append(product_name)
+                    if price > 0:
+                        discovered_boxes[dims_str]['prices'].append(price)
+        
+        # Now match against box library
+        library = BoxLibrary()
+        
+        # Get existing box dimensions to avoid duplicates
+        existing_dimensions = set()
+        for box in store_data.get('boxes', []):
+            dims = sorted(box['dimensions'], reverse=True)
+            dims_str = "x".join([str(d) for d in dims])
+            existing_dimensions.add(dims_str)
+        
+        results = {
+            'discovered_dimensions': [],
+            'library_matches': [],
+            'unmatched_dimensions': [],
+            'already_in_store': []
+        }
+        
+        # Process each discovered dimension
+        for dims_str, info in discovered_boxes.items():
+            dims = info['dimensions']
+            
+            # Check if already in store
+            if dims_str in existing_dimensions:
+                results['already_in_store'].append({
+                    'dimensions': dims,
+                    'dimensions_str': dims_str,
+                    'count': info['count'],
+                    'models': info['models'],
+                    'avg_price': sum(info['prices']) / len(info['prices']) if info['prices'] else None
+                })
+                continue
+            
+            # Record as discovered
+            discovered = {
+                'dimensions': dims,
+                'dimensions_str': dims_str,
+                'count': info['count'],
+                'models': info['models'],
+                'avg_price': sum(info['prices']) / len(info['prices']) if info['prices'] else None
+            }
+            results['discovered_dimensions'].append(discovered)
+            
+            # Look for ALL boxes with these exact dimensions (may have different alternate depths)
+            exact_matches = library.find_all_by_dimensions(dims)
+            if exact_matches:
+                results['library_matches'].append({
+                    'discovered': discovered,
+                    'library_boxes': exact_matches  # Multiple boxes with same dims but different alternate depths
+                })
+            else:
+                # No match - needs custom box
+                results['unmatched_dimensions'].append(discovered)
+        
+        # Summary statistics
+        results['summary'] = {
+            'total_boxes_found': len(discovered_boxes),
+            'already_in_store': len(results['already_in_store']),
+            'new_dimensions': len(results['discovered_dimensions']),
+            'exact_matches': len(results['library_matches']),
+            'unmatched': len(results['unmatched_dimensions'])
+        }
+        
+        return results
+        
+    finally:
+        # Clean up temp file
+        os.unlink(temp_file.name)

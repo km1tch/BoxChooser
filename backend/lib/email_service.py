@@ -20,7 +20,7 @@ SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
 SMTP_FROM = os.getenv("SMTP_FROM", "noreply@boxchooser.com")
 
 # Site configuration
-SITE_NAME = os.getenv("SITE_NAME", "Packing Site")
+SITE_NAME = os.getenv("SITE_NAME", "BoxChooser")
 
 
 def send_email_smtp(to_email: str, subject: str, body: str, html_body: Optional[str] = None) -> bool:

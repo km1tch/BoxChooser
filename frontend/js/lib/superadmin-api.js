@@ -41,7 +41,33 @@ class SuperadminAPI {
             // Handle 401 Unauthorized
             if (response.status === 401) {
                 localStorage.removeItem('superadmin_token');
-                window.location.href = '/admin-login.html';
+                
+                // Show clean message before redirect
+                const message = document.createElement('div');
+                message.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: white;
+                    padding: 30px;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                    text-align: center;
+                    z-index: 10000;
+                    color: #333;
+                `;
+                message.innerHTML = `
+                    <h3 style="margin: 0 0 15px 0;">Session Expired</h3>
+                    <p style="margin: 0;">Please log in again.</p>
+                `;
+                document.body.appendChild(message);
+                
+                // Redirect after brief delay so user can see the message
+                setTimeout(() => {
+                    window.location.href = '/admin-login.html';
+                }, 1500);
+                
                 throw new Error('Session expired');
             }
 
@@ -264,23 +290,6 @@ class SuperadminAPI {
             method: 'POST',
             body: JSON.stringify({ totp_token: token })
         });
-    }
-    
-    /**
-     * Get list of all vendors
-     * @returns {Promise<Array<{name: string, url: string, version: string, box_count: number}>>}
-     */
-    static async getVendors() {
-        return this.request('/api/admin/vendors');
-    }
-    
-    /**
-     * Get boxes for a specific vendor
-     * @param {string} vendorName
-     * @returns {Promise<Array<{model: string, dimensions: number[], alternate_depths?: number[], category: string}>>}
-     */
-    static async getVendorBoxes(vendorName) {
-        return this.request(`/api/admin/vendors/${encodeURIComponent(vendorName)}/boxes`);
     }
 }
 

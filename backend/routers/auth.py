@@ -141,7 +141,7 @@ router_store = APIRouter(prefix="/api/store/{store_id}", tags=["store-auth"])
 @router_store.get("/pin")
 async def get_pin_info(
     store_id: str = Path(..., regex=r"^\d{1,6}$"),
-    auth_info: Tuple[str, str] = get_current_auth()
+    auth_info: Tuple[str, str] = Depends(get_current_auth())
 ):
     """Get PIN info (admin only)"""
     auth_store_id, auth_level = auth_info
@@ -168,7 +168,7 @@ async def get_pin_info(
 @router_store.post("/regenerate-pin")
 async def regenerate_pin_endpoint(
     store_id: str = Path(..., regex=r"^\d{1,6}$"),
-    auth_info: Tuple[str, str] = get_current_auth()
+    auth_info: Tuple[str, str] = Depends(get_current_auth())
 ):
     """Regenerate PIN for a store (admin only)"""
     auth_store_id, auth_level = auth_info
@@ -195,7 +195,7 @@ async def regenerate_pin_endpoint(
 @router_store.get("/info")
 async def get_store_info_endpoint(
     store_id: str = Path(..., regex=r"^\d{1,6}$"),
-    auth_info: Tuple[str, str] = get_current_auth()
+    auth_info: Tuple[str, str] = Depends(get_current_auth())
 ):
     """Get store info including admin email (admin only)"""
     auth_store_id, auth_level = auth_info
@@ -224,7 +224,7 @@ async def get_store_info_endpoint(
 async def update_admin_email(
     store_id: str = Path(..., regex=r"^\d{1,6}$"),
     request: UpdateEmailRequest = Body(...),
-    auth_info: Tuple[str, str] = get_current_auth()
+    auth_info: Tuple[str, str] = Depends(get_current_auth())
 ):
     """Update admin email for a store (admin only)"""
     auth_store_id, auth_level = auth_info

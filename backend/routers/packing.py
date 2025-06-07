@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api/store/{store_id}", tags=["packing"])
 @router.get("/packing-rules", response_class=JSONResponse)
 async def get_packing_rules(
     store_id: str = Path(..., regex=r"^\d{1,6}$"),
-    auth: Tuple[str, str] = get_current_auth()
+    auth: Tuple[str, str] = Depends(get_current_auth())
 ):
     """Get all packing rules for a store (custom + defaults)"""
     # Verify user has access to this store
@@ -73,7 +73,7 @@ async def get_packing_rules(
 async def update_packing_rules(
     store_id: str = Path(..., regex=r"^\d{1,6}$"),
     request: PackingRulesUpdateRequest = Body(...),
-    auth_info: Tuple[str, str] = get_current_auth()
+    auth_info: Tuple[str, str] = Depends(get_current_auth())
 ):
     """Update packing rules for a store"""
     auth_store_id, auth_level = auth_info
@@ -128,7 +128,7 @@ async def update_packing_rules(
 @router.delete("/packing-rules", response_class=JSONResponse)
 async def reset_packing_rules(
     store_id: str = Path(..., regex=r"^\d{1,6}$"),
-    auth_info: Tuple[str, str] = get_current_auth()
+    auth_info: Tuple[str, str] = Depends(get_current_auth())
 ):
     """Reset all packing rules to defaults"""
     auth_store_id, auth_level = auth_info
@@ -158,7 +158,7 @@ async def reset_packing_rules(
 async def get_packing_requirements(
     store_id: str = Path(..., regex=r"^\d{1,6}$"),
     type: str = Query(..., description="Packing type (Basic, Standard, Fragile, Custom)"),
-    auth: Tuple[str, str] = get_current_auth()
+    auth: Tuple[str, str] = Depends(get_current_auth())
 ):
     """Get specific packing requirements for given type"""
     # Verify user has access to this store
@@ -193,7 +193,7 @@ async def get_packing_requirements(
 @router.get("/engine-config", response_class=JSONResponse)
 async def get_engine_config(
     store_id: str = Path(..., regex=r"^\d{1,6}$"),
-    auth: Tuple[str, str] = get_current_auth()
+    auth: Tuple[str, str] = Depends(get_current_auth())
 ):
     """Get recommendation engine configuration for a store"""
     # Verify user has access to this store
@@ -241,7 +241,7 @@ async def get_engine_config(
 async def update_engine_config(
     store_id: str = Path(..., regex=r"^\d{1,6}$"),
     request: EngineConfigUpdateRequest = Body(...),
-    auth_info: Tuple[str, str] = get_current_auth()
+    auth_info: Tuple[str, str] = Depends(get_current_auth())
 ):
     """Update recommendation engine configuration for a store"""
     auth_store_id, auth_level = auth_info
@@ -316,7 +316,7 @@ async def update_engine_config(
 @router.delete("/engine-config", response_class=JSONResponse)
 async def reset_engine_config(
     store_id: str = Path(..., regex=r"^\d{1,6}$"),
-    auth_info: Tuple[str, str] = get_current_auth()
+    auth_info: Tuple[str, str] = Depends(get_current_auth())
 ):
     """Reset engine configuration to defaults"""
     auth_store_id, auth_level = auth_info
@@ -345,7 +345,7 @@ async def reset_engine_config(
 @router.get("/packing-config", response_class=JSONResponse)
 async def get_packing_config(
     store_id: str = Path(..., regex=r"^\d{1,6}$"),
-    auth: Tuple[str, str] = get_current_auth()
+    auth: Tuple[str, str] = Depends(get_current_auth())
 ):
     """Get combined packing rules and engine config for a store"""
     # Verify user has access to this store

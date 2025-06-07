@@ -142,7 +142,7 @@ describe('LabelGenerator', () => {
       
       const html = LabelGenerator.generateBoxInfo(data);
       
-      expect(html).toContain('Box: A1 (12"×10"×8")');
+      expect(html).toContain('Box: A1 (12×10×8)');
       expect(html).toContain('Strategy: Standard packing');
       expect(html).toContain('Total: $45.99 Box: $5.99');
     });

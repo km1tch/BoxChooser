@@ -10,7 +10,7 @@ get_current_auth() for consistent authentication and authorization.
 import json
 import logging
 import os
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Tuple
 
 import yaml
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field, validator
 from backend.lib.auth_middleware import get_current_auth
 from typing import Tuple
 from backend.lib.yaml_helpers import load_store_yaml, save_store_yaml, get_box_section, validate_box_data
+from backend.lib.box_analytics import BoxAnalytics
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -32,7 +33,7 @@ router = APIRouter(prefix="/api/store/{store_id}", tags=["boxes"])
 @router.get("/info", response_class=JSONResponse)
 async def get_store_info(
     store_id: str = Path(..., regex=r"^\d{1,6}$"),
-    auth_info: Tuple[str, str] = get_current_auth()
+    auth_info: Tuple[str, str] = Depends(get_current_auth())
 ):
     """Get store configuration info including price group"""
     auth_store_id, auth_level = auth_info
@@ -51,7 +52,7 @@ async def get_store_info(
 @router.get("/boxes", response_class=JSONResponse)
 async def get_boxes(
     store_id: str = Path(..., regex=r"^\d{1,6}$"),
-    auth_info: Tuple[str, str] = get_current_auth()
+    auth_info: Tuple[str, str] = Depends(get_current_auth())
 ):
     """Get all boxes for a store with validation"""
     auth_store_id, auth_level = auth_info
@@ -88,7 +89,7 @@ async def get_boxes(
 @router.get("/boxes_with_sections", response_class=JSONResponse)
 async def get_boxes_with_sections(
     store_id: str = Path(..., regex=r"^\d{1,6}$"),
-    auth_info: Tuple[str, str] = get_current_auth()
+    auth_info: Tuple[str, str] = Depends(get_current_auth())
 ):
     """Get boxes formatted for the editor with sections"""
     auth_store_id, auth_level = auth_info
@@ -151,7 +152,7 @@ async def get_boxes_with_sections(
 @router.get("/all_boxes", response_class=JSONResponse)
 async def get_all_boxes(
     store_id: str = Path(..., regex=r"^\d{1,6}$"),
-    auth_info: Tuple[str, str] = get_current_auth()
+    auth_info: Tuple[str, str] = Depends(get_current_auth())
 ):
     """Get all boxes at once (bulk endpoint)"""
     auth_store_id, auth_level = auth_info
@@ -172,7 +173,7 @@ async def get_all_boxes(
 async def get_box_by_model(
     store_id: str = Path(..., regex=r"^\d{1,6}$"),
     model: str = Path(...),
-    auth_info: Tuple[str, str] = get_current_auth()
+    auth_info: Tuple[str, str] = Depends(get_current_auth())
 ):
     """Get a single box by model"""
     auth_store_id, auth_level = auth_info
@@ -190,8 +191,6 @@ async def get_box_by_model(
             # For legacy boxes, ensure all fields exist
             if "model" not in box:
                 box["model"] = box_model
-            if "supplier" not in box:
-                box["supplier"] = "Unknown"
             if "location" not in box:
                 box["location"] = "???"
             
@@ -214,7 +213,7 @@ class ItemizedPriceUpdateRequest(BaseModel):
 async def update_itemized_prices(
     store_id: str = Path(..., regex=r"^\d{1,6}$"),
     update_data: ItemizedPriceUpdateRequest = Body(...),
-    auth_info: Tuple[str, str] = get_current_auth()
+    auth_info: Tuple[str, str] = Depends(get_current_auth())
 ):
     """Update itemized prices for multiple boxes"""
     auth_store_id, auth_level = auth_info
@@ -294,7 +293,7 @@ async def update_box_location(
     store_id: str = Path(..., regex=r"^\d{1,6}$"),
     model: str = Path(...),
     location_data: LocationUpdateRequest = Body(...),
-    auth_info: Tuple[str, str] = get_current_auth()
+    auth_info: Tuple[str, str] = Depends(get_current_auth())
 ):
     """Update location for a specific box"""
     auth_store_id, auth_level = auth_info
@@ -337,7 +336,7 @@ async def update_box_location(
 async def delete_box(
     model: str = Path(...),
     store_id: str = Path(..., regex=r"^\d{1,6}$"),
-    auth_info: Tuple[str, str] = get_current_auth()
+    auth_info: Tuple[str, str] = Depends(get_current_auth())
 ):
     """Delete a box from the store inventory"""
     auth_store_id, auth_level = auth_info
@@ -371,11 +370,13 @@ async def delete_box(
 class CreateBoxRequest(BaseModel):
     """Request model for creating a new box"""
     model: str = Field(..., min_length=1, max_length=50, description="Box model identifier")
-    supplier: str = Field(..., min_length=1, max_length=50, description="Supplier name or ID")
     dimensions: List[float] = Field(..., min_items=3, max_items=3, description="Box dimensions [L, W, H]")
     alternate_depths: Optional[List[float]] = Field(None, max_items=10, description="Alternate depths for prescoring")
     location: Optional[Dict[str, Any]] = None
     notes: Optional[str] = Field(None, max_length=500, description="Additional notes")
+    # Analytics tracking fields
+    from_library: bool = Field(False, description="Whether box was imported from library")
+    offered_names: Optional[List[str]] = Field(None, description="Names offered from library")
     
     @validator('dimensions', each_item=True)
     def validate_dimensions(cls, v):
@@ -389,19 +390,117 @@ class CreateBoxRequest(BaseModel):
             raise ValueError('Alternate depths must be between 0.1 and 1000 inches')
         return v
     
-    @validator('model', 'supplier')
-    def validate_no_special_chars(cls, v):
+    @validator('model')
+    def validate_model_no_special_chars(cls, v):
         # Basic sanitization - no SQL special characters
         if any(char in v for char in [';', '--', '/*', '*/', '\x00']):
-            raise ValueError('Invalid characters in field')
+            raise ValueError('Invalid characters in model')
         return v
 
+
+@router.post("/boxes/batch", response_class=JSONResponse)
+async def create_boxes_batch(
+    store_id: str = Path(..., regex=r"^\d{1,6}$"),
+    boxes: List[CreateBoxRequest] = Body(...),
+    auth_info: Tuple[str, str] = Depends(get_current_auth())
+):
+    """Add multiple boxes to the store inventory in one request"""
+    auth_store_id, auth_level = auth_info
+    
+    # Check admin access
+    if auth_level != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Verify access to this store
+    if auth_store_id != store_id:
+        raise HTTPException(status_code=403, detail=f"Not authorized to access store {store_id}")
+    
+    data = load_store_yaml(store_id)
+    
+    # Check for duplicate models
+    existing_models = [box.get("model", "") for box in data["boxes"]]
+    new_models = [box.model for box in boxes]
+    duplicates = [model for model in new_models if model in existing_models]
+    
+    if duplicates:
+        raise HTTPException(status_code=400, detail=f"Box models already exist: {', '.join(duplicates)}")
+    
+    # Track analytics
+    analytics = BoxAnalytics()
+    added_boxes = []
+    
+    # Add all boxes
+    for box_data in boxes:
+        # Determine box type based on source (library boxes are NormalBox, others are CustomBox)
+        box_type = "NormalBox" if box_data.from_library else "CustomBox"
+        
+        new_box = {
+            "type": box_type,
+            "model": box_data.model,
+            "dimensions": box_data.dimensions
+        }
+        
+        # NO SUPPLIER FIELD EVER!
+        
+        # Add optional fields
+        if box_data.alternate_depths:
+            new_box["alternate_depths"] = box_data.alternate_depths
+        
+        if box_data.location:
+            new_box["location"] = box_data.location
+        
+        if box_data.notes:
+            new_box["notes"] = box_data.notes
+        
+        # Add default itemized pricing (zeros for now, admin can update later)
+        new_box["itemized-prices"] = {
+            "box-price": 0,
+            "basic-materials": 0,
+            "basic-services": 0,
+            "standard-materials": 0,
+            "standard-services": 0,
+            "fragile-materials": 0,
+            "fragile-services": 0,
+            "custom-materials": 0,
+            "custom-services": 0
+        }
+        
+        # Add to store data
+        data["boxes"].append(new_box)
+        added_boxes.append(new_box)
+        
+        # Track analytics
+        source = "library" if box_data.from_library else "custom"
+        analytics.log_box_import(
+            store_id=store_id,
+            dimensions=box_data.dimensions,
+            alternate_depths=box_data.alternate_depths,
+            chosen_name=box_data.model,
+            source=source
+        )
+        
+        # If from library with offered names, track name selection
+        if box_data.from_library and box_data.offered_names:
+            analytics.log_name_selection(
+                store_id=store_id,
+                dimensions=box_data.dimensions,
+                offered_names=box_data.offered_names,
+                chosen_name=box_data.model
+            )
+    
+    # Save the updated YAML file
+    save_store_yaml(store_id, data)
+    
+    return {
+        "message": f"Successfully added {len(added_boxes)} boxes",
+        "boxes": added_boxes
+    }
 
 @router.post("/box", response_class=JSONResponse)
 async def create_box(
     store_id: str = Path(..., regex=r"^\d{1,6}$"),
     box_data: CreateBoxRequest = Body(...),
-    auth_info: Tuple[str, str] = get_current_auth()
+    auth_info: Tuple[str, str] = Depends(get_current_auth())
 ):
     """Add a new box to the store inventory"""
     auth_store_id, auth_level = auth_info
@@ -422,27 +521,21 @@ async def create_box(
         raise HTTPException(status_code=400, detail=f"Box model '{box_data.model}' already exists")
     
     # Build the new box dictionary
+    # Determine box type based on source (library boxes are NormalBox, others are CustomBox)
+    box_type = "NormalBox" if box_data.from_library else "CustomBox"
+    
     new_box = {
-        "type": "NormalBox",
-        "supplier": box_data.supplier,
+        "type": box_type,
         "model": box_data.model,
         "dimensions": box_data.dimensions
     }
     
-    # If this is a vendor box, get the vendor version
-    if box_data.supplier and box_data.supplier != "Custom":
-        from backend.lib.vendor_catalog import VendorCatalog
-        catalog = VendorCatalog()
-        
-        # Look up vendor by ID
-        vendor_data = catalog.vendors.get(box_data.supplier)
-        
-        if vendor_data:
-            new_box["supplier_version"] = vendor_data['vendor']['version']
+    # NO SUPPLIER FIELD EVER!
+    
     
     # Add optional fields
     if box_data.alternate_depths:
-        new_box["prescored_heights"] = box_data.alternate_depths
+        new_box["alternate_depths"] = box_data.alternate_depths
     
     if box_data.location:
         new_box["location"] = box_data.location
@@ -475,4 +568,74 @@ async def create_box(
     # Save the updated YAML file
     save_store_yaml(store_id, data)
     
+    # Track analytics
+    analytics = BoxAnalytics()
+    source = "library" if box_data.from_library else "custom"
+    analytics.log_box_import(
+        store_id=store_id,
+        dimensions=box_data.dimensions,
+        alternate_depths=box_data.alternate_depths,
+        chosen_name=box_data.model,
+        source=source
+    )
+    
+    # If from library with offered names, track name selection
+    if box_data.from_library and box_data.offered_names:
+        analytics.log_name_selection(
+            store_id=store_id,
+            dimensions=box_data.dimensions,
+            offered_names=box_data.offered_names,
+            chosen_name=box_data.model
+        )
+    
     return {"message": "Box added successfully", "box": new_box}
+
+
+class BoxModificationRequest(BaseModel):
+    """Request model for tracking box modifications"""
+    original_dimensions: List[float]
+    original_alternate_depths: Optional[List[float]] = None
+    modified_dimensions: Optional[List[float]] = None
+    modified_alternate_depths: Optional[List[float]] = None
+    modification_type: str
+    
+
+@router.post("/stats/box-modification", response_class=JSONResponse)
+async def track_box_modification(
+    request: BoxModificationRequest = Body(...),
+    auth_info: Tuple[str, str] = Depends(get_current_auth())
+):
+    """Track when users modify box specifications during import"""
+    auth_store_id, auth_level = auth_info
+    
+    # Any authenticated user can track modifications
+    if not auth_store_id:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    
+    # Import BoxAnalytics
+    from backend.lib.box_analytics import BoxAnalytics
+    analytics = BoxAnalytics()
+    
+    # Determine modification type
+    if request.modification_type == "pivot_from_library":
+        mod_type = "both"  # Assume user will modify both dimensions and depths
+    elif request.modified_dimensions and request.modified_alternate_depths:
+        mod_type = "both"
+    elif request.modified_dimensions:
+        mod_type = "dimensions"
+    elif request.modified_alternate_depths:
+        mod_type = "depths"
+    else:
+        mod_type = "both"
+    
+    # Log the modification
+    analytics.log_box_modification(
+        store_id=auth_store_id,
+        original_dimensions=request.original_dimensions,
+        original_alternate_depths=request.original_alternate_depths,
+        modified_dimensions=request.modified_dimensions or request.original_dimensions,
+        modified_alternate_depths=request.modified_alternate_depths,
+        modification_type=mod_type
+    )
+    
+    return {"message": "Modification tracked successfully"}

@@ -35,9 +35,34 @@ async function authenticatedFetch(url, storeId, options = {}) {
         
         // Handle 401 Unauthorized (expired or invalid token)
         if (response.status === 401) {
-            console.error('Authentication failed - token may be expired');
             AuthManager.removeToken(storeId);
-            window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+            
+            // Show clean message before redirect
+            const message = document.createElement('div');
+            message.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                padding: 30px;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                text-align: center;
+                z-index: 10000;
+            `;
+            message.innerHTML = `
+                <h3 style="margin: 0 0 15px 0;">Session Expired</h3>
+                <p style="margin: 0;">Please log in again.</p>
+            `;
+            document.body.appendChild(message);
+            
+            // Redirect after brief delay so user can see the message
+            setTimeout(() => {
+                window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+            }, 1500);
+            
+            // Throw error to stop further processing
             throw new Error('Session expired');
         }
         

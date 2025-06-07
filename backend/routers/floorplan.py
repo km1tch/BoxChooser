@@ -23,7 +23,7 @@ router = APIRouter(prefix="/api/store/{store_id}", tags=["floorplan"])
 @router.get("/floorplan", response_class=FileResponse)
 async def get_floorplan(
     store_id: str = Path(..., regex=r"^\d{1,6}$"),  # Allow 6 digits for demo
-    auth: Tuple[str, str] = get_current_auth()
+    auth: Tuple[str, str] = Depends(get_current_auth())
 ):
     """Get the floorplan image for a store"""
     # Verify user has access to this store
@@ -172,7 +172,7 @@ async def upload_floorplan(
 @router.get("/box-locations", response_class=JSONResponse)
 async def get_box_locations(
     store_id: str = Path(..., regex=r"^\d{1,6}$"),  # Allow 6 digits for demo
-    auth: Tuple[str, str] = get_current_auth()
+    auth: Tuple[str, str] = Depends(get_current_auth())
 ):
     """Get all box locations for mapping"""
     # Verify user has access to this store
