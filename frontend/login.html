@@ -258,6 +258,44 @@
       .loading.show {
         display: block;
       }
+
+      /* Password Toggle Styles */
+      .password-input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+
+      .password-input-wrapper input {
+        padding-right: 45px;
+      }
+
+      .toggle-password {
+        position: absolute;
+        right: 10px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+        transition: color 0.2s;
+      }
+
+      .toggle-password:hover {
+        color: #1976d2;
+      }
+
+      .toggle-password:focus {
+        outline: none;
+      }
+
+      .eye-icon {
+        font-size: 18px;
+        user-select: none;
+      }
     </style>
   </head>
   <body>
@@ -293,7 +331,12 @@
             </div>
             <div class="form-group">
               <label for="pin">6-Digit PIN</label>
-              <input type="password" id="pin" maxlength="6" pattern="\d{6}" />
+              <div class="password-input-wrapper">
+                <input type="password" id="pin" maxlength="6" pattern="\d{6}" />
+                <button type="button" class="toggle-password" data-target="pin">
+                  <span class="eye-icon">👁️</span>
+                </button>
+              </div>
             </div>
             <button type="submit" class="btn btn-primary">Login</button>
           </form>
@@ -422,16 +465,27 @@
         });
       });
 
-      // Auto-submit PIN
-      document.getElementById("pin").addEventListener("input", (e) => {
-        if (e.target.value.length === 6) {
-          document.getElementById("pos-form").requestSubmit();
-        }
-      });
 
       // Auto-uppercase code
       document.getElementById("code").addEventListener("input", (e) => {
         e.target.value = e.target.value.toUpperCase();
+      });
+
+      // Password toggle functionality
+      document.querySelectorAll(".toggle-password").forEach(button => {
+        button.addEventListener("click", () => {
+          const targetId = button.getAttribute("data-target");
+          const input = document.getElementById(targetId);
+          const eyeIcon = button.querySelector(".eye-icon");
+          
+          if (input.type === "password") {
+            input.type = "text";
+            eyeIcon.textContent = "👁️‍🗨️";
+          } else {
+            input.type = "password";
+            eyeIcon.textContent = "👁️";
+          }
+        });
       });
 
       // POS form
