@@ -483,11 +483,6 @@ class LocationUtils {
             cancelable: true
         });
         document.dispatchEvent(event);
-        
-        // Fallback to global function for backward compatibility
-        if (typeof window.editLocationForModel === 'function') {
-            window.editLocationForModel(model);
-        }
     }
     
     /**
