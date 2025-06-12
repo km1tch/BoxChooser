@@ -66,7 +66,7 @@ BoxChooser/
 
 2. **Static Assets** (HTML, CSS, JS, images)
 
-   - Served directly by Docker Caddy with caching headers
+   - Served directly by Docker Caddy with caching headers. Built at docker build-time to ensure cache busting for this "version" as deployed. See tools/cache_buster.sh
    - No authentication required
 
 3. **API Requests** (`/api/*`)
@@ -79,7 +79,6 @@ BoxChooser/
    - Store configurations from `stores/*.yml` accessed via `/api/store/{id}/boxes`, `/api/store/{id}/pricing_mode`, etc.
    - Floorplan images from `floorplans/` served at `/api/store/{id}/floorplan`
    - Packing guidelines from `stores/packing_guidelines.yml` at `/api/packing-guidelines`
-   - Vendor catalogs from `vendors/*.yml` via `/api/vendors/*`
    - All require authentication - YAML files never served directly
 
 ### Development Environment
