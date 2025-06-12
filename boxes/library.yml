@@ -1,0 +1,85 @@
+version: '1.0'
+description: Box library for SelfHosted BoxChooser
+boxes:
+- dimensions: [12, 12, 12]
+  alternate_depths: [10, 8]
+  category: cube
+  volume: 1728
+- dimensions: [12, 12, 6]
+  alternate_depths: [4]
+  category: medium
+  volume: 864
+- dimensions: [6, 6, 6]
+  alternate_depths: [4]
+  category: cube
+  volume: 216
+- dimensions: [10, 10, 10]
+  alternate_depths: [8, 6]
+  category: cube
+  volume: 1000
+- dimensions: [14, 14, 14]
+  alternate_depths: [12, 10, 8]
+  category: cube
+  volume: 2744
+- dimensions: [16, 16, 4]
+  category: medium
+  volume: 1024
+- dimensions: [16, 16, 16]
+  alternate_depths: [14, 12, 10, 8]
+  category: cube
+  volume: 4096
+- dimensions: [20, 20, 20]
+  alternate_depths: [18, 16, 14]
+  category: cube
+  volume: 8000
+- dimensions: [18, 18, 18]
+  alternate_depths: [16, 14, 12, 10]
+  category: cube
+  volume: 5832
+- dimensions: [15, 12, 10]
+  alternate_depths: [8, 6]
+  category: medium
+  volume: 1800
+- dimensions: [8, 8, 8]
+  alternate_depths: [6, 4]
+  category: cube
+  volume: 512
+- dimensions: [17, 11, 8]
+  alternate_depths: [8, 6, 4]
+  category: medium
+  volume: 1496
+- dimensions: [21, 16, 5]
+  category: medium
+  volume: 1680
+- dimensions: [24, 24, 24]
+  alternate_depths: [22, 20, 18, 16, 14, 12]
+  category: cube
+  volume: 13824
+- dimensions: [20, 20, 12]
+  alternate_depths: [10, 8, 6]
+  category: medium
+  volume: 4800
+- dimensions: [24, 18, 18]
+  alternate_depths: [16, 14, 12, 10]
+  category: large
+  volume: 7776
+- dimensions: [20, 12, 12]
+  alternate_depths: [10, 8, 6]
+  category: medium
+  volume: 2880
+- dimensions: [24, 24, 16]
+  alternate_depths: [14, 12, 10, 8, 6]
+  category: medium
+  volume: 9216
+- dimensions: [30, 24, 6]
+  category: specialty
+  volume: 4320
+- dimensions: [24, 18, 6]
+  category: medium
+  volume: 2592
+- dimensions: [6, 6, 48]
+  category: specialty
+  volume: 1728
+- dimensions: [15, 15, 48]
+  category: large
+  volume: 10800

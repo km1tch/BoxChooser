@@ -1,0 +1,57 @@
+recommendation_engine:
+  weights:
+    price: 0.4
+    efficiency: 0.3
+    ease: 0.3
+  strategy_preferences:
+    normal: 0
+    prescored: 0
+    flattened: 2
+    manual_cut: 9
+    telescoping: 6
+    cheating: 5
+  practically_tight_threshold: 5
+  max_recommendations: 10
+  extreme_cut_threshold: 0.5
+basic:
+  padding_inches: 0
+  wizard_description: For non-sensitive items like clothing, toys, books
+  label_instructions: '- Inflatable void fill as needed'
+standard:
+  padding_inches: 1
+  wizard_description: For electronics, jewelry, and medium-sensitive items
+  label_instructions: '- Two (2) layers of large bubble or inflatable air cushioning
+
+    - Inflatable void fill as needed
+
+    - 1" between item and edge of box
+
+    '
+fragile:
+  padding_inches: 2
+  wizard_description: For china, crystal, art, and sensitive equipment
+  label_instructions: '- One (1) layer of small bubble or foam wrap
+
+    - Two (2) layers of large bubble or inflatable air cushioning
+
+    - Inflatable void fill as needed
+
+    - Corrugated dividers for layering multiple items
+
+    - 2" between item and edge of box
+
+    '
+custom:
+  padding_inches: 3
+  wizard_description: Maximum protection for highly sensitive items
+  label_instructions: '- 1" foam plank on all sides of the box
+
+    - One (1) layer of small bubble or foam wrap
+
+    - Two (2) layers of small bubble or foam wrap
+
+    - Inflatable void fill as needed
+
+    - 3" between item and edge of box
+
+    '

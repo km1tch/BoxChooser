@@ -1,0 +1,294 @@
+boxes:
+- type: NormalBox
+  supplier: ABC
+  model: 06C-UPS
+  dimensions: [6.0, 6.0, 6.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: 10C-UPS
+  dimensions: [10.0, 10.0, 10.0]
+  alternate_depths: [7.5, 5.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: 14C-UPS
+  dimensions: [14.0, 14.0, 14.0]
+  alternate_depths: [11.5, 9.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: 18C-UPS
+  dimensions: [18.0, 18.0, 18.0]
+  alternate_depths: [15.5, 13.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: 24C-UPS
+  dimensions: [24.0, 24.0, 24.0]
+  alternate_depths: [22.0, 20.0, 18.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: 12 X 12 X 6 - UPS
+  dimensions: [12.0, 12.0, 6.0]
+  alternate_depths: [4.0, 3.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: 15 X 15 X 48 - UPS
+  dimensions: [15.0, 15.0, 48.0]
+  alternate_depths: [38.0, 42.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: 17 X 11 X 8 - UPS
+  dimensions: [17.0, 11.0, 8.0]
+  alternate_depths: [6.0, 4.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: 20 X 20 X 12 - UPS
+  dimensions: [20.0, 20.0, 12.0]
+  alternate_depths: [10.0, 8.0, 6.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: 24 X 18 X 18 - UPS
+  dimensions: [24.0, 18.0, 18.0]
+  alternate_depths: [16.0, 14.0, 12.0, 10.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: 08C-UPS
+  dimensions: [8.0, 8.0, 8.0]
+  alternate_depths: [4.5]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: 12C-UPS
+  dimensions: [12.0, 12.0, 12.0]
+  alternate_depths: [9.5, 7.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: 16C-UPS
+  dimensions: [16.0, 16.0, 16.0]
+  alternate_depths: [13.5, 11.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: 20C-UPS
+  dimensions: [20.0, 20.0, 20.0]
+  alternate_depths: [16.0, 12.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: 6 X 6 X 48 - UPS
+  dimensions: [6.0, 6.0, 48.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: 15 X 12 X 10 - UPS
+  dimensions: [15.0, 12.0, 10.0]
+  alternate_depths: [8.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: 16 X 16 X 4 - UPS
+  dimensions: [16.0, 16.0, 4.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: 20 X 12 X 12 - UPS
+  dimensions: [20.0, 12.0, 12.0]
+  alternate_depths: [10.0, 8.0, 6.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: 24 X 18 X 6 - UPS
+  dimensions: [24.0, 18.0, 6.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: UMBRELLA
+  dimensions: [4.0, 4.0, 60.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: SKI BTM
+  dimensions: [8.5, 6.0, 42.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: J-14
+  dimensions: [12.0, 9.0, 5.5]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: J-15
+  dimensions: [13.5, 10.0, 6.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: Golf Box 2
+  dimensions: [14.0, 14.0, 53.0]
+  alternate_depths: [50.0, 48.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: S. WREATH
+  dimensions: [18.0, 4.0, 18.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: Guitar Box
+  dimensions: [20.0, 10.0, 50.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: VCR
+  dimensions: [20.0, 20.0, 12.0]
+  alternate_depths: [9.5, 7.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: CHAIR
+  dimensions: [30.0, 29.0, 34.0]
+  alternate_depths: [30.0, 26.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: BB-130
+  dimensions: [34.0, 22.0, 24.0]
+  alternate_depths: [21.0, 17.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: LG BIKE BOX
+  dimensions: [54.5, 10.0, 27.5]
+  alternate_depths: [24.0, 20.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: SNW BRD
+  dimensions: [8.0, 16.0, 65.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: J-11
+  dimensions: [9.5, 7.0, 4.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: 101048
+  dimensions: [10.0, 10.0, 48.0]
+  alternate_depths: [38.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: 12 X 9 X 3
+  dimensions: [12.0, 9.0, 3.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: LAMP
+  dimensions: [13.0, 13.0, 40.0]
+  alternate_depths: [37.0, 34.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: J-16
+  dimensions: [15.0, 11.0, 6.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: J-20
+  dimensions: [18.0, 13.0, 9.5]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: WREATH-1
+  dimensions: [20.0, 6.0, 20.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: J-64
+  dimensions: [22.0, 15.0, 13.0]
+  alternate_depths: [10.0, 7.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: SUITCASE
+  dimensions: [24.0, 10.0, 31.0]
+  alternate_depths: [26.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: UPS-3
+  dimensions: [33.0, 18.0, 18.0]
+  alternate_depths: [14.0, 10.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: 3688
+  dimensions: [36.0, 8.0, 8.0]
+  alternate_depths: [6.0, 4.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: SHIRTB
+  dimensions: [18.375, 14.375, 4.125]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: ST-6
+  dimensions: [15.5, 15.5, 8.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: MIR-8
+  dimensions: [30.0, 6.0, 30.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: MIR-9
+  dimensions: [36.0, 6.0, 36.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: MIR-10
+  dimensions: [42.0, 6.0, 36.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: MIR-11
+  dimensions: [36.0, 5.0, 48.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: 25.75C
+  dimensions: [25.75, 25.75, 25.75]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: Heavy Duty Mirror Box
+  dimensions: [42.0, 8.0, 60.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: 36C
+  dimensions: [36.0, 36.0, 36.0]
+  alternate_depths: [28.0, 32.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: 22C275
+  dimensions: [22.0, 22.0, 22.0]
+  alternate_depths: [12.0, 17.0]
+  supplier_version: '2025-05-30'
+- type: NormalBox
+  supplier: ABC
+  model: MIR-3
+  dimensions: [30.0, 6.0, 24.0]
+  supplier_version: '2025-05-30'

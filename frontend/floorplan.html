@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Floorplan Editor - BoxChooser</title>
+    <link rel="stylesheet" type="text/css" href="/assets/css/common.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        
+        #app-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        .container {
+            flex: 1;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        /* State containers */
+        .state-container {
+            display: none;
+        }
+        
+        .state-container.active {
+            display: block;
+        }
+        
+        /* Empty state styles */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .empty-state h2 {
+            margin-bottom: 10px;
+        }
+        
+        .empty-state p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn-large {
+            padding: 20px 40px;
+            font-size: 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            min-width: 200px;
+        }
+        
+        /* Has floorplan state */
+        .has-floorplan {
+            width: 100%;
+        }
+        
+        .floorplan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .floorplan-header h2 {
+            margin: 0;
+        }
+        
+        
+        /* Editor state (full viewport) */
+        .editor-fullscreen {
+            position: fixed;
+            top: 60px; /* Below nav */
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            z-index: 1000;
+            overflow: auto;
+            padding: 20px;
+        }
+        
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .editor-header h2 {
+            margin: 0;
+        }
+        
+        
+        /* Upload state specific styles */
+        .upload-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .upload-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .upload-header h2 {
+            margin: 0;
+        }
+        
+        /* FloorplanUpload component styles */
+        .floorplan-upload {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .upload-zone {
+            border: 3px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-zone:hover {
+            border-color: #999;
+            background-color: #f9f9f9;
+        }
+        
+        .upload-zone.drag-over {
+            border-color: #4CAF50;
+            background-color: #f0f8ff;
+        }
+        
+        .upload-icon {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .upload-zone h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        
+        .upload-zone p {
+            margin: 5px 0;
+            color: #666;
+        }
+        
+        .file-types {
+            font-size: 0.9em;
+            color: #999;
+        }
+        
+        .upload-preview {
+            text-align: center;
+        }
+        
+        .upload-preview img {
+            max-width: 100%;
+            max-height: 500px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .preview-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .upload-status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .upload-status.loading {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .upload-status.success {
+            background-color: #e8f5e9;
+            color: #388e3c;
+        }
+        
+        .upload-status.error {
+            background-color: #ffebee;
+            color: #d32f2f;
+        }
+        
+        /* Common button styles */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #45a049;
+        }
+        
+        .btn-secondary {
+            background: #666;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #555;
+        }
+        
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            max-width: 600px;
+            width: 90%;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+        
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .modal-body {
+            padding: 30px;
+        }
+        
+        .modal-body p {
+            margin-bottom: 30px;
+            color: #666;
+            text-align: center;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+        
+        .modal-actions .btn-large {
+            flex: 1;
+            max-width: 200px;
+        }
+        
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid #eee;
+            text-align: center;
+        }
+        
+        /* Mode controls */
+        .mode-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+        
+        .mode-toggle {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .toggle-switch {
+            width: 60px;
+            height: 30px;
+            background: #ddd;
+            border-radius: 15px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .toggle-slider {
+            width: 26px;
+            height: 26px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .toggle-switch.active {
+            background: #4CAF50;
+        }
+        
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(30px);
+        }
+        
+        .toggle-label {
+            font-weight: 500;
+            color: #999;
+            transition: color 0.3s;
+        }
+        
+        .toggle-label.active {
+            color: #333;
+        }
+        
+        /* Floorplan viewer */
+        .floorplan-viewer {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto 30px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            min-height: 400px;
+        }
+        
+        .floorplan-viewer.has-floorplan {
+            display: block;
+            min-height: 400px;
+        }
+        
+        .floorplan-container {
+            position: relative;
+            width: 100%;
+        }
+        
+        .floorplan-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .marker-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .marker-layer.edit-mode {
+            pointer-events: auto;
+            cursor: crosshair;
+        }
+        
+        /* Location markers */
+        .location-marker {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            margin-left: -40px;
+            margin-top: -40px;
+            color: #FF0000;
+            font-size: 72px;
+            font-weight: 900;
+            text-align: center;
+            line-height: 80px;
+            pointer-events: auto;
+            cursor: pointer;
+            text-shadow: 
+                3px 3px 0px #000,
+                -3px -3px 0px #000,
+                3px -3px 0px #000,
+                -3px 3px 0px #000,
+                0px 0px 8px rgba(0,0,0,0.5);
+            z-index: 10;
+            transition: transform 0.2s ease;
+            transform-origin: center;
+            animation: markerFadeIn 0.3s ease-out;
+        }
+        
+        @keyframes markerFadeIn {
+            from {
+                transform: scale(0) rotate(-180deg);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+        
+        .location-marker:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+        
+        .location-marker.selected {
+            color: #FFA500;
+            transform: scale(1.2);
+        }
+        
+        .marker-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 100;
+            transform: translate(-50%, -100%);
+            margin-top: -10px;
+        }
+        
+        /* Box selector panel */
+        .box-selector-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: white;
+            border-left: 2px solid #ddd;
+            box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+            transition: right 0.3s ease;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .box-selector-panel.open {
+            right: 0;
+        }
+        
+        .box-selector-header {
+            padding: 20px;
+            border-bottom: 1px solid #ddd;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+        }
+        
+        .box-selector-header h3 {
+            margin: 0 0 15px 0;
+        }
+        
+        .box-selector-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .box-search {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .box-list {
+            padding: 20px;
+        }
+        
+        .box-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .box-item:hover {
+            background: #e8e8e8;
+            border-color: #999;
+        }
+        
+        .box-item.selected {
+            background: #e3f2fd;
+            border-color: #2196F3;
+        }
+        
+        .box-item .box-model {
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        
+        .box-item .box-details {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .box-checkbox {
+            margin-right: 10px;
+        }
+        
+        .no-boxes-message {
+            text-align: center;
+            color: #999;
+            padding: 40px 20px;
+        }
+        
+        .box-selector-actions {
+            padding: 20px;
+            border-top: 1px solid #ddd;
+            position: sticky;
+            bottom: 0;
+            background: white;
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* Mode indicator */
+        .mode-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 4px;
+            font-weight: bold;
+            z-index: 100;
+            display: none;
+        }
+        
+        .mode-indicator.visible {
+            display: block;
+        }
+        
+    </style>
+</head>
+<body>
+    <div id="app-container" style="display: none;">
+        <nav id="nav-container"></nav>
+        
+        <div class="container">
+            <div id="content">
+                <!-- Empty state -->
+                <div id="empty-state" class="state-container">
+                    <div class="empty-state">
+                        <h2>No Floorplan Found</h2>
+                        <p>Choose how you'd like to add a floorplan for your store:</p>
+                        <div class="action-buttons">
+                            <button class="btn btn-primary btn-large" onclick="floorplanManager.handleUpload()">
+                                Upload Image
+                            </button>
+                            <button class="btn btn-secondary btn-large" onclick="floorplanManager.handleCreate()">
+                                Create New
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Upload state -->
+                <div id="upload-state" class="state-container">
+                    <div class="upload-container">
+                        <div class="upload-header">
+                            <h2>Upload Floorplan</h2>
+                            <button class="btn btn-secondary" onclick="floorplanManager.handleCancelUpload()">
+                                Back
+                            </button>
+                        </div>
+                        <div id="upload-component-container">
+                            <!-- FloorplanUpload will be initialized here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Has floorplan state -->
+                <div id="has-floorplan-state" class="state-container">
+                    <div class="has-floorplan">
+                        <div class="floorplan-header">
+                            <h2>Floorplan Editor</h2>
+                            <button class="btn btn-secondary" onclick="floorplanManager.handleReplace()">
+                                Replace Floorplan
+                            </button>
+                        </div>
+                        
+                        <!-- Mode controls expected by FloorplanLocationEditor -->
+                        <div class="mode-controls" id="mode-controls">
+                            <div class="mode-toggle">
+                                <span class="toggle-label active" id="view-label">View</span>
+                                <div class="toggle-switch" id="mode-toggle-switch">
+                                    <div class="toggle-slider"></div>
+                                </div>
+                                <span class="toggle-label" id="edit-label">Edit</span>
+                            </div>
+                            <div class="filter-controls"></div>
+                        </div>
+                        
+                        <!-- Floorplan viewer expected by FloorplanLocationEditor -->
+                        <div id="floorplan-viewer" class="floorplan-viewer">
+                            <!-- Viewer will be initialized here -->
+                        </div>
+                        
+                        <!-- Upload section (hidden by default) -->
+                        <div class="upload-section" style="display: none;">
+                            <div id="upload-container"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Box selector panel expected by FloorplanLocationEditor -->
+                    <div class="box-selector-panel" id="box-selector-panel">
+                        <div class="box-selector-header">
+                            <h3>Select Boxes for Location</h3>
+                            <button class="box-selector-close" id="close-box-selector">×</button>
+                            <input type="text" class="box-search" id="box-search" placeholder="Search boxes...">
+                        </div>
+                        <div class="box-list" id="box-list"></div>
+                        <div class="box-selector-actions">
+                            <button class="btn btn-primary" id="save-location">Save Location</button>
+                            <button class="btn btn-secondary" id="cancel-location">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Editor state (full viewport) -->
+                <div id="editor-state" class="state-container">
+                    <div class="editor-fullscreen">
+                        <div class="editor-header">
+                            <h2>Create Floorplan</h2>
+                            <button class="btn btn-secondary" onclick="floorplanManager.handleCancel()">
+                                Back
+                            </button>
+                        </div>
+                        <div id="creator-container" style="max-width: 1200px; margin: 0 auto;">
+                            <!-- FloorplanCreator will be initialized here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Replace Floorplan Modal -->
+        <div id="replace-modal" class="modal-overlay">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3>Replace Floorplan</h3>
+                </div>
+                <div class="modal-body">
+                    <p>How would you like to replace the current floorplan?</p>
+                    <div class="modal-actions">
+                        <button class="btn btn-primary btn-large" onclick="floorplanManager.handleModalUpload()">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            Upload Image
+                        </button>
+                        <button class="btn btn-secondary btn-large" onclick="floorplanManager.handleModalCreate()">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 20h9"></path>
+                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                            </svg>
+                            Create New
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="floorplanManager.closeModal()">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mode indicator -->
+        <div class="mode-indicator" id="mode-indicator">Edit Mode Active</div>
+        
+    </div>
+    
+    <script src="/js/lib/auth.js"></script>
+    <script src="/js/lib/api-utils.js"></script>
+    <script src="/js/lib/auth-page-init.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    
+    <script type="module">
+        import { FloorplanCreator } from '/js/components/floorplan-creator.js';
+        import { FloorplanUpload } from '/js/components/floorplan-upload.js';
+        import { FloorplanLocationEditor } from '/js/components/floorplan-location-editor.js';
+        // Floorplan manager
+        class FloorplanManager {
+            constructor(storeId) {
+                this.state = 'LOADING';
+                this.hasFloorplan = false;
+                this.previousState = null;
+                this.storeId = storeId;
+                this.floorplanCreator = null;
+                this.floorplanUpload = null;
+                this.locationEditor = null;
+                
+                this.log('FloorplanManager initialized');
+            }
+            
+            async init() {
+                this.log('Initializing...');
+                
+                // Check for floorplan
+                await this.checkFloorplan();
+                
+                // Set initial state based on floorplan status
+                this.setState(this.hasFloorplan ? 'HAS_FLOORPLAN' : 'EMPTY');
+            }
+            
+            async checkFloorplan() {
+                this.log('Checking for floorplan...');
+                
+                try {
+                    // Real API call to check if floorplan exists
+                    const response = await apiUtils.authenticatedFetch(
+                        `/api/store/${this.storeId}/floorplan`,
+                        this.storeId
+                    );
+                    
+                    this.hasFloorplan = response.ok;
+                    
+                    if (!response.ok && response.status !== 404) {
+                        this.log(`API error: ${response.status} ${response.statusText}`);
+                    }
+                } catch (error) {
+                    this.log(`Error checking floorplan: ${error.message}`);
+                    this.hasFloorplan = false;
+                }
+                
+                this.log(`Floorplan check result: ${this.hasFloorplan}`);
+                
+                return this.hasFloorplan;
+            }
+            
+            setState(newState) {
+                this.log(`State change: ${this.state} → ${newState}`);
+                this.previousState = this.state;
+                this.state = newState;
+                
+                // Update UI
+                this.render();
+            }
+            
+            async render() {
+                // Hide all states
+                document.querySelectorAll('.state-container').forEach(el => {
+                    el.classList.remove('active');
+                });
+                
+                // Show current state
+                switch(this.state) {
+                    case 'EMPTY':
+                        document.getElementById('empty-state').classList.add('active');
+                        break;
+                    case 'HAS_FLOORPLAN':
+                        document.getElementById('has-floorplan-state').classList.add('active');
+                        await this.initializeLocationEditor();
+                        break;
+                    case 'UPLOAD':
+                        document.getElementById('upload-state').classList.add('active');
+                        this.initializeUpload();
+                        break;
+                    case 'EDITOR':
+                        document.getElementById('editor-state').classList.add('active');
+                        this.initializeCreator();
+                        break;
+                }
+            }
+            
+            initializeCreator() {
+                // Only initialize if not already done
+                if (!this.floorplanCreator) {
+                    this.log('Initializing FloorplanCreator');
+                    const container = document.getElementById('creator-container');
+                    
+                    // Clear any existing content
+                    container.innerHTML = '';
+                    
+                    // Initialize the creator
+                    this.floorplanCreator = new FloorplanCreator(container, {
+                        onSave: async (blob, elements) => {
+                            this.log('Floorplan saved');
+                            this.handleCreatorSave(blob, elements);
+                        }
+                    });
+                }
+            }
+            
+            async handleCreatorSave(blob, elements) {
+                this.log(`Creator save: ${elements.length} elements, blob size: ${blob.size}`);
+                
+                // Upload the created floorplan
+                const formData = new FormData();
+                formData.append('file', blob, 'floorplan.png');
+                
+                try {
+                    const response = await apiUtils.authenticatedFetch(
+                        `/api/store/${this.storeId}/floorplan`,
+                        this.storeId,
+                        {
+                            method: 'POST',
+                            body: formData
+                        }
+                    );
+                    
+                    if (response.ok) {
+                        this.log('Floorplan uploaded successfully');
+                        alert('Floorplan created and uploaded successfully!');
+                        
+                        // Update state
+                        this.hasFloorplan = true;
+                                
+                        // Reload to get fresh data
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        const error = await response.json();
+                        throw new Error(error.detail || 'Upload failed');
+                    }
+                } catch (error) {
+                    this.log(`Upload error: ${error.message}`);
+                    alert('Failed to upload floorplan: ' + error.message);
+                }
+            }
+            
+            initializeUpload() {
+                // Only initialize if not already done
+                if (!this.floorplanUpload) {
+                    this.log('Initializing FloorplanUpload');
+                    const container = document.getElementById('upload-component-container');
+                    
+                    // Clear any existing content
+                    container.innerHTML = '';
+                    
+                    // Initialize the upload component
+                    this.floorplanUpload = new FloorplanUpload(container, this.storeId, {
+                        onUploadSuccess: (result) => {
+                            this.log('Upload successful');
+                            this.handleUploadSuccess(result);
+                        },
+                        onUploadError: (error) => {
+                            this.log(`Upload error: ${error.message}`);
+                            alert('Failed to upload floorplan: ' + error.message);
+                        }
+                    });
+                }
+            }
+            
+            handleUploadSuccess(result) {
+                this.log('Floorplan uploaded successfully');
+                
+                // Update state
+                this.hasFloorplan = true;
+                
+                // Show success message
+                alert('Floorplan uploaded successfully! Page will reload.');
+                
+                // In real app, we'd reload to get fresh data
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            }
+            
+            // Action handlers
+            handleUpload() {
+                this.log('Upload clicked');
+                this.setState('UPLOAD');
+            }
+            
+            handleCancelUpload() {
+                this.log('Cancel upload clicked');
+                
+                // Clean up upload component
+                if (this.floorplanUpload) {
+                    this.log('Cleaning up FloorplanUpload');
+                    this.floorplanUpload = null;
+                    document.getElementById('upload-component-container').innerHTML = '';
+                }
+                
+                // Return to previous state
+                this.setState(this.previousState || 'EMPTY');
+            }
+            
+            handleCreate() {
+                this.log('Create clicked');
+                this.setState('EDITOR');
+            }
+            
+            async initializeLocationEditor() {
+                // Only initialize if not already done
+                if (!this.locationEditor) {
+                    this.log('Initializing FloorplanLocationEditor');
+                    
+                    // Wait a bit to ensure DOM is ready
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
+                    // Verify required elements exist
+                    const requiredElements = ['floorplan-viewer', 'mode-controls', 'box-selector-panel'];
+                    for (const id of requiredElements) {
+                        if (!document.getElementById(id)) {
+                            this.log(`Error: Required element #${id} not found`);
+                            return;
+                        }
+                    }
+                    
+                    try {
+                        // Initialize the location editor
+                        this.locationEditor = new FloorplanLocationEditor(this.storeId);
+                        
+                        // The location editor initializes itself and manages its own UI
+                        this.log('FloorplanLocationEditor initialized successfully');
+                    } catch (error) {
+                        this.log(`Error initializing FloorplanLocationEditor: ${error.message}`);
+                        alert('Failed to initialize location editor. Please refresh the page.');
+                    }
+                }
+            }
+            
+            handleReplace() {
+                this.log('Replace clicked - showing modal');
+                this.showModal();
+            }
+            
+            showModal() {
+                const modal = document.getElementById('replace-modal');
+                modal.classList.add('active');
+                
+                // Close on overlay click
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        this.closeModal();
+                    }
+                });
+            }
+            
+            closeModal() {
+                const modal = document.getElementById('replace-modal');
+                modal.classList.remove('active');
+                this.log('Modal closed');
+            }
+            
+            handleModalUpload() {
+                this.log('Modal: Upload selected');
+                this.closeModal();
+                
+                // Clean up location editor if it exists
+                if (this.locationEditor) {
+                    this.log('Cleaning up FloorplanLocationEditor');
+                    this.locationEditor = null;
+                }
+                
+                this.setState('UPLOAD');
+            }
+            
+            handleModalCreate() {
+                this.log('Modal: Create selected');
+                this.closeModal();
+                
+                // Clean up location editor if it exists
+                if (this.locationEditor) {
+                    this.log('Cleaning up FloorplanLocationEditor');
+                    this.locationEditor = null;
+                }
+                
+                this.setState('EDITOR');
+            }
+            
+            handleCancel() {
+                this.log('Cancel clicked');
+                
+                // Clean up creator
+                if (this.floorplanCreator) {
+                    this.log('Cleaning up FloorplanCreator');
+                    this.floorplanCreator = null;
+                    document.getElementById('creator-container').innerHTML = '';
+                }
+                
+                // Return to previous state
+                if (this.previousState === 'HAS_FLOORPLAN') {
+                    this.setState('HAS_FLOORPLAN');
+                } else {
+                    this.setState('EMPTY');
+                }
+            }
+            
+            // Logging - only in development
+            log(message) {
+                // Uncomment for debugging
+                // console.log(`[FloorplanManager] ${message}`);
+            }
+        }
+        
+        // Initialize with authentication
+        async function initializePage() {
+            await AuthPageInit.initPage({
+                pageName: 'floorplan',
+                requireAdmin: true,
+                containerSelector: '#app-container',
+                onSuccess: async (storeId) => {
+                    // Create and initialize floorplan manager with the verified storeId
+                    const floorplanManager = new FloorplanManager(storeId);
+                    window.floorplanManager = floorplanManager; // Make it available globally for onclick handlers
+                    await floorplanManager.init();
+                }
+            });
+        }
+        
+        initializePage();
+    </script>
+</body>
+</html>

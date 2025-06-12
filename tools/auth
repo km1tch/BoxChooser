@@ -1,0 +1,21 @@
+#!/bin/bash
+# Authentication Management Tool Shortcut
+# This script provides a convenient way to run the auth management tool in Docker
+
+# Check if Docker is available
+if ! command -v docker &> /dev/null; then
+  echo "Error: Docker is required. Please make sure Docker is installed and available."
+  exit 1
+fi
+
+# Try to find the container - check for both dev and production container names
+CONTAINER=$(docker ps --format "{{.Names}}" | grep -E "boxchooser_backend" | head -1)
+
+if [ -n "$CONTAINER" ]; then
+  # Container is running, execute the command
+  echo "Running in Docker container: $CONTAINER"
+  exec docker exec -it "$CONTAINER" python /code/tools/manage_auth.py "$@"
+else
+  echo "Error: No backend container found. Please start 'boxchooser_backend' first."
+  exit 1
+fi

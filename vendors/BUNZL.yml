@@ -1,0 +1,144 @@
+vendor:
+  id: BUNZL
+  name: Bunzl Industrial
+  url: https://www.shopbunzlindustrial.ca
+  version: '2025-06-06'
+boxes:
+- model: '03010045'
+  dimensions: [8, 8, 8]
+  category: cube
+- model: '03010050'
+  dimensions: [9, 9, 9]
+  category: cube
+- model: '03010060'
+  dimensions: [10, 8, 6]
+  category: small
+- model: '03010070'
+  dimensions: [10, 10, 10]
+  category: cube
+- model: '03010071'
+  dimensions: [12, 9, 6]
+  category: small
+- model: '03010074'
+  dimensions: [10, 10, 10]
+  category: cube
+- model: 03010078
+  dimensions: [10, 10, 10]
+  category: cube
+- model: 03010080
+  dimensions: [12, 10, 8]
+  category: small
+- model: 03010090
+  dimensions: [12.25, 12.25, 12.25]
+  category: cube
+- model: '03010120'
+  dimensions: [16, 16, 16]
+  category: cube
+- model: '03010130'
+  dimensions: [16, 12, 10]
+  category: medium
+- model: '03010140'
+  dimensions: [18, 12, 6]
+  category: medium
+- model: '03010150'
+  dimensions: [18, 12, 12]
+  category: medium
+- model: '03010170'
+  dimensions: [18, 18, 28]
+  category: large
+- model: '03010220'
+  dimensions: [24, 12, 12]
+  category: medium
+- model: '03010240'
+  dimensions: [24, 24, 24]
+  category: cube
+- model: 03013069
+  dimensions: [10, 8, 6]
+  category: small
+- model: '03021265'
+  dimensions: [13, 13, 7]
+  category: medium
+- model: '03070007'
+  dimensions: [10, 10, 6]
+  category: small
+- model: 03070129
+  dimensions: [11, 7, 7]
+  category: small
+- model: '03070167'
+  dimensions: [10, 10, 4]
+  category: small
+- model: '03070206'
+  dimensions: [10, 4, 4]
+  category: small
+- model: '03070254'
+  dimensions: [11, 11, 11]
+  category: cube
+- model: 03070308
+  dimensions: [10, 10, 7]
+  category: small
+- model: 03070338
+  dimensions: [10, 6, 6]
+  category: small
+- model: '03070401'
+  dimensions: [11, 11, 52]
+  category: large
+- model: 03073852
+  dimensions: [11, 8, 6]
+  category: small
+- model: 03073987
+  dimensions: [11, 11, 9]
+  category: small
+- model: '03074064'
+  dimensions: [10, 5, 4]
+  category: small
+- model: '03074066'
+  dimensions: [10, 5, 5]
+  category: small
+- model: 03074069
+  dimensions: [10, 7, 4]
+  category: small
+- model: '03074106'
+  dimensions: [10, 8, 4]
+  category: small
+- model: '03074156'
+  dimensions: [11, 6, 4]
+  category: small
+- model: '03074320'
+  dimensions: [12, 12, 10]
+  category: small
+- model: '03074360'
+  dimensions: [20, 10, 8]
+  category: medium
+- model: '03074530'
+  dimensions: [10, 8, 7]
+  category: small
+- model: '03074566'
+  dimensions: [10, 10, 10]
+  category: cube
+- model: '03074716'
+  dimensions: [22, 15, 10]
+  category: medium
+- model: 03990414
+  dimensions: [4, 4, 4]
+  category: cube
+- model: 03990421
+  dimensions: [18, 18, 18]
+  category: cube
+- model: 03990461
+  dimensions: [10, 10, 10]
+  category: cube
+- model: 03992353
+  dimensions: [8, 8, 8]
+  category: cube
+- model: 03992397
+  dimensions: [24, 8, 6]
+  category: medium
+- model: 03992398
+  dimensions: [8, 8, 6]
+  category: small
+- model: 03992399
+  dimensions: [10, 10, 8]
+  category: small
+- model: 03992537
+  dimensions: [41, 27, 15]
+  category: large

@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Import from Excel</title>
+    <link rel="stylesheet" href="/assets/css/common.css" />
+    <link rel="stylesheet" href="/assets/css/import.css" />
+    <style>
+      /* Clean, modern styling for unified import */
+      .import-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding: 20px 0;
+      }
+      
+      .import-header h1 {
+        margin: 0 0 10px 0;
+        color: #2c3e50;
+        font-size: 32px;
+      }
+      
+      .subtitle {
+        color: #7f8c8d;
+        font-size: 16px;
+        margin: 0;
+      }
+      
+      .file-upload-zone {
+        border: 3px dashed #bdc3c7;
+        border-radius: 12px;
+        padding: 60px 40px;
+        text-align: center;
+        background: #f8f9fa;
+        transition: all 0.3s ease;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+      
+      .file-upload-zone:hover {
+        border-color: #3498db;
+        background: #f0f8ff;
+      }
+      
+      .upload-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+      }
+      
+      .file-upload-zone h3 {
+        margin: 0 0 10px 0;
+        color: #34495e;
+        font-size: 20px;
+      }
+      
+      .file-upload-zone p {
+        margin: 0;
+        color: #7f8c8d;
+      }
+      
+      .action-btn:hover {
+        background: #f8f9fa !important;
+      }
+      
+      #import-boxes-btn:hover {
+        border-color: #2980b9 !important;
+      }
+      
+      #import-prices-btn:hover {
+        border-color: #229954 !important;
+      }
+      
+      /* Override some default styles for cleaner look */
+      .import-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      
+      /* Make the loading indicator more centered */
+      .loading-indicator {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        z-index: 1000;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app-container" style="display: none">
+      <div class="import-container">
+        <div class="import-header">
+          <h1>Import from Excel</h1>
+          <p class="subtitle">Import boxes or update prices from your Dynamics export</p>
+        </div>
+
+        <!-- Unified file upload zone -->
+        <div id="upload-zone" class="file-upload-zone" style="cursor: pointer;">
+          <div class="upload-icon">📁</div>
+          <h3>Drop your Excel file here or click to browse</h3>
+          <p>Accepts .xlsx or .xls files from Dynamics</p>
+          <input
+            type="file"
+            id="file-input"
+            accept=".xlsx,.xls"
+            style="display: none"
+          />
+        </div>
+
+        <!-- Action selection (hidden until file selected) -->
+        <div id="action-selection" style="display: none; margin-top: 30px;">
+          <h3 style="text-align: center; margin-bottom: 20px;">What would you like to import?</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 600px; margin: 0 auto;">
+            <button id="import-boxes-btn" class="action-btn" style="padding: 30px; border: 2px solid #3498db; background: white; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+              <div style="font-size: 48px; margin-bottom: 10px;">📦</div>
+              <h4 style="margin: 0 0 10px 0; color: #2c3e50;">Import Boxes</h4>
+              <p style="margin: 0; color: #7f8c8d; font-size: 14px;">Discover and add new boxes to your inventory</p>
+              <small style="color: #95a5a6; display: block; margin-top: 10px;">Use this first when setting up a new store</small>
+            </button>
+            <button id="import-prices-btn" class="action-btn" style="padding: 30px; border: 2px solid #27ae60; background: white; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+              <div style="font-size: 48px; margin-bottom: 10px;">💰</div>
+              <h4 style="margin: 0 0 10px 0; color: #2c3e50;">Import Prices</h4>
+              <p style="margin: 0; color: #7f8c8d; font-size: 14px;">Update prices for existing boxes</p>
+              <small style="color: #95a5a6; display: block; margin-top: 10px;">Run periodically to keep prices current</small>
+            </button>
+          </div>
+          <div style="text-align: center; margin-top: 20px;">
+            <button id="cancel-file-btn" class="btn btn-secondary" style="padding: 8px 20px;">Choose Different File</button>
+          </div>
+        </div>
+
+        <!-- Loading indicator -->
+        <div id="loading" class="loading-indicator">
+          <div class="spinner"></div>
+          <p>Analyzing Excel file...</p>
+        </div>
+
+        <!-- Results sections -->
+        <div id="results" style="display: none">
+          <!-- Perfect matches section -->
+          <div id="perfect-section" class="import-section">
+            <div
+              class="section-header perfect"
+              onclick="toggleSection('perfect-section')"
+            >
+              <div>
+                <span class="toggle-icon">�</span>
+                <strong> Perfect Matches</strong>
+                <span class="stats-badge" id="perfect-count">0</span>
+              </div>
+              <button
+                class="btn btn-success"
+                onclick="updateAllPerfectMatches(event)"
+              >
+                Update All Prices
+              </button>
+            </div>
+            <div class="section-content">
+              <div id="perfect-summary"></div>
+              <div id="perfect-matches"></div>
+            </div>
+          </div>
+
+          <!-- Probable matches section -->
+          <div id="probable-section" class="import-section">
+            <div
+              class="section-header probable"
+              onclick="toggleSection('probable-section')"
+            >
+              <div>
+                <span class="toggle-icon">�</span>
+                <strong>� Probable Matches</strong>
+                <span class="stats-badge" id="probable-count">0</span>
+              </div>
+              <button
+                class="btn btn-primary"
+                onclick="approveAllProbableMatches(event)"
+              >
+                Approve All Probable
+              </button>
+            </div>
+            <div class="section-content">
+              <table class="match-table" id="probable-table">
+                <thead>
+                  <tr>
+                    <th>Model</th>
+                    <th>Dimensions</th>
+                    <th>Excel Match</th>
+                    <th>Price Preview</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="probable-matches"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Incomplete categories section -->
+          <div id="incomplete-section" class="import-section">
+            <div
+              class="section-header incomplete"
+              onclick="toggleSection('incomplete-section')"
+            >
+              <div>
+                <span class="toggle-icon">▼</span>
+                <strong>⚡ Incomplete Categories</strong>
+                <span class="stats-badge" id="incomplete-count">0</span>
+              </div>
+            </div>
+            <div class="section-content">
+              <p class="section-description">
+                These boxes have matching dimensions in the Excel file, but are
+                missing some required price categories.
+              </p>
+              <table class="match-table" id="incomplete-table">
+                <thead>
+                  <tr>
+                    <th>Model</th>
+                    <th>Dimensions</th>
+                    <th>Missing Categories</th>
+                    <th>Available Items</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="incomplete-matches"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Manual mapping section -->
+          <div id="manual-section" class="import-section">
+            <div
+              class="section-header manual"
+              onclick="toggleSection('manual-section')"
+            >
+              <div>
+                <span class="toggle-icon">�</span>
+                <strong>� Manual Mapping Required</strong>
+                <span class="stats-badge" id="manual-count">0</span>
+              </div>
+            </div>
+            <div class="section-content">
+              <p class="section-description">
+                These boxes have no matching dimensions in the Excel file.
+                You'll need to manually select items or skip them.
+              </p>
+              <table class="match-table" id="manual-table">
+                <thead>
+                  <tr>
+                    <th>Store Box</th>
+                    <th>Excel Options</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="manual-matches"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Apply changes button -->
+          <div class="action-buttons" style="margin-top: 30px">
+            <button class="btn" onclick="cancelImport()">Cancel</button>
+            <button class="btn btn-warning" onclick="showDataIssuesReport()">
+              View Data Issues
+            </button>
+            <button class="btn btn-primary" onclick="applyImportChanges()">
+              Apply Changes
+            </button>
+          </div>
+        </div>
+
+        <!-- Browse Items Modal -->
+        <div
+          id="browse-modal"
+          class="modal"
+          style="display: none"
+          onclick="if(event.target === this) closeBrowseModal()"
+        >
+          <div class="modal-content">
+            <div class="modal-header">
+              <h2>Browse All Excel Items</h2>
+              <button class="modal-close" onclick="closeBrowseModal()">
+                &times;
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="browse-controls">
+                <input
+                  type="text"
+                  id="browse-search"
+                  placeholder="Search dimensions (e.g. 12x10x6)..."
+                  class="search-input"
+                />
+                <div class="filter-group">
+                  <label>Show:</label>
+                  <select id="browse-filter">
+                    <option value="all">All dimensions</option>
+                    <option value="unmatched">Unmatched only</option>
+                    <option value="matched">Already matched</option>
+                  </select>
+                </div>
+              </div>
+              <div id="browse-items-container" class="browse-items">
+                <!-- Items will be populated here -->
+              </div>
+            </div>
+            <div class="modal-footer">
+              <div class="selected-info">
+                <span id="selected-count">0 items selected</span>
+              </div>
+              <button class="btn" onclick="closeBrowseModal()">Cancel</button>
+              <button class="btn btn-primary" onclick="applyBrowseSelection()">
+                Apply Selection
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Data Issues Report Modal -->
+        <div
+          id="issues-modal"
+          class="modal"
+          style="display: none"
+          onclick="if(event.target === this) closeIssuesModal()"
+        >
+          <div class="modal-content" style="max-width: 800px">
+            <div class="modal-header">
+              <h2>Data Issues Report</h2>
+              <button class="modal-close" onclick="closeIssuesModal()">
+                &times;
+              </button>
+            </div>
+            <div class="modal-body" style="max-height: 600px; overflow-y: auto">
+              <div
+                id="issues-report-content"
+                style="
+                  font-family: monospace;
+                  white-space: pre-wrap;
+                  background: #f5f5f5;
+                  padding: 20px;
+                  border-radius: 5px;
+                "
+              >
+                <!-- Report will be generated here -->
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn" onclick="copyIssuesReport()">
+                Copy to Clipboard
+              </button>
+              <button class="btn" onclick="closeIssuesModal()">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/lib/auth.js"></script>
+    <script src="/js/lib/api-utils.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components/help-bubble.js"></script>
+    <script src="/js/components/import.js"></script>
+    <script src="/js/components/box-discovery.js"></script>
+    <script>
+      let selectedFile = null;
+      let importStoreId = null;
+
+      // Initialize page
+      document.addEventListener("DOMContentLoaded", async function () {
+        // Get current store ID
+        const storeId = AuthManager.getCurrentStoreId();
+        importStoreId = storeId;
+        
+        if (!storeId) {
+          window.location.href = "/login";
+          return;
+        }
+
+        // Check if user is authenticated for this store
+        const authStatus = await AuthManager.getAuthStatus(storeId);
+        if (!authStatus.isAuthenticated) {
+          window.location.href = `/login?redirect=/import`;
+          return;
+        }
+
+        // Check if user is admin (required for import)
+        if (authStatus.authLevel !== "admin") {
+          alert("You must be an admin to access the import feature.");
+          window.location.href = `/${storeId}/`;
+          return;
+        }
+
+        // Show container after successful auth
+        document.getElementById("app-container").style.display = "block";
+        await initAdminNav("app-container", storeId, "import");
+        
+        // Initialize box discovery (but don't let it add buttons)
+        boxDiscovery.init(storeId);
+        
+        // Initialize the new unified import flow
+        initializeUnifiedImport(storeId);
+      });
+
+      function initializeUnifiedImport(storeId) {
+        const uploadZone = document.getElementById("upload-zone");
+        const fileInput = document.getElementById("file-input");
+        const actionSelection = document.getElementById("action-selection");
+
+        // Make entire zone clickable
+        uploadZone.addEventListener("click", () => {
+          fileInput.click();
+        });
+
+        // Handle drag and drop
+        uploadZone.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          uploadZone.style.backgroundColor = "#f0f8ff";
+        });
+
+        uploadZone.addEventListener("dragleave", () => {
+          uploadZone.style.backgroundColor = "";
+        });
+
+        uploadZone.addEventListener("drop", (e) => {
+          e.preventDefault();
+          uploadZone.style.backgroundColor = "";
+          
+          const files = e.dataTransfer.files;
+          if (files.length > 0) {
+            handleFileSelection(files[0]);
+          }
+        });
+
+        // Handle file selection
+        fileInput.addEventListener("change", (e) => {
+          if (e.target.files.length > 0) {
+            handleFileSelection(e.target.files[0]);
+          }
+        });
+
+        // Handle action buttons
+        document.getElementById("import-boxes-btn").addEventListener("click", () => {
+          handleImportBoxes();
+        });
+
+        document.getElementById("import-prices-btn").addEventListener("click", () => {
+          handleImportPrices();
+        });
+
+        document.getElementById("cancel-file-btn").addEventListener("click", () => {
+          resetFileSelection();
+        });
+
+        // Add hover effects to action buttons
+        document.querySelectorAll(".action-btn").forEach(btn => {
+          btn.addEventListener("mouseenter", () => {
+            btn.style.transform = "translateY(-2px)";
+            btn.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
+          });
+          btn.addEventListener("mouseleave", () => {
+            btn.style.transform = "";
+            btn.style.boxShadow = "";
+          });
+        });
+      }
+
+      function handleFileSelection(file) {
+        if (!file) return;
+        
+        // Validate file type
+        if (!file.name.match(/\.(xlsx?|xls)$/i)) {
+          alert("Please select an Excel file (.xlsx or .xls)");
+          return;
+        }
+
+        selectedFile = file;
+        
+        // Update UI
+        document.getElementById("upload-zone").style.display = "none";
+        document.getElementById("action-selection").style.display = "block";
+        
+        // Update the subtitle with file name
+        const subtitle = document.querySelector(".subtitle");
+        subtitle.innerHTML = `Selected file: <strong>${file.name}</strong>`;
+      }
+
+      function resetFileSelection() {
+        selectedFile = null;
+        document.getElementById("file-input").value = "";
+        document.getElementById("upload-zone").style.display = "block";
+        document.getElementById("action-selection").style.display = "none";
+        document.querySelector(".subtitle").textContent = "Import boxes or update prices from your Dynamics export";
+      }
+
+      async function handleImportBoxes() {
+        if (!selectedFile || !importStoreId) return;
+        
+        // Hide action selection
+        document.getElementById("action-selection").style.display = "none";
+        document.getElementById("loading").style.display = "block";
+        
+        // Update loading message
+        document.querySelector("#loading p").textContent = "Discovering boxes in Excel file...";
+        
+        try {
+          // Use box discovery
+          await boxDiscovery.handleDiscovery(selectedFile);
+        } catch (error) {
+          console.error("Box import failed:", error);
+          alert("Failed to import boxes: " + error.message);
+          resetFileSelection();
+        }
+      }
+
+      async function handleImportPrices() {
+        if (!selectedFile || !importStoreId) return;
+        
+        // Hide action selection
+        document.getElementById("action-selection").style.display = "none";
+        
+        // Initialize the standard import flow
+        initializeImport(importStoreId);
+        
+        // Call handleFile directly instead of trying to simulate an event
+        if (typeof handleFile === 'function') {
+          handleFile(selectedFile);
+        } else {
+          console.error('handleFile function not found');
+        }
+      }
+    </script>
+  </body>
+</html>

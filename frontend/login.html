@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - BoxChooser</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: #e3f2fd;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .login-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 20px rgba(74, 144, 226, 0.25);
+        width: 100%;
+        max-width: 500px;
+        padding: 40px;
+        overflow: hidden;
+      }
+
+      .logo-container {
+        text-align: center;
+        margin-bottom: 10px;
+      }
+
+      .logo-container img {
+        height: 80px;
+        width: auto;
+      }
+
+      h1 {
+        margin: 0 0 0 0;
+        color: #2c3e50;
+        font-size: 28px;
+        text-align: center;
+      }
+
+      .subtitle {
+        color: #1976d2;
+        text-align: center;
+        margin: 0 0 30px 0;
+      }
+
+      /* Tab Navigation */
+      .tab-nav {
+        display: flex;
+        background: #bbdefb;
+        border-radius: 8px;
+        padding: 4px;
+        margin-bottom: 30px;
+        position: relative;
+      }
+
+      .tab-nav::before {
+        content: "";
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        width: calc(33.33% - 4px);
+        height: calc(100% - 8px);
+        background: white;
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 0;
+      }
+
+      .tab-nav.tab-1::before {
+        transform: translateX(0);
+      }
+      .tab-nav.tab-2::before {
+        transform: translateX(calc(100% + 4px));
+      }
+      .tab-nav.tab-3::before {
+        transform: translateX(calc(200% + 8px));
+      }
+
+      .tab-btn {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        background: transparent;
+        font-size: 14px;
+        font-weight: 500;
+        color: #1976d2;
+        cursor: pointer;
+        border-radius: 6px;
+        transition: color 0.2s;
+        position: relative;
+        z-index: 1;
+      }
+
+      .tab-btn.active {
+        color: #2c3e50;
+      }
+
+      /* Content Area with Fixed Height */
+      .content-wrapper {
+        height: 250px; /* Fixed height for all modes */
+        position: relative;
+        overflow: hidden;
+      }
+
+      .tab-content {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        opacity: 0;
+        transform: translateX(50px);
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        pointer-events: none; /* Prevent clicks on hidden tabs */
+      }
+
+      .tab-content.active {
+        opacity: 1;
+        transform: translateX(0);
+        pointer-events: auto; /* Re-enable clicks on active tab */
+      }
+
+      .tab-content.slide-out-left {
+        opacity: 0;
+        transform: translateX(-50px);
+      }
+
+      .tab-content.slide-out-right {
+        opacity: 0;
+        transform: translateX(50px);
+      }
+
+      /* Form Elements */
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: #495057;
+        font-weight: 500;
+        font-size: 14px;
+      }
+
+      input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #90caf9;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.2s;
+      }
+
+      input:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      /* Buttons */
+      .btn {
+        width: 100%;
+        padding: 14px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      }
+
+      .btn-danger {
+        background: #e74c3c;
+        color: white;
+      }
+
+      .btn-danger:hover {
+        background: #c0392b;
+      }
+
+      .btn:disabled {
+        background: #90caf9;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      /* Demo Mode Specific */
+      .demo-content {
+        text-align: center;
+        padding: 20px 0;
+      }
+
+      .demo-content p {
+        margin-bottom: 20px;
+        color: #1976d2;
+      }
+
+      .demo-content .btn {
+        margin-bottom: 10px;
+      }
+
+      /* Messages */
+      .message {
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        display: none;
+      }
+
+      .message.error {
+        background: #fed7d7;
+        color: #c53030;
+      }
+
+      .message.success {
+        background: #c6f6d5;
+        color: #276749;
+      }
+
+      .message.show {
+        display: block;
+      }
+
+      /* Loading */
+      .loading {
+        display: none;
+        text-align: center;
+        color: #1976d2;
+        padding: 20px;
+      }
+
+      .loading.show {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-card">
+      <div class="logo-container">
+        <img src="/assets/boxes.png" alt="BoxChooser Logo" />
+      </div>
+      <h1>BoxChooser Login</h1>
+      <p class="subtitle">Find the right box, fast and easily</p>
+
+      <div class="message error" id="error-msg"></div>
+      <div class="message success" id="success-msg"></div>
+
+      <div class="tab-nav tab-1" id="tabNav">
+        <button class="tab-btn active" data-tab="1">Point-of-Sale</button>
+        <button class="tab-btn" data-tab="2">Back Office Admin</button>
+        <button class="tab-btn" data-tab="3">Demo</button>
+      </div>
+
+      <div class="content-wrapper">
+        <!-- POS Mode -->
+        <div class="tab-content active" id="tab-1">
+          <form id="pos-form">
+            <div class="form-group">
+              <label for="pos-store">Store Number</label>
+              <input
+                type="text"
+                id="pos-store"
+                required
+                maxlength="6"
+                pattern="\d+"
+              />
+            </div>
+            <div class="form-group">
+              <label for="pin">6-Digit PIN</label>
+              <input type="password" id="pin" maxlength="6" pattern="\d{6}" />
+            </div>
+            <button type="submit" class="btn btn-primary">Login</button>
+          </form>
+        </div>
+
+        <!-- Admin Mode -->
+        <div class="tab-content" id="tab-2">
+          <form id="admin-form">
+            <div id="email-step">
+              <div class="form-group">
+                <label for="admin-store">Store Number</label>
+                <input
+                  type="text"
+                  id="admin-store"
+                  required
+                  maxlength="6"
+                  pattern="\d+"
+                />
+              </div>
+              <div class="form-group">
+                <label for="email">Admin Email</label>
+                <input type="email" id="email" required />
+              </div>
+              <button type="submit" class="btn btn-primary">Send Code</button>
+            </div>
+
+            <div id="code-step" style="display: none">
+              <div class="form-group">
+                <label for="code">Verification Code</label>
+                <input
+                  type="text"
+                  id="code"
+                  maxlength="6"
+                  pattern="[A-Z0-9]{6}"
+                  style="
+                    font-family: monospace;
+                    font-size: 24px;
+                    text-align: center;
+                    letter-spacing: 8px;
+                  "
+                />
+              </div>
+              <button type="submit" class="btn btn-primary">Verify</button>
+              <div style="text-align: center; margin-top: 12px">
+                <a
+                  href="#"
+                  id="resend-btn"
+                  style="color: #667eea; text-decoration: none; font-size: 14px"
+                  >Resend code</a
+                >
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Demo Mode -->
+        <div class="tab-content" id="tab-3">
+          <div class="demo-content">
+            <p>Try out the box selection tools with sample data</p>
+            <button type="button" class="btn btn-primary" id="demo-user-btn">
+              Login as Demo User
+            </button>
+            <button type="button" class="btn btn-primary" id="demo-admin-btn">
+              Login as Demo Admin
+            </button>
+            <button type="button" class="btn btn-danger" id="demo-reset-btn">
+              Reset Demo Environment
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="loading" id="loading">Processing...</div>
+    </div>
+
+    <script src="/js/lib/auth.js"></script>
+    <script>
+      // State
+      let currentTab = 1;
+      let adminStep = "email";
+      let adminEmail = "";
+      let storeId = "";
+
+      // Elements
+      const tabNav = document.getElementById("tabNav");
+      const errorMsg = document.getElementById("error-msg");
+      const successMsg = document.getElementById("success-msg");
+      const loading = document.getElementById("loading");
+
+      // Tab switching
+      document.querySelectorAll(".tab-btn").forEach((btn, index) => {
+        // Add click handler to tab button
+        btn.addEventListener("click", () => {
+          const newTab = parseInt(btn.dataset.tab);
+          // Tab clicked: switching tabs
+          if (newTab === currentTab) return;
+
+          // Update active states
+          document
+            .querySelectorAll(".tab-btn")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+
+          // Update tab nav indicator
+          tabNav.className = `tab-nav tab-${newTab}`;
+
+          // Animate content
+          const currentContent = document.getElementById(`tab-${currentTab}`);
+          const newContent = document.getElementById(`tab-${newTab}`);
+
+          // Determine direction
+          const direction = newTab > currentTab ? "left" : "right";
+
+          // Slide out current
+          currentContent.classList.remove("active");
+          currentContent.classList.add(`slide-out-${direction}`);
+
+          // Slide in new
+          setTimeout(() => {
+            currentContent.classList.remove(`slide-out-${direction}`);
+            newContent.classList.add("active");
+          }, 200);
+
+          currentTab = newTab;
+          hideMessages();
+        });
+      });
+
+      // Auto-submit PIN
+      document.getElementById("pin").addEventListener("input", (e) => {
+        if (e.target.value.length === 6) {
+          document.getElementById("pos-form").requestSubmit();
+        }
+      });
+
+      // Auto-uppercase code
+      document.getElementById("code").addEventListener("input", (e) => {
+        e.target.value = e.target.value.toUpperCase();
+      });
+
+      // POS form
+      document
+        .getElementById("pos-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          hideMessages();
+
+          const storeId = document.getElementById("pos-store").value;
+          const pin = document.getElementById("pin").value;
+
+          if (!storeId || pin.length !== 6) {
+            showError("Please enter store number and 6-digit PIN");
+            return;
+          }
+
+          setLoading(true);
+
+          try {
+            const response = await fetch("/api/auth/login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ store_id: storeId, pin }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+              AuthManager.setToken(storeId, data.access_token);
+              AuthManager.setCurrentStoreId(storeId);
+              window.location.href = "/wizard";
+            } else {
+              showError(data.detail || "Invalid PIN");
+            }
+          } catch (error) {
+            showError("Connection error. Please try again.");
+          } finally {
+            setLoading(false);
+          }
+        });
+
+      // Admin form
+      const adminForm = document.getElementById("admin-form");
+      // Admin form setup
+      adminForm.addEventListener("submit", async (e) => {
+        // Admin form submitted
+        e.preventDefault();
+        hideMessages();
+
+        if (adminStep === "email") {
+          storeId = document.getElementById("admin-store").value;
+          adminEmail = document.getElementById("email").value;
+
+          if (!storeId || !adminEmail) {
+            // Validation failed
+            showError("Please enter store number and email");
+            return;
+          }
+
+          // Sending code
+          setLoading(true);
+
+          try {
+            const response = await fetch("/api/auth/send-code", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ store_id: storeId, email: adminEmail }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+              showSuccess("Code sent! Check your email.");
+              document.getElementById("email-step").style.display = "none";
+              document.getElementById("code-step").style.display = "block";
+              adminStep = "code";
+            } else {
+              showError(data.detail || "Failed to send code");
+            }
+          } catch (error) {
+            showError("Connection error. Please try again.");
+          } finally {
+            setLoading(false);
+          }
+        } else {
+          // Verify code
+          const code = document.getElementById("code").value;
+
+          if (code.length !== 6) {
+            showError("Please enter 6-character code");
+            return;
+          }
+
+          setLoading(true);
+
+          try {
+            const response = await fetch("/api/auth/verify-code", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                store_id: storeId,
+                email: adminEmail,
+                code,
+              }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+              AuthManager.setToken(storeId, data.access_token);
+              AuthManager.setCurrentStoreId(storeId);
+              
+              // Check if store has start-screen enabled
+              try {
+                const statsResponse = await fetch(`/api/store/${storeId}/stats`, {
+                  headers: { 
+                    'Authorization': `Bearer ${data.access_token}`
+                  }
+                });
+                
+                if (statsResponse.ok) {
+                  const stats = await statsResponse.json();
+                  if (stats.start_screen) {
+                    window.location.href = "/getting-started";
+                    return;
+                  }
+                }
+              } catch (error) {
+                console.error('Failed to check start-screen status:', error);
+              }
+              
+              window.location.href = "/settings";
+            } else {
+              showError(data.detail || "Invalid code");
+            }
+          } catch (error) {
+            showError("Connection error. Please try again.");
+          } finally {
+            setLoading(false);
+          }
+        }
+      });
+
+      // Resend code
+      const resendBtn = document.getElementById("resend-btn");
+      // Resend button setup
+      resendBtn.addEventListener("click", async (e) => {
+        // Resend code clicked
+        e.preventDefault();
+        hideMessages();
+        setLoading(true);
+
+        try {
+          const response = await fetch("/api/auth/send-code", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ store_id: storeId, email: adminEmail }),
+          });
+
+          if (response.ok) {
+            showSuccess("New code sent!");
+          } else {
+            showError("Failed to resend code");
+          }
+        } catch {
+          showError("Connection error");
+        } finally {
+          setLoading(false);
+        }
+      });
+
+      // Demo buttons
+      const demoUserBtn = document.getElementById("demo-user-btn");
+      const demoAdminBtn = document.getElementById("demo-admin-btn");
+      const demoResetBtn = document.getElementById("demo-reset-btn");
+
+      if (demoUserBtn) {
+        // Add demo user button handler
+        demoUserBtn.addEventListener("click", () => demoLogin("user"));
+      }
+      if (demoAdminBtn) {
+        // Add demo admin button handler
+        demoAdminBtn.addEventListener("click", () => demoLogin("admin"));
+      }
+      if (demoResetBtn) {
+        // Add demo reset button handler
+        demoResetBtn.addEventListener("click", async (e) => {
+          // Demo reset button clicked
+          e.preventDefault();
+          e.stopPropagation();
+          if (!confirm("Reset demo environment to default state?")) return;
+
+          setLoading(true);
+          hideMessages();
+
+          try {
+            const response = await fetch("/api/auth/demo/reset", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+            });
+
+            if (response.ok) {
+              showSuccess("Demo environment reset successfully!");
+            } else {
+              const data = await response.json();
+              showError(data.detail || "Failed to reset demo environment");
+            }
+          } catch (error) {
+            showError("Connection error. Please try again.");
+          } finally {
+            setLoading(false);
+          }
+        });
+      }
+
+      async function demoLogin(authLevel) {
+        setLoading(true);
+        hideMessages();
+
+        try {
+          const response = await fetch("/api/auth/demo/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ auth_level: authLevel }),
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            AuthManager.setToken("999999", data.access_token);
+            AuthManager.setCurrentStoreId("999999");
+            
+            // For admin, check if start-screen is enabled
+            if (authLevel === "admin") {
+              try {
+                const statsResponse = await fetch(`/api/store/999999/stats`, {
+                  headers: { 
+                    'Authorization': `Bearer ${data.access_token}`
+                  }
+                });
+                
+                if (statsResponse.ok) {
+                  const stats = await statsResponse.json();
+                  if (stats.start_screen) {
+                    window.location.href = "/getting-started";
+                    return;
+                  }
+                }
+              } catch (error) {
+                console.error('Failed to check start-screen status:', error);
+              }
+            }
+            
+            window.location.href =
+              authLevel === "admin" ? "/settings" : "/wizard";
+          } else {
+            showError(data.detail || `Failed to login as demo ${authLevel}`);
+          }
+        } catch (error) {
+          showError("Connection error. Please try again.");
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      // Helpers
+      function showError(msg) {
+        errorMsg.textContent = msg;
+        errorMsg.classList.add("show");
+      }
+
+      function showSuccess(msg) {
+        successMsg.textContent = msg;
+        successMsg.classList.add("show");
+      }
+
+      function hideMessages() {
+        errorMsg.classList.remove("show");
+        successMsg.classList.remove("show");
+      }
+
+      function setLoading(isLoading) {
+        loading.classList.toggle("show", isLoading);
+        document.querySelectorAll("button").forEach((btn) => {
+          btn.disabled = isLoading;
+        });
+      }
+
+      // Check for redirect parameter
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirectUrl = urlParams.get("redirect");
+
+      // Focus first input
+      document.getElementById("pos-store").focus();
+
+      // Login page initialization complete
+    </script>
+  </body>
+</html>

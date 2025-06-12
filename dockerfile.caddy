@@ -1,0 +1,12 @@
+# Production Caddy with cache-busted frontend
+FROM caddy:2-alpine
+
+# Copy frontend and cache buster script
+COPY ./frontend /srv/frontend
+COPY ./tools/cache_buster.sh /tmp/cache_buster.sh
+
+# Run cache busting on the copied files
+RUN sh /tmp/cache_buster.sh && rm /tmp/cache_buster.sh
+
+# Copy Caddy config
+COPY ./Caddyfile.production /etc/caddy/Caddyfile

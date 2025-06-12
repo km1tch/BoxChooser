@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Packing Wizard</title>
+    <meta name="description" content="Find the perfect box in 3 easy steps" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="/assets/css/common.css" />
+    <link rel="stylesheet" href="/assets/css/wizard.css" />
+    <link rel="stylesheet" href="/assets/css/mobile.css" />
+
+    <!-- Load required modules -->
+    <script src="/js/lib/auth.js"></script>
+    <script src="/js/lib/api-utils.js"></script>
+    <script src="/js/lib/auth-page-init.js"></script>
+    <script src="/js/lib/pricing.js"></script>
+    <script src="/js/lib/packing.js"></script>
+    <script src="/js/lib/packing-rules.js"></script>
+    <script src="/js/lib/recommendation-engine.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components/help-bubble.js"></script>
+    <script src="/js/components/wizard-ui.js"></script>
+    <script type="module">
+      import { LabelGenerator } from '/js/components/label-generator.js';
+      window.LabelGenerator = LabelGenerator;
+    </script>
+  </head>
+
+  <body>
+    <div id="app-container">
+      <nav id="nav-container"></nav>
+
+      <div class="container" id="wizard-container" style="display: none;">
+        <!-- Wizard UI will be rendered here -->
+      </div>
+    </div>
+
+    <script>
+      // Initialize wizard when DOM is ready
+      document.addEventListener("DOMContentLoaded", async function () {
+        // Use AuthPageInit for streamlined initialization
+        await AuthPageInit.initPage({
+          pageName: 'wizard',
+          requireAdmin: false,
+          containerSelector: '#wizard-container',
+          onSuccess: async (storeId) => {
+            // Load boxes, engine config, and packing rules for this store
+            let boxes = [];
+            let engineConfig = {};
+            let rulesManager = new PackingRulesManager(storeId);
+
+            try {
+              // Load all data in parallel
+              const [boxData, configData, packingRules] = await Promise.all([
+                loadBoxes(storeId, rulesManager),  // Pass rulesManager to avoid duplicate API call
+                apiUtils.authenticatedFetch(`/api/store/${storeId}/engine-config`, storeId)
+                  .then(async (r) => {
+                    await apiUtils.handleApiError(r, "load engine config");
+                    return r.json();
+                  }),
+                rulesManager.getAllRequirements()  // Pre-cache all packing rules
+              ]);
+
+              boxes = boxData;
+              engineConfig = configData;
+            } catch (error) {
+              console.error("Error loading data:", error);
+              document.getElementById("wizard-container").innerHTML =
+                '<div class="error">Error loading data. Please refresh the page.</div>';
+              return;
+            }
+
+            // Initialize recommendation engine with store config
+            const engine = new RecommendationEngine(engineConfig);
+
+            // Initialize wizard UI
+            const wizard = new WizardUI("wizard-container", {
+              storeId: storeId,
+              rulesManager: rulesManager,  // Pass the cached rules manager
+              onFindBoxes: async (itemDims, packingLevel) => {
+                // Get recommendations from engine
+                return engine.getRecommendations(boxes, itemDims, packingLevel);
+              },
+            });
+
+            wizard.init();
+          }
+        });
+      });
+
+      // Global functions for box location and printing
+      window.showBoxLocation = async function(boxModel, recId) {
+        try {
+          // Get the store ID
+          const storeId = AuthManager.getCurrentStoreId();
+          if (!storeId) {
+            alert("Please log in to view box locations");
+            return;
+          }
+
+          // Get the store's box data to find location
+          const response = await apiUtils.authenticatedFetch(
+            `/api/store/${storeId}/boxes`,
+            storeId
+          );
+          
+          await apiUtils.handleApiError(response, "load box data");
+
+          const data = await response.json();
+          const boxData = data.boxes.find((b) => b.model === boxModel);
+
+          if (!boxData || !boxData.location) {
+            alert(`Location not set for ${boxModel}`);
+            return;
+          }
+
+          // Check if floorplan exists
+          const floorplanResponse = await apiUtils.authenticatedFetch(
+            `/api/store/${storeId}/floorplan`,
+            storeId
+          );
+          if (!floorplanResponse.ok) {
+            // No floorplan, just show text location
+            if (typeof boxData.location === "string") {
+              alert(`${boxModel} Location: ${boxData.location}`);
+            } else {
+              alert(`${boxModel} is mapped on the store floorplan`);
+            }
+            return;
+          }
+
+          // Show floorplan modal with location marker
+          window.showFloorplanModal(boxModel, boxData.location, floorplanResponse);
+        } catch (error) {
+          console.error("Error showing location:", error);
+          alert("Unable to show box location");
+        }
+      }
+
+      window.showFloorplanModal = async function(boxModel, location, floorplanResponse) {
+        // Get floorplan image
+        const blob = await floorplanResponse.blob();
+        const imageUrl = URL.createObjectURL(blob);
+
+        // Create modal
+        const modal = document.createElement("div");
+        modal.className = "modal-backdrop";
+        modal.innerHTML = `
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2>${boxModel} Location</h2>
+                            <button class="modal-close" onclick="this.closest('.modal-backdrop').remove()">&times;</button>
+                        </div>
+                        <div id="floorplan-container">
+                            <img id="floorplan-image" src="${imageUrl}">
+                        </div>
+                    </div>
+                `;
+
+        // Close modal on backdrop click
+        modal.addEventListener("click", (e) => {
+          if (e.target === modal) {
+            modal.remove();
+            URL.revokeObjectURL(imageUrl);
+          }
+        });
+
+        // Also clean up on close button
+        modal.querySelector(".modal-close").addEventListener("click", () => {
+          URL.revokeObjectURL(imageUrl);
+        });
+
+        document.body.appendChild(modal);
+
+        // Wait for image to load, then add marker and apply smart scaling
+        const img = modal.querySelector("#floorplan-image");
+        img.onload = () => {
+          // Calculate optimal scaling based on viewport and image dimensions
+          const viewportHeight = window.innerHeight;
+          const viewportWidth = window.innerWidth;
+          
+          // Reserve space for modal padding, header, etc.
+          const modalPadding = 40; // 20px each side
+          const headerHeight = 60; // Approximate header height
+          const containerPadding = 40; // 20px each side
+          const maxModalWidth = viewportWidth * 0.9 - modalPadding;
+          const maxModalHeight = viewportHeight * 0.9 - headerHeight - containerPadding;
+          
+          // Get natural image dimensions
+          const imgWidth = img.naturalWidth;
+          const imgHeight = img.naturalHeight;
+          
+          // Calculate scale factors for both dimensions
+          const widthScale = maxModalWidth / imgWidth;
+          const heightScale = maxModalHeight / imgHeight;
+          
+          // Use the smaller scale factor to ensure image fits in both dimensions
+          const scale = Math.min(widthScale, heightScale, 1); // Don't scale up beyond 100%
+          
+          // Apply dimensions to image
+          if (scale < 1) {
+            img.style.maxWidth = `${imgWidth * scale}px`;
+            img.style.maxHeight = `${imgHeight * scale}px`;
+          }
+          
+          // Add location marker if exists
+          if (location && location.coords) {
+            const container = modal.querySelector("#floorplan-container");
+
+            // Create marker
+            const marker = document.createElement("div");
+            marker.className = "location-marker-x";
+            marker.style.left = `${location.coords[0] * 100}%`;
+            marker.style.top = `${location.coords[1] * 100}%`;
+            marker.innerHTML = '<span class="marker-x">X</span>';
+            
+            container.appendChild(marker);
+          }
+        };
+      }
+
+      window.printRecommendation = async function(recId, index) {
+        // Get the recommendation card
+        const cards = document.querySelectorAll(".recommendation-card");
+        const card = cards[index];
+        if (!card) return;
+
+        // Parse the stored data
+        const data = JSON.parse(card.dataset.recommendation);
+
+        // Get store ID
+        const storeId = AuthManager.getCurrentStoreId();
+        if (!storeId) {
+          alert("Please log in to print recommendations");
+          return;
+        }
+
+        try {
+          // Fetch packing rules to get instructions
+          const rulesResponse = await apiUtils.authenticatedFetch(
+            `/api/store/${storeId}/packing-rules`,
+            storeId
+          );
+          
+          if (!rulesResponse.ok) {
+            throw new Error(`Failed to fetch packing rules: ${rulesResponse.status}`);
+          }
+          
+          const rulesData = await rulesResponse.json();
+
+          // Get the selected packing level API name
+          const packingLevelApi = data.packingLevelApi || "Basic";
+
+          // Find the matching rule
+          const rule = rulesData.effective_rules.find(
+            (r) => r.packing_type === packingLevelApi
+          );
+          const instructions = rule
+            ? rule.label_instructions
+            : "No specific instructions available";
+
+          // Prepare floorplan data if location exists
+          let floorplanData = null;
+          
+          if (data.box.location && data.box.location.coords) {
+            const floorplanResponse = await apiUtils.authenticatedFetch(
+              `/api/store/${storeId}/floorplan`,
+              storeId
+            );
+            if (floorplanResponse.ok) {
+              const blob = await floorplanResponse.blob();
+              const imageUrl = URL.createObjectURL(blob);
+              
+              // Load image to get dimensions
+              const img = new Image();
+              await new Promise((resolve) => {
+                img.onload = resolve;
+                img.src = imageUrl;
+              });
+              
+              floorplanData = {
+                imageUrl,
+                location: data.box.location,
+                dimensions: { width: img.width, height: img.height }
+              };
+            }
+          }
+
+          // Use LabelGenerator to calculate layout
+          const layoutResult = window.LabelGenerator.calculateLayout(
+            instructions,
+            floorplanData ? floorplanData.dimensions : null
+          );
+
+          // Generate label content using LabelGenerator
+          const labelContent = window.LabelGenerator.generateLabelContent(
+            data,
+            instructions,
+            floorplanData,
+            !layoutResult.fits
+          );
+
+          // Generate complete document
+          const documentTitle = `Packing Label - ${data.box.model}`;
+          const documentHtml = window.LabelGenerator.generateDocument(
+            labelContent,
+            documentTitle
+          );
+
+          // Create a hidden iframe for direct printing
+          const printFrame = document.createElement("iframe");
+          printFrame.style.position = "absolute";
+          printFrame.style.top = "-9999px";
+          printFrame.style.left = "-9999px";
+          printFrame.style.width = "0";
+          printFrame.style.height = "0";
+          document.body.appendChild(printFrame);
+
+          // Write content to iframe
+          const printDoc =
+            printFrame.contentDocument || printFrame.contentWindow.document;
+          printDoc.open();
+          printDoc.write(documentHtml);
+          printDoc.close();
+
+          // Wait for content to load, then print
+          printFrame.contentWindow.onload = () => {
+            setTimeout(() => {
+              printFrame.contentWindow.print();
+              // Remove iframe after printing
+              setTimeout(() => {
+                document.body.removeChild(printFrame);
+              }, 1000);
+            }, 100);
+          };
+        } catch (error) {
+          console.error("Error preparing print:", error);
+          alert("Unable to prepare label for printing. Please try again.");
+        }
+      }
+    </script>
+  </body>
+</html>
