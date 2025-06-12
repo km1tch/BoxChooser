@@ -1,0 +1,225 @@
+/**
+ * Styles for the main calculator page
+ */
+
+/* Calculator container */
+.calculator-container {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Option groups */
+.option-group {
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.option-group-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #495057;
+}
+
+/* Checkbox containers */
+.checkbox-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  margin-right: 12px;
+}
+
+.checkbox-item input[type="checkbox"] {
+  width: auto;
+  margin-right: 5px;
+}
+
+.checkbox-item label {
+  margin-bottom: 0;
+  cursor: pointer;
+}
+
+/* Dimension inputs */
+.dimension-inputs {
+  display: flex;
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.dimension-inputs input {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+
+.clear-btn {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.clear-btn:hover {
+  background-color: #5a6268;
+}
+
+/* Results table */
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.results-table th {
+  background-color: #343a40;
+  color: white;
+  padding: 10px;
+  text-align: left;
+  font-weight: 600;
+}
+
+.results-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.results-table tr:hover {
+  background-color: rgba(0,0,0,0.03);
+}
+
+/* Recommendation levels styling */
+.recommendation-impossible {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.recommendation-nospace {
+  color: #fd7e14;
+  font-weight: 600;
+}
+
+.recommendation-possible {
+  color: #ffc107;
+  font-weight: 600;
+}
+
+.recommendation-fits {
+  color: #28a745;
+  font-weight: 600;
+}
+
+/* Print button */
+.print-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.print-btn:hover {
+  background-color: #0069d9;
+}
+
+/* Debug area */
+.debug-area {
+  background-color: #f1f1f1;
+  border-radius: 4px;
+  padding: 10px;
+  margin-top: 20px;
+}
+
+.debug-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+/* Help container */
+.help-container {
+  background-color: #e9ecef;
+  border-radius: 4px;
+  padding: 15px;
+  margin-top: 15px;
+}
+
+.help-container div {
+  margin-bottom: 8px;
+}
+
+/* No results message */
+.no-results {
+  text-align: center;
+  padding: 20px;
+  color: #6c757d;
+  font-size: 18px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  margin-top: 20px;
+}
+
+/* Store selector */
+.store-selector {
+  margin-bottom: 20px;
+}
+
+.store-selector select {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ced4da;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .checkbox-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .checkbox-item {
+    margin-right: 0;
+    margin-bottom: 8px;
+  }
+  
+  .dimension-inputs {
+    flex-wrap: wrap;
+  }
+  
+  .dimension-inputs input {
+    flex: 1 0 100%;
+    margin-bottom: 10px;
+  }
+  
+  .results-table {
+    font-size: 14px;
+  }
+  
+  .results-table th, .results-table td {
+    padding: 6px 8px;
+  }
+  
+  /* Simplify table on small screens */
+  .results-table thead th:nth-child(1),
+  .results-table tbody td:nth-child(1) {
+    display: none; /* Hide score column */
+  }
+  
+  .print-btn {
+    padding: 8px 12px; /* Larger touch target */
+  }
+}

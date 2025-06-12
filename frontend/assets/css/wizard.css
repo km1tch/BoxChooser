@@ -1,0 +1,601 @@
+/* Wizard-specific styles */
+
+.wizard-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.wizard-header h1 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.wizard-header p {
+    color: #1976D2;
+    font-size: 18px;
+}
+
+/* Step containers */
+.wizard-step {
+    background: white;
+    border-radius: 8px;
+    padding: 30px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(74, 144, 226, 0.25);
+}
+
+.step-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.step-number {
+    background: #007bff;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-right: 15px;
+}
+
+.step-number.completed {
+    background: #28a745;
+}
+
+.step-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Form inputs */
+.input-group {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.input-field {
+    flex: 1;
+    min-width: 150px;
+}
+
+.input-field label {
+    display: block;
+    margin-bottom: 5px;
+    color: #555;
+    font-weight: 500;
+}
+
+.input-field input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #90CAF9;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.input-field input:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+/* Hide spinner arrows on number inputs */
+.input-field input[type="number"] {
+    -moz-appearance: textfield; /* Firefox */
+}
+
+.input-field input[type="number"]::-webkit-inner-spin-button,
+.input-field input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Buttons */
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #0056b3;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Packing level selection */
+.packing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.packing-option {
+    border: 2px solid #90CAF9;
+    border-radius: 8px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.packing-option:hover {
+    border-color: #007bff;
+    background: #E3F2FD;
+}
+
+.packing-option.selected {
+    border-color: #007bff;
+    background: #e7f3ff;
+}
+
+.packing-option h4 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.padding-info {
+    font-weight: bold;
+    color: #007bff;
+    margin-bottom: 5px;
+}
+
+/* Results */
+.results-container {
+    margin-top: 30px;
+}
+
+.recommendation-card {
+    background: white;
+    border: 1px solid #90CAF9;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    transition: border-color 0.2s;
+}
+
+.recommendation-card:hover {
+    border-color: #999;
+}
+
+.recommendation-card.best {
+    border-color: #28a745;
+    border-width: 2px;
+}
+
+.card-rank {
+    font-size: 18px;
+    font-weight: bold;
+    color: #1976D2;
+    margin-right: 15px;
+    min-width: 25px;
+}
+
+.box-details {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 10px;
+}
+
+.box-info {
+    flex: 1;
+    min-width: 200px;
+}
+
+.box-info h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #333;
+    font-weight: normal;
+}
+
+.dimensions {
+    color: #1976D2;
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+.box-badges {
+    display: flex;
+    gap: 6px;
+    margin-right: 15px;
+    flex-wrap: wrap;
+}
+
+.recommendation-badge {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+    background: #007bff;
+    color: white;
+    white-space: nowrap;
+}
+
+.recommendation-badge.efficient {
+    background: #28a745;
+}
+
+.recommendation-badge.lowest-cost {
+    background: #ffc107;
+    color: #333;
+}
+
+.recommendation-badge.easiest {
+    background: #17a2b8;
+}
+
+.recommendation-badge.pre-scored {
+    background: #6c757d;
+}
+
+.recommendation-badge.manual-cut {
+    background: #dc3545;
+}
+
+.recommendation-badge.alternative {
+    background: #6c757d;
+}
+
+.box-pricing {
+    text-align: right;
+    margin-right: 15px;
+    min-width: 80px;
+}
+
+.box-pricing .total-price {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    line-height: 1.2;
+}
+
+.box-pricing .box-cost {
+    font-size: 12px;
+    color: #1976D2;
+}
+
+.action-icons {
+    display: flex;
+    gap: 8px;
+}
+
+.icon-button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    color: #1976D2;
+    transition: color 0.2s;
+    font-size: 16px;
+}
+
+.icon-button:hover {
+    color: #007bff;
+}
+
+/* Loading state */
+.loading {
+    text-align: center;
+    padding: 40px;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* No results */
+.no-results {
+    text-align: center;
+    padding: 40px;
+    color: #1976D2;
+}
+
+.no-results a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.no-results a:hover {
+    text-decoration: underline;
+}
+
+/* Modal styles */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 8px;
+    max-width: 90%;
+    max-height: 90%;
+    overflow: auto;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #ddd;
+    flex-shrink: 0;
+}
+
+.modal-header h2 {
+    margin: 0;
+    color: #333;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #1976D2;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:hover {
+    color: #333;
+}
+
+#floorplan-container {
+    position: relative;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: auto;
+    flex: 1;
+}
+
+#floorplan-image {
+    display: block;
+    /* max-width and max-height will be set dynamically by JS */
+}
+
+.location-marker {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    margin-left: -12px;
+    margin-top: -12px;
+    background-color: #ff0000;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(74, 144, 226, 0.4);
+    z-index: 10;
+}
+
+/* X marker style for floorplan modal - screen display only */
+.location-marker-x {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.location-marker-x .marker-x {
+    font-size: 36px;
+    font-weight: bold;
+    color: #ff0000;  /* Red for screen display */
+    /* White outline for visibility */
+    text-shadow: 
+        -2px -2px 0 #fff,
+        2px -2px 0 #fff,
+        -2px 2px 0 #fff,
+        2px 2px 0 #fff,
+        -3px 0 0 #fff,
+        3px 0 0 #fff,
+        0 -3px 0 #fff,
+        0 3px 0 #fff;
+}
+
+.marker-label {
+    position: absolute;
+    left: 30px;
+    top: -5px;
+    background-color: #fff;
+    border: 1px solid #333;
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-size: 12px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+/* Utility classes */
+.hidden {
+    display: none;
+}
+
+/* For small screens, use visibility instead of display:none to maintain document height */
+@media (max-height: 800px) {
+    .wizard-step.hidden {
+        display: block !important;
+        visibility: hidden;
+        opacity: 0;
+        pointer-events: none;
+    }
+    
+    .wizard-step:not(.hidden) {
+        visibility: visible;
+        opacity: 1;
+        pointer-events: auto;
+    }
+    
+    /* Add extra space at bottom to ensure we can scroll any step to top */
+    .wizard-step:last-child {
+        margin-bottom: 100vh !important;
+    }
+}
+
+.text-muted {
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.error {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 20px;
+    border-radius: 4px;
+    margin: 20px 0;
+}
+
+/* Print styles - Monochrome for Zebra thermal printers */
+@media print {
+    /* Page setup for 4x6 labels */
+    @page {
+        size: 4in 6in;
+        margin: 0;
+    }
+    
+    /* Force pure black and white */
+    * {
+        color: #000 !important;
+        background-color: #fff !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    .print-label {
+        padding: 20px;
+        /* Use same font stack as site for consistency */
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        line-height: 1.4;
+        letter-spacing: 0.05em; /* Slight spacing helps thermal printing */
+    }
+    
+    .print-label h2 {
+        margin-bottom: 20px;
+        color: #000 !important;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 18pt; /* Clear size for thermal printing */
+    }
+    
+    .print-section {
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 2px solid #000;
+        padding-bottom: 5px;
+    }
+    
+    .print-section .label {
+        font-weight: bold;
+        color: #000 !important;
+        text-transform: uppercase;
+        font-size: 12pt; /* Consistent sizing */
+    }
+    
+    .print-section .value {
+        color: #000 !important;
+        font-weight: normal;
+        font-size: 12pt; /* Consistent sizing */
+    }
+    
+    /* Remove any shadows, gradients, or other effects */
+    .print-label * {
+        box-shadow: none !important;
+        text-shadow: none !important;
+        background-image: none !important;
+        filter: none !important;
+    }
+    
+    /* Force page break when floorplan won't fit */
+    .force-page-break {
+        page-break-before: always !important;
+        break-before: page !important;
+        -webkit-column-break-before: always !important;
+        display: block !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* Ensure the floorplan section starts on new page */
+    .print-floorplan-section.force-page-break {
+        page-break-before: always !important;
+        break-before: page !important;
+        margin-top: 0 !important;
+    }
+    
+    /* Page break handling for split labels */
+    .print-label.page1 {
+        page-break-after: always !important;
+        break-after: page !important;
+    }
+    
+    .print-label.page2 {
+        page-break-before: always !important;
+        break-before: page !important;
+    }
+    
+    /* Hide page break hr in print */
+    hr[style*="page-break-after"] {
+        display: none !important;
+    }
+}
+
+/* Marker dragging state */
+.location-marker.dragging {
+    margin: 0 !important;
+    transform: none !important;
+}

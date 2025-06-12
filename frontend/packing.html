@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>BoxChooser</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            table, th, td {
+                border: 1px solid black;
+                border-collapse: collapse;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="app-container">
+            <!-- The navigation bar will be inserted here by initAdminNav -->
+        </div>
+        <div id="container"></div>
+        <script src="/js/lib/auth.js"></script>
+        <script src="/js/lib/api-utils.js"></script>
+        <script src="/js/components/navigation.js"></script>
+        <script src="/js/components/help-bubble.js"></script>
+        <script src="/js/lib/pricing.js"></script>
+        <script src="/js/lib/packing.js"></script>
+        <script src="/js/lib/api.js"></script>
+        <script src="/js/lib/location.js"></script>
+        <script>
+            // Initialize navigation for the main packing page
+            document.addEventListener('DOMContentLoaded', async function() {
+                // Get store ID from auth context
+                const storeId = AuthManager.getCurrentStoreId();
+                
+                if (!storeId) {
+                    // Redirect to login if no store selected
+                    window.location.href = '/login';
+                    return;
+                }
+                
+                // Initialize the navigation bar
+                await initAdminNav('app-container', storeId, 'packing');
+                
+                // Check authentication (user or admin)
+                await AuthManager.requireAuth(storeId, false);
+            });
+        </script>
+        <script src="/js/index.js" defer></script>
+    </body>
+</html>

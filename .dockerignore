@@ -1,0 +1,35 @@
+# Version control
+.git
+.gitignore
+
+# Data directories (mounted, not copied)
+db/
+stores/
+floorplans/
+
+# Development files
+.env
+.claude/
+.repomix/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+
+# Documentation
+docs/
+README.md
+
+# Test files
+tests/
+vitest.config.js
+package.json
+package-lock.json
+node_modules/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo

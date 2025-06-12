@@ -1,0 +1,931 @@
+boxes:
+- type: NormalBox
+  model: 06C-UPS
+  dimensions: [6, 6, 6]
+  itemized-prices:
+    box-price: 6.89
+    basic-materials: 0.8
+    basic-services: 1.2
+    standard-materials: 2.73
+    standard-services: 1.76
+    fragile-materials: 4.85
+    fragile-services: 2.52
+    custom-materials: 5.67
+    custom-services: 2.58
+  location:
+    coords:
+    - 0.42541666666666667
+    - 0.63375
+- type: NormalBox
+  model: 10C-UPS
+  dimensions: [10, 10, 10]
+  alternate_depths: [7.5, 5]
+  itemized-prices:
+    box-price: 8.52
+    basic-materials: 2.2
+    basic-services: 0.85
+    standard-materials: 6.04
+    standard-services: 2.8
+    fragile-materials: 8.37
+    fragile-services: 2.64
+    custom-materials: 10.36
+    custom-services: 6.16
+  location:
+    coords:
+    - 0.42541666666666667
+    - 0.63375
+- type: NormalBox
+  model: 14C-UPS
+  dimensions: [14, 14, 14]
+  alternate_depths: [11.5, 9]
+  itemized-prices:
+    box-price: 10.71
+    basic-materials: 1.68
+    basic-services: 1.15
+    standard-materials: 7.76
+    standard-services: 3.08
+    fragile-materials: 10.53
+    fragile-services: 8.96
+    custom-materials: 14.85
+    custom-services: 10.09
+  location:
+    coords:
+    - 0.42541666666666667
+    - 0.63375
+- type: NormalBox
+  model: 18C-UPS
+  dimensions: [18, 18, 18]
+  alternate_depths: [15.5, 13]
+  itemized-prices:
+    box-price: 13.52
+    basic-materials: 3.45
+    basic-services: 0.82
+    standard-materials: 8.68
+    standard-services: 6.16
+    fragile-materials: 17.55
+    fragile-services: 10.12
+    custom-materials: 24.36
+    custom-services: 16.24
+  location:
+    coords:
+    - 0.3854166666666667
+    - 0.22625
+- type: NormalBox
+  model: 24C-UPS
+  dimensions: [24, 24, 24]
+  alternate_depths: [22, 20, 18]
+  itemized-prices:
+    box-price: 20.03
+    basic-materials: 2.52
+    basic-services: 1.18
+    standard-materials: 13.68
+    standard-services: 7.48
+    fragile-materials: 35.0
+    fragile-services: 16.24
+    custom-materials: 47.88
+    custom-services: 14.62
+  location:
+    coords:
+    - 0.3854166666666667
+    - 0.22625
+- type: NormalBox
+  model: 12 X 12 X 6 - UPS
+  dimensions: [12, 12, 6]
+  alternate_depths: [4, 3]
+  itemized-prices:
+    box-price: 8.95
+    basic-materials: 2.32
+    basic-services: 0.84
+    standard-materials: 5.88
+    standard-services: 3.36
+    fragile-materials: 8.37
+    fragile-services: 3.52
+    custom-materials: 9.24
+    custom-services: 6.16
+  location:
+    coords:
+    - 0.3854166666666667
+    - 0.22625
+- type: NormalBox
+  model: 15 X 15 X 48 - UPS
+  dimensions: [15, 15, 48]
+  alternate_depths: [38, 42]
+  itemized-prices:
+    box-price: 17.91
+    basic-materials: 2.52
+    basic-services: 1.15
+    standard-materials: 15.12
+    standard-services: 6.88
+    fragile-materials: 31.32
+    fragile-services: 14.56
+    custom-materials: 42.0
+    custom-services: 14.62
+  location:
+    coords:
+    - 0.035416666666666666
+    - 0.20875
+- type: NormalBox
+  model: 17 X 11 X 8 - UPS
+  dimensions: [17, 11, 8]
+  alternate_depths: [6, 4]
+  itemized-prices:
+    box-price: 11.19
+    basic-materials: 1.68
+    basic-services: 1.18
+    standard-materials: 6.44
+    standard-services: 3.01
+    fragile-materials: 8.37
+    fragile-services: 7.28
+    custom-materials: 10.36
+    custom-services: 6.45
+  location:
+    coords:
+    - 0.035416666666666666
+    - 0.20875
+- type: NormalBox
+  model: 20 X 20 X 12 - UPS
+  dimensions: [20, 20, 12]
+  alternate_depths: [10, 8, 6]
+  itemized-prices:
+    box-price: 15.11
+    basic-materials: 3.45
+    basic-services: 0.84
+    standard-materials: 9.52
+    standard-services: 7.28
+    fragile-materials: 16.2
+    fragile-services: 9.24
+    custom-materials: 21.84
+    custom-services: 15.12
+  location:
+    coords:
+    - 0.035416666666666666
+    - 0.20875
+- type: NormalBox
+  model: 24 X 18 X 18 - UPS
+  dimensions: [24, 18, 18]
+  alternate_depths: [16, 14, 12, 10]
+  itemized-prices:
+    box-price: 16.23
+    basic-materials: 2.52
+    basic-services: 1.15
+    standard-materials: 11.76
+    standard-services: 6.02
+    fragile-materials: 23.22
+    fragile-services: 13.44
+    custom-materials: 30.8
+    custom-services: 12.9
+  location:
+    coords:
+    - 0.035416666666666666
+    - 0.20875
+- type: NormalBox
+  model: 08C-UPS
+  dimensions: [8, 8, 8]
+  alternate_depths: [4.5]
+  itemized-prices:
+    box-price: 6.99
+    basic-materials: 2.32
+    basic-services: 0.84
+    standard-materials: 5.04
+    standard-services: 2.8
+    fragile-materials: 6.48
+    fragile-services: 2.64
+    custom-materials: 8.68
+    custom-services: 6.16
+  location:
+    coords:
+    - 0.42541666666666667
+    - 0.63375
+- type: NormalBox
+  model: 12C-UPS
+  dimensions: [12, 12, 12]
+  alternate_depths: [9.5, 7]
+  itemized-prices:
+    box-price: 9.79
+    basic-materials: 1.68
+    basic-services: 1.15
+    standard-materials: 6.44
+    standard-services: 2.79
+    fragile-materials: 8.91
+    fragile-services: 6.44
+    custom-materials: 13.16
+    custom-services: 7.53
+  location:
+    coords:
+    - 0.32375
+    - 0.64625
+- type: NormalBox
+  model: 16C-UPS
+  dimensions: [16, 16, 16]
+  alternate_depths: [13.5, 11]
+  itemized-prices:
+    box-price: 12.03
+    basic-materials: 2.32
+    basic-services: 0.84
+    standard-materials: 8.12
+    standard-services: 3.92
+    fragile-materials: 13.23
+    fragile-services: 7.92
+    custom-materials: 17.92
+    custom-services: 14.56
+  location:
+    coords:
+    - 0.32375
+    - 0.64625
+- type: NormalBox
+  model: 20C-UPS
+  dimensions: [20, 20, 20]
+  alternate_depths: [16, 12]
+  itemized-prices:
+    box-price: 17.91
+    basic-materials: 2.52
+    basic-services: 1.15
+    standard-materials: 9.24
+    standard-services: 5.16
+    fragile-materials: 20.79
+    fragile-services: 14.0
+    custom-materials: 31.08
+    custom-services: 12.9
+  location:
+    coords:
+    - 0.32375
+    - 0.64625
+- type: NormalBox
+  model: 6 X 6 X 48 - UPS
+  dimensions: [6, 6, 48]
+  itemized-prices:
+    box-price: 13.99
+    basic-materials: 3.45
+    basic-services: 0.82
+    standard-materials: 6.16
+    standard-services: 5.6
+    fragile-materials: 9.72
+    fragile-services: 6.16
+    custom-materials: 14.0
+    custom-services: 10.64
+  location:
+    coords:
+    - 0.24041666666666667
+    - 0.22375
+- type: NormalBox
+  model: 15 X 12 X 10 - UPS
+  dimensions: [15, 12, 10]
+  alternate_depths: [8]
+  itemized-prices:
+    box-price: 10.07
+    basic-materials: 1.68
+    basic-services: 1.18
+    standard-materials: 7.0
+    standard-services: 3.44
+    fragile-materials: 9.99
+    fragile-services: 7.28
+    custom-materials: 13.16
+    custom-services: 7.31
+  location:
+    coords:
+    - 0.10875
+    - 0.21125
+- type: NormalBox
+  model: 16 X 16 X 4 - UPS
+  dimensions: [16, 16, 4]
+  itemized-prices:
+    box-price: 11.75
+    basic-materials: 2.32
+    basic-services: 0.82
+    standard-materials: 6.44
+    standard-services: 3.64
+    fragile-materials: 10.08
+    fragile-services: 6.16
+    custom-materials: 13.44
+    custom-services: 8.96
+  location:
+    coords:
+    - 0.10875
+    - 0.21125
+- type: NormalBox
+  model: 20 X 12 X 12 - UPS
+  dimensions: [20, 12, 12]
+  alternate_depths: [10, 8, 6]
+  itemized-prices:
+    box-price: 13.43
+    basic-materials: 2.52
+    basic-services: 1.18
+    standard-materials: 7.0
+    standard-services: 3.44
+    fragile-materials: 11.07
+    fragile-services: 8.4
+    custom-materials: 15.4
+    custom-services: 10.32
+  location:
+    coords:
+    - 0.10875
+    - 0.21125
+- type: NormalBox
+  model: 24 X 18 X 6 - UPS
+  dimensions: [24, 18, 6]
+  itemized-prices:
+    box-price: 12.31
+    basic-materials: 2.52
+    basic-services: 1.15
+    standard-materials: 8.4
+    standard-services: 5.04
+    fragile-materials: 13.44
+    fragile-services: 8.96
+    custom-materials: 18.48
+    custom-services: 11.2
+  location:
+    coords:
+    - 0.10875
+    - 0.21125
+- type: NormalBox
+  model: UMBRELLA
+  dimensions: [4, 4, 60]
+  itemized-prices:
+    box-price: 11.19
+    basic-materials: 2.52
+    basic-services: 3.45
+    standard-materials: 12.32
+    standard-services: 6.45
+    fragile-materials: 34.02
+    fragile-services: 13.44
+    custom-materials: 47.6
+    custom-services: 13.33
+  location:
+    coords:
+    - 0.17541666666666667
+    - 0.19875
+- type: NormalBox
+  model: SKI BTM
+  dimensions: [8.5, 6, 42]
+  itemized-prices:
+    box-price: 13.99
+    basic-materials: 3.36
+    basic-services: 1.68
+    standard-materials: 9.52
+    standard-services: 6.16
+    fragile-materials: 16.8
+    fragile-services: 11.2
+    custom-materials: 22.4
+    custom-services: 13.44
+  location:
+    coords:
+    - 0.17541666666666667
+    - 0.19875
+- type: NormalBox
+  model: J-14
+  dimensions: [12, 9, 5.5]
+  itemized-prices:
+    box-price: 7.83
+    basic-materials: 1.68
+    basic-services: 1.18
+    standard-materials: 4.76
+    standard-services: 1.72
+    fragile-materials: 7.29
+    fragile-services: 3.36
+    custom-materials: 9.24
+    custom-services: 3.87
+  location:
+    coords:
+    - 0.32375
+    - 0.64625
+- type: NormalBox
+  model: J-15
+  dimensions: [13.5, 10, 6]
+  itemized-prices:
+    box-price: 8.95
+    basic-materials: 2.32
+    basic-services: 0.84
+    standard-materials: 5.88
+    standard-services: 3.36
+    fragile-materials: 8.37
+    fragile-services: 3.52
+    custom-materials: 10.36
+    custom-services: 6.16
+  location:
+    coords:
+    - 0.32375
+    - 0.64625
+- type: NormalBox
+  model: Golf Box 2
+  dimensions: [14, 14, 53]
+  alternate_depths: [50, 48]
+  itemized-prices:
+    box-price: 25.75
+    basic-materials: 4.2
+    basic-services: 3.45
+    standard-materials: 14.0
+    standard-services: 6.88
+    fragile-materials: 29.7
+    fragile-services: 19.04
+    custom-materials: 42.0
+    custom-services: 14.62
+  location:
+    coords:
+    - 0.15375
+    - 0.91375
+- type: NormalBox
+  model: S. WREATH
+  dimensions: [18, 4, 18]
+  itemized-prices:
+    box-price: 10.07
+    basic-materials: 1.68
+    basic-services: 1.18
+    standard-materials: 5.88
+    standard-services: 3.44
+    fragile-materials: 9.99
+    fragile-services: 7.28
+    custom-materials: 13.16
+    custom-services: 7.74
+  location:
+    coords:
+    - 0.17541666666666667
+    - 0.19875
+- type: NormalBox
+  model: Guitar Box
+  dimensions: [20, 10, 50]
+  itemized-prices:
+    box-price: 24.63
+    basic-materials: 4.2
+    basic-services: 1.15
+    standard-materials: 14.0
+    standard-services: 6.88
+    fragile-materials: 29.7
+    fragile-services: 19.04
+    custom-materials: 42.0
+    custom-services: 16.34
+  location:
+    coords:
+    - 0.24041666666666667
+    - 0.22375
+- type: NormalBox
+  model: VCR
+  dimensions: [20, 20, 12]
+  alternate_depths: [9.5, 7]
+  itemized-prices:
+    box-price: 15.11
+    basic-materials: 3.45
+    basic-services: 0.84
+    standard-materials: 9.52
+    standard-services: 7.28
+    fragile-materials: 16.2
+    fragile-services: 9.24
+    custom-materials: 21.84
+    custom-services: 15.12
+  location:
+    coords:
+    - 0.24041666666666667
+    - 0.22375
+- type: NormalBox
+  model: CHAIR
+  dimensions: [30, 29, 34]
+  alternate_depths: [30, 26]
+  itemized-prices:
+    box-price: 23.51
+    basic-materials: 3.36
+    basic-services: 4.6
+    standard-materials: 20.72
+    standard-services: 9.46
+    fragile-materials: 44.82
+    fragile-services: 15.68
+    custom-materials: 61.04
+    custom-services: 16.77
+  location:
+    coords:
+    - 0.24041666666666667
+    - 0.22375
+- type: NormalBox
+  model: BB-130
+  dimensions: [34, 22, 24]
+  alternate_depths: [21, 17]
+  itemized-prices:
+    box-price: 25.75
+    basic-materials: 4.6
+    basic-services: 3.36
+    standard-materials: 20.72
+    standard-services: 12.32
+    fragile-materials: 44.82
+    fragile-services: 12.32
+    custom-materials: 61.04
+    custom-services: 22.08
+  location:
+    coords:
+    - 0.24041666666666667
+    - 0.22375
+- type: NormalBox
+  model: LG BIKE BOX
+  dimensions: [54.5, 10, 27.5]
+  alternate_depths: [24, 20]
+  itemized-prices:
+    box-price: 32.47
+    basic-materials: 5.75
+    basic-services: 2.52
+    standard-materials: 16.8
+    standard-services: 10.64
+    fragile-materials: 38.34
+    fragile-services: 11.44
+    custom-materials: 53.2
+    custom-services: 19.04
+  location:
+    coords:
+    - 0.24041666666666667
+    - 0.22375
+- type: NormalBox
+  model: SNW BRD
+  dimensions: [8, 16, 65]
+  itemized-prices:
+    box-price: 22.39
+    basic-materials: 3.36
+    basic-services: 3.45
+    standard-materials: 14.0
+    standard-services: 6.88
+    fragile-materials: 29.7
+    fragile-services: 19.04
+    custom-materials: 42.0
+    custom-services: 14.62
+  location:
+    coords:
+    - 0.24041666666666667
+    - 0.22375
+- type: NormalBox
+  model: J-11
+  dimensions: [9.5, 7, 4]
+  itemized-prices:
+    box-price: 6.71
+    basic-materials: 0.84
+    basic-services: 1.15
+    standard-materials: 4.76
+    standard-services: 1.72
+    fragile-materials: 6.21
+    fragile-services: 2.8
+    custom-materials: 8.68
+    custom-services: 1.94
+  location:
+    coords:
+    - 0.32375
+    - 0.64625
+- type: NormalBox
+  model: '101048'
+  dimensions: [10, 10, 48]
+  alternate_depths: [38]
+  itemized-prices:
+    box-price: 16.79
+    basic-materials: 1.68
+    basic-services: 1.18
+    standard-materials: 6.72
+    standard-services: 4.3
+    fragile-materials: 9.72
+    fragile-services: 7.84
+    custom-materials: 14.0
+    custom-services: 8.17
+  location:
+    coords:
+    - 0.40375
+    - 0.51125
+- type: NormalBox
+  model: 12 X 9 X 3
+  dimensions: [12, 9, 3]
+  itemized-prices:
+    box-price: 4.48
+    basic-materials: 1.15
+    basic-services: 0.82
+    standard-materials: 2.24
+    standard-services: 2.32
+    fragile-materials: 3.24
+    fragile-services: 1.76
+    custom-materials: 4.48
+    custom-services: 2.32
+  location:
+    coords:
+    - 0.40375
+    - 0.51125
+- type: NormalBox
+  model: LAMP
+  dimensions: [13, 13, 40]
+  alternate_depths: [37, 34]
+  itemized-prices:
+    box-price: 22.39
+    basic-materials: 4.6
+    basic-services: 4.2
+    standard-materials: 14.0
+    standard-services: 8.96
+    fragile-materials: 29.7
+    fragile-services: 14.96
+    custom-materials: 42.0
+    custom-services: 19.04
+  location:
+    coords:
+    - 0.40375
+    - 0.51125
+- type: NormalBox
+  model: J-16
+  dimensions: [15, 11, 6]
+  itemized-prices:
+    box-price: 10.07
+    basic-materials: 3.45
+    basic-services: 0.84
+    standard-materials: 7.0
+    standard-services: 4.48
+    fragile-materials: 9.99
+    fragile-services: 5.72
+    custom-materials: 13.16
+    custom-services: 10.08
+  location:
+    coords:
+    - 0.32375
+    - 0.64625
+- type: NormalBox
+  model: J-20
+  dimensions: [18, 13, 9.5]
+  itemized-prices:
+    box-price: 11.19
+    basic-materials: 2.52
+    basic-services: 1.15
+    standard-materials: 7.56
+    standard-services: 4.48
+    fragile-materials: 11.76
+    fragile-services: 7.84
+    custom-materials: 15.68
+    custom-services: 10.08
+  location:
+    coords:
+    - 0.32375
+    - 0.64625
+- type: NormalBox
+  model: WREATH-1
+  dimensions: [20, 6, 20]
+  itemized-prices:
+    box-price: 12.31
+    basic-materials: 2.52
+    basic-services: 1.15
+    standard-materials: 7.0
+    standard-services: 3.44
+    fragile-materials: 11.07
+    fragile-services: 8.4
+    custom-materials: 15.4
+    custom-services: 10.32
+  location:
+    coords:
+    - 0.3154166666666667
+    - 0.49625
+- type: NormalBox
+  model: J-64
+  dimensions: [22, 15, 13]
+  alternate_depths: [10, 7]
+  itemized-prices:
+    box-price: 15.11
+    basic-materials: 2.52
+    basic-services: 3.45
+    standard-materials: 8.4
+    standard-services: 5.59
+    fragile-materials: 15.12
+    fragile-services: 11.2
+    custom-materials: 20.16
+    custom-services: 11.18
+  location:
+    coords:
+    - 0.24041666666666667
+    - 0.22375
+- type: NormalBox
+  model: SUITCASE
+  dimensions: [24, 10, 31]
+  alternate_depths: [26]
+  itemized-prices:
+    box-price: 16.24
+    basic-materials: 3.45
+    basic-services: 1.68
+    standard-materials: 10.64
+    standard-services: 8.4
+    fragile-materials: 23.76
+    fragile-services: 11.0
+    custom-materials: 32.48
+    custom-services: 17.36
+  location:
+    coords:
+    - 0.17541666666666667
+    - 0.19875
+- type: NormalBox
+  model: UPS-3
+  dimensions: [33, 18, 18]
+  alternate_depths: [14, 10]
+  itemized-prices:
+    box-price: 20.16
+    basic-materials: 5.75
+    basic-services: 0.84
+    standard-materials: 14.0
+    standard-services: 11.2
+    fragile-materials: 30.24
+    fragile-services: 11.44
+    custom-materials: 39.76
+    custom-services: 19.04
+  location:
+    coords:
+    - 0.17541666666666667
+    - 0.19875
+- type: NormalBox
+  model: '3688'
+  dimensions: [36, 8, 8]
+  alternate_depths: [6, 4]
+  itemized-prices:
+    box-price: 12.31
+    basic-materials: 2.52
+    basic-services: 1.15
+    standard-materials: 6.16
+    standard-services: 4.3
+    fragile-materials: 9.72
+    fragile-services: 7.84
+    custom-materials: 14.0
+    custom-services: 8.17
+  location:
+    coords:
+    - 0.10875
+    - 0.21125
+- type: NormalBox
+  model: SHIRTB
+  dimensions: [18.375, 14.375, 4.125]
+  itemized-prices:
+    box-price: 12.31
+    basic-materials: 1.68
+    basic-services: 1.18
+    standard-materials: 6.44
+    standard-services: 2.8
+    fragile-materials: 8.1
+    fragile-services: 6.72
+    custom-materials: 11.2
+    custom-services: 6.45
+  location:
+    coords:
+    - 0.40375
+    - 0.51125
+- type: NormalBox
+  model: ST-6
+  dimensions: [15.5, 15.5, 8]
+  itemized-prices:
+    box-price: 11.2
+    basic-materials: 2.32
+    basic-services: 0.82
+    standard-materials: 7.0
+    standard-services: 4.48
+    fragile-materials: 9.99
+    fragile-services: 5.72
+    custom-materials: 13.16
+    custom-services: 10.08
+  location:
+    coords:
+    - 0.40375
+    - 0.51125
+- type: NormalBox
+  model: MIR-8
+  dimensions: [30, 6, 30]
+  itemized-prices:
+    box-price: 20.71
+    basic-materials: 3.45
+    basic-services: 2.52
+    standard-materials: 9.52
+    standard-services: 8.4
+    fragile-materials: 21.06
+    fragile-services: 13.64
+    custom-materials: 35.28
+    custom-services: 13.44
+  location:
+    coords:
+    - 0.3070833333333333
+    - 0.22875
+- type: NormalBox
+  model: MIR-9
+  dimensions: [36, 6, 36]
+  itemized-prices:
+    box-price: 55.99
+    basic-materials: 4.2
+    basic-services: 1.15
+    standard-materials: 12.32
+    standard-services: 6.45
+    fragile-materials: 29.16
+    fragile-services: 13.44
+    custom-materials: 40.88
+    custom-services: 13.33
+  location:
+    coords:
+    - 0.3070833333333333
+    - 0.22875
+- type: NormalBox
+  model: MIR-10
+  dimensions: [42, 6, 36]
+  itemized-prices:
+    box-price: 25.19
+    basic-materials: 4.48
+    basic-services: 2.52
+    standard-materials: 13.44
+    standard-services: 6.45
+    fragile-materials: 34.02
+    fragile-services: 13.44
+    custom-materials: 47.6
+    custom-services: 13.33
+  location:
+    coords:
+    - 0.3070833333333333
+    - 0.22875
+- type: NormalBox
+  model: MIR-11
+  dimensions: [36, 5, 48]
+  itemized-prices:
+    box-price: 26.87
+    basic-materials: 4.48
+    basic-services: 2.52
+    standard-materials: 14.0
+    standard-services: 6.72
+    fragile-materials: 35.28
+    fragile-services: 14.0
+    custom-materials: 49.28
+    custom-services: 14.56
+  location:
+    coords:
+    - 0.3070833333333333
+    - 0.22875
+- type: NormalBox
+  model: 25.75C
+  dimensions: [25.75, 25.75, 25.75]
+  itemized-prices:
+    box-price: 22.39
+    basic-materials: 4.2
+    basic-services: 1.15
+    standard-materials: 14.56
+    standard-services: 7.31
+    fragile-materials: 34.83
+    fragile-services: 9.52
+    custom-materials: 49.0
+    custom-services: 14.19
+  location:
+    coords:
+    - 0.10875
+    - 0.21125
+- type: NormalBox
+  model: Heavy Duty Mirror Box
+  dimensions: [42, 8, 60]
+  itemized-prices:
+    box-price: 28.55
+    basic-materials: 5.04
+    basic-services: 3.36
+    standard-materials: 16.8
+    standard-services: 8.4
+    fragile-materials: 42.0
+    fragile-services: 16.8
+    custom-materials: 58.8
+    custom-services: 19.04
+  location:
+    coords:
+    - 0.3070833333333333
+    - 0.22875
+- type: NormalBox
+  model: 36C
+  dimensions: [36, 36, 36]
+  alternate_depths: [28, 32]
+  itemized-prices:
+    box-price: 55.99
+    basic-materials: 5.75
+    basic-services: 0.84
+    standard-materials: 12.32
+    standard-services: 8.4
+    fragile-materials: 29.16
+    fragile-services: 10.56
+    custom-materials: 40.88
+    custom-services: 17.36
+  location:
+    coords:
+    - 0.3154166666666667
+    - 0.49625
+- type: NormalBox
+  model: 22C275
+  dimensions: [22, 22, 22]
+  alternate_depths: [12, 17]
+  itemized-prices:
+    box-price: 19.03
+    basic-materials: 3.45
+    basic-services: 0.82
+    standard-materials: 10.36
+    standard-services: 7.84
+    fragile-materials: 21.87
+    fragile-services: 11.88
+    custom-materials: 32.2
+    custom-services: 17.92
+  location:
+    coords:
+    - 0.3154166666666667
+    - 0.49625
+- type: NormalBox
+  model: MIR-3
+  dimensions: [30, 6, 24]
+  itemized-prices:
+    box-price: 16.79
+    basic-materials: 2.32
+    basic-services: 2.52
+    standard-materials: 8.4
+    standard-services: 6.72
+    fragile-materials: 17.28
+    fragile-services: 8.8
+    custom-materials: 24.08
+    custom-services: 15.12
+  location:
+    coords:
+    - 0.3070833333333333
+    - 0.22875
+demo_last_reset: '2025-05-28T18:27:03.451107+00:00'

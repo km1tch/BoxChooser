@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Box Inventory - Packing Website</title>
+    <link rel="stylesheet" href="/assets/css/common.css">
+    <link rel="stylesheet" href="/assets/css/index.css">
+    <link rel="stylesheet" href="/assets/css/import.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+    <style>
+        .boxes-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .add-box-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .add-box-btn:hover {
+            background: #229954;
+        }
+        
+        #boxes-table {
+            width: 100% !important;
+        }
+        
+        .dataTables_wrapper {
+            margin-top: 20px;
+        }
+        
+        .dimension-cell {
+            font-family: monospace;
+            white-space: nowrap;
+        }
+        
+        .supplier-cell {
+            font-weight: 500;
+        }
+        
+        .location-cell {
+            cursor: pointer;
+            color: #0066cc;
+            text-decoration: underline;
+        }
+        
+        .location-cell:hover {
+            color: #0052a3;
+        }
+        
+        .no-location {
+            color: #999;
+            font-style: italic;
+            cursor: pointer;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px;
+            border-radius: 3px;
+            transition: background 0.2s;
+        }
+        
+        .action-btn:hover {
+            background: #f0f0f0;
+        }
+        
+        .action-btn.delete {
+            color: #e74c3c;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .error {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c00;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+        }
+        
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: black;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+        
+        .wizard-step {
+            min-height: 300px;
+        }
+        
+        .box-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .box-card:hover {
+            background: #f8f9fa;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .box-info h4 {
+            margin: 0 0 5px 0;
+            color: #333;
+        }
+        
+        .box-dimensions {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .box-alt-depths {
+            color: #999;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        .box-card.selected {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+        
+        .box-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .bulk-add-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 20px 0;
+            width: 100%;
+        }
+        
+        .bulk-add-btn:hover {
+            background: #229954;
+        }
+        
+        .bulk-add-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="nav-container"></div>
+    
+    <div class="boxes-container" style="display: none;">
+        <div class="page-header">
+            <h1>Box Inventory</h1>
+            <button class="add-box-btn" onclick="addNewBox()">
+                + Add New Box
+            </button>
+        </div>
+        
+        <div id="boxes-content" class="loading">
+            Loading boxes...
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Delete Box</h2>
+                <span class="close" onclick="closeDeleteModal()">&times;</span>
+            </div>
+            <p>Are you sure you want to remove this box from your inventory?</p>
+            <p><strong id="delete-box-model"></strong></p>
+            <p style="color: #e74c3c;">This action cannot be undone.</p>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="confirmDelete()">Delete Box</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Box Wizard -->
+    <div id="add-modal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2 id="modal-title">Add New Box</h2>
+                <span class="close" onclick="closeAddModal()">&times;</span>
+            </div>
+            
+            <!-- Step 1: Choose Source -->
+            <div id="step-source" class="wizard-step">
+                <p>Search our box library or create a custom box.</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px;">
+                    <button class="btn" style="padding: 30px; font-size: 18px; background: #3498db; color: white;" onclick="showLibrarySearch()">
+                        📚 Box Library
+                    </button>
+                    <button class="btn" style="padding: 30px; font-size: 18px; background: #27ae60; color: white;" onclick="showCustomForm()">
+                        ✏️ Custom Box
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Step 2A: Library Search -->
+            <div id="step-library" class="wizard-step" style="display: none;">
+                <button class="btn btn-secondary" onclick="backToSource()">← Back</button>
+                <div style="margin: 20px 0;">
+                    <input type="text" id="library-search" placeholder="Filter boxes (e.g., '10x10x10', '10C', 'cube')... or browse all below" 
+                           style="width: calc(100% - 26px); padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; box-sizing: border-box;"
+                           oninput="searchLibraryDebounced()">
+                </div>
+                <div style="margin: -10px 0 10px 0; padding: 0; background: #f8f9fa; border-radius: 4px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin: 0; padding: 10px;">
+                        <input type="checkbox" id="hide-existing-boxes" checked onchange="filterLibraryResults()" style="width: auto;">
+                        <span>Hide boxes already in this store</span>
+                    </label>
+                </div>
+                <div id="library-results" style="max-height: 500px; overflow-y: auto;">
+                    <p style="text-align: center; color: #666;">Loading boxes...</p>
+                </div>
+            </div>
+            
+            <!-- Step 2B: Name Selection -->
+            <div id="step-name-selection" class="wizard-step" style="display: none;">
+                <button class="btn btn-secondary" onclick="backToLibrary()">← Back</button>
+                <div id="selected-box-info" style="background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 8px;">
+                    <!-- Box details will be shown here -->
+                </div>
+                <p style="margin-top: 20px;">Select a name for this box in your store:</p>
+                <div id="name-options" style="margin: 0;">
+                    <!-- Radio buttons for name options will be inserted here -->
+                </div>
+                <label style="display: inline-block !important; width: auto !important; margin: 10px 0; text-align: left; padding: 0;">
+                    <input type="radio" name="box-name" value="custom" id="custom-name-radio" style="margin: 0 8px 0 0; vertical-align: middle; display: inline; width: auto;">
+                    <input type="text" id="custom-name-input" placeholder="Enter custom name..." 
+                           style="width: 300px !important; padding: 6px; border: 1px solid #ddd; border-radius: 4px; vertical-align: middle; display: inline;"
+                           onfocus="document.getElementById('custom-name-radio').checked = true">
+                </label>
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
+                    <p style="color: #666; margin-bottom: 10px;">Need different specifications?</p>
+                    <button class="btn" style="background: #e67e22; color: white; margin-bottom: 10px;" onclick="pivotToCustom()">
+                        🔧 I need different specs...
+                    </button>
+                </div>
+                <button class="bulk-add-btn" onclick="confirmBoxSelection()" style="margin-top: 20px;">
+                    Add Box
+                </button>
+            </div>
+            
+            <!-- Step 2C: Custom Form -->
+            <div id="step-custom" class="wizard-step" style="display: none;">
+                <button class="btn btn-secondary" onclick="backFromCustom()">← Back</button>
+                <form id="custom-box-form" style="margin-top: 20px;">
+                    <div style="display: grid; gap: 15px;">
+                        <div>
+                            <label for="custom-model">Model Name <span style="color: red;">*</span></label>
+                            <input type="text" id="custom-model" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        
+                        <div>
+                            <label>Dimensions (inches) <span style="color: red;">*</span></label>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                                <div>
+                                    <label for="custom-length" style="font-size: 12px;">Length</label>
+                                    <input type="number" id="custom-length" min="0.1" step="0.1" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+                                <div>
+                                    <label for="custom-width" style="font-size: 12px;">Width</label>
+                                    <input type="number" id="custom-width" min="0.1" step="0.1" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+                                <div>
+                                    <label for="custom-depth" style="font-size: 12px;">Depth</label>
+                                    <input type="number" id="custom-depth" min="0.1" step="0.1" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="custom-alternate-depths">Alternate Depths (comma-separated, optional)</label>
+                            <input type="text" id="custom-alternate-depths" placeholder="e.g., 4.5, 3.0" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <small style="color: #666; font-size: 12px; display: block;">Pre-scored depths must be less than the box depth</small>
+                            <small id="custom-alternate-depths-error" style="color: #e74c3c; display: none;"></small>
+                        </div>
+                        
+                        <div>
+                            <label for="custom-notes">Notes (optional)</label>
+                            <textarea id="custom-notes" rows="3" placeholder="Any additional information about this box..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-buttons" style="margin-top: 20px;">
+                        <button type="submit" class="btn add-box-btn">Add Custom Box</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script src="/js/lib/auth.js"></script>
+    <script src="/js/lib/api-utils.js"></script>
+    <script src="/js/lib/api.js"></script>
+    <script src="/js/lib/superadmin-api.js"></script>
+    <script src="/js/lib/location-utils.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components/help-bubble.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Get store ID from auth
+            const storeId = AuthManager.getCurrentStoreId();
+            
+            // Initialize navigation
+            initAdminNav('nav-container', storeId, 'boxes');
+            
+            try {
+                // Check admin access
+                await AuthManager.requireAuth(storeId, true);
+                
+                // Show container after successful auth
+                document.querySelector('.boxes-container').style.display = 'block';
+                
+                // Initialize location utilities
+                LocationUtils.init(storeId);
+            } catch (error) {
+                // Auth failed, requireAuth will redirect
+                return;
+            }
+        
+        let currentBoxes = [];
+        let boxToDelete = null;
+        let librarySearchTimeout = null;
+        let selectedLibraryBox = null;
+        let librarySearchResults = [];
+        let libraryFullResults = []; // Store unfiltered results
+        let allLibraryBoxes = []; // Store all library boxes for client-side search
+        let isPivotFromLibrary = false;
+        
+        // Validate box dimensions and alternate depths
+        function validateBoxDimensions(dimensions, alternateDepths) {
+            const [length, width, depth] = dimensions;
+            
+            // Check all dimensions are positive numbers
+            if (!dimensions.every(d => d > 0)) {
+                return { valid: false, error: "All dimensions must be greater than 0" };
+            }
+            
+            // Check dimensions are reasonable (not too small or too large)
+            if (dimensions.some(d => d < 0.1)) {
+                return { valid: false, error: "Dimensions must be at least 0.1 inches" };
+            }
+            
+            if (dimensions.some(d => d > 1000)) {
+                return { valid: false, error: "Dimensions cannot exceed 1000 inches" };
+            }
+            
+            // Validate alternate depths if provided
+            if (alternateDepths && alternateDepths.length > 0) {
+                // Check all alternate depths are positive
+                if (!alternateDepths.every(d => d > 0)) {
+                    return { valid: false, error: "All alternate depths must be greater than 0" };
+                }
+                
+                // Check all alternate depths are less than the box depth
+                const invalidDepths = alternateDepths.filter(d => d >= depth);
+                if (invalidDepths.length > 0) {
+                    return { valid: false, error: `Alternate depths (${invalidDepths.join(', ')}) must be less than box depth (${depth}")` };
+                }
+                
+                // Check for duplicates
+                const uniqueDepths = [...new Set(alternateDepths)];
+                if (uniqueDepths.length !== alternateDepths.length) {
+                    return { valid: false, error: "Duplicate alternate depths are not allowed" };
+                }
+                
+                // Check reasonable number of alternate depths
+                if (alternateDepths.length > 10) {
+                    return { valid: false, error: "Maximum 10 alternate depths allowed" };
+                }
+            }
+            
+            return { valid: true };
+        }
+        
+        // Check if a library box already exists in the store
+        function boxExistsInStore(libraryBox) {
+            const [l, w, d] = libraryBox.dimensions;
+            
+            // Check if we have a box with same dimensions and alternate depths
+            return currentBoxes.some(storeBox => {
+                // Check dimensions match
+                if (storeBox.dimensions[0] !== l || 
+                    storeBox.dimensions[1] !== w || 
+                    storeBox.dimensions[2] !== d) {
+                    return false;
+                }
+                
+                // Check alternate depths match (if both have them)
+                const storeDepths = storeBox.alternate_depths || [];
+                const libDepths = libraryBox.alternate_depths || [];
+                
+                // If lengths differ, they're different boxes
+                if (storeDepths.length !== libDepths.length) {
+                    return false;
+                }
+                
+                // Sort and compare depths
+                const sortedStore = [...storeDepths].sort((a, b) => a - b);
+                const sortedLib = [...libDepths].sort((a, b) => a - b);
+                
+                return sortedStore.every((depth, i) => Math.abs(depth - sortedLib[i]) < 0.01);
+            });
+        }
+        
+        // Load boxes
+        async function loadBoxes() {
+            try {
+                // Make sure API is available
+                if (!window.api || !window.api.fetchAllBoxes) {
+                    throw new Error('API not loaded');
+                }
+                
+                const response = await window.api.fetchAllBoxes(storeId);
+                currentBoxes = response.boxes;
+                displayBoxes(response.boxes);
+            } catch (error) {
+                console.error('Error loading boxes:', error);
+                document.getElementById('boxes-content').innerHTML = `
+                    <div class="error">
+                        Failed to load boxes: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        // Display boxes in DataTable
+        function displayBoxes(boxes) {
+            const container = document.getElementById('boxes-content');
+            
+            if (boxes.length === 0) {
+                container.innerHTML = '<p>No boxes found in inventory.</p>';
+                return;
+            }
+            
+            // Create table structure
+            let tableHtml = `
+                <table id="boxes-table" class="display">
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Source</th>
+                            <th>Dimensions (L×W×D)</th>
+                            <th>Alternate Depths</th>
+                            <th>Location 📍</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            // Build rows
+            boxes.forEach((box, index) => {
+                const [l, w, d] = box.dimensions || [0, 0, 0];
+                // Display logic: show "Custom" for CustomBox type, "Library" for NormalBox
+                let displaySource;
+                if (box.type === 'CustomBox') {
+                    displaySource = 'Custom';
+                } else if (box.type === 'NormalBox') {
+                    displaySource = 'Library';
+                } else {
+                    displaySource = 'Unknown';
+                }
+                const hasCoords = box.location && box.location.coords && box.location.coords.length > 0;
+                
+                // Store location data for this box
+                if (box.location) {
+                    LocationUtils.locationData[box.model] = box.location;
+                }
+                
+                tableHtml += `
+                    <tr>
+                        <td>${box.model || ''}</td>
+                        <td class="supplier-cell">${displaySource}</td>
+                        <td class="dimension-cell">${l} × ${w} × ${d}</td>
+                        <td style="color: #666; font-size: 0.9em;">
+                            ${box.alternate_depths ? box.alternate_depths.join(', ') : '-'}
+                        </td>
+                        <td>
+                            ${LocationUtils.renderLocationButtons(box.model, box.location)}
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="action-btn delete" 
+                                        data-box-index="${index}"
+                                        title="Delete box">
+                                    🗑️
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableHtml += `
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = tableHtml;
+            
+            // Initialize DataTable
+            const table = $('#boxes-table').DataTable({
+                pageLength: 50,
+                order: [[0, 'asc']], // Sort by model
+                columnDefs: [
+                    { orderable: false, targets: 5 } // Actions column not sortable
+                ],
+                language: {
+                    search: "Search boxes:"
+                }
+            });
+            
+            // Add custom search that ignores spaces and is case-insensitive
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                // Get the search term from the search box
+                const searchTerm = $('.dataTables_filter input').val();
+                if (!searchTerm) return true; // Show all if no search
+                
+                // Normalize search term: remove spaces, lowercase, and convert × to x
+                const normalizedSearch = searchTerm
+                    .replace(/\s+/g, '')
+                    .toLowerCase()
+                    .replace(/×/g, 'x');
+                
+                // Combine all data fields and normalize
+                // Replace × with x so "9×9×9" becomes "9x9x9"
+                const rowText = data.join(' ')
+                    .replace(/×/g, 'x')  // Replace multiplication symbol with x
+                    .replace(/\s+/g, '')
+                    .toLowerCase();
+                
+                // Check if normalized search is found in normalized row text
+                return rowText.includes(normalizedSearch);
+            });
+            
+            // Trigger redraw when search input changes
+            $('.dataTables_filter input').off('keyup search input').on('keyup search input', function() {
+                table.draw();
+            });
+        }
+        
+        // Edit location
+        async function editLocation(index) {
+            const box = currentBoxes[index];
+            
+            const onSave = async (locationData) => {
+                try {
+                    // Update box location
+                    const updatedBox = {
+                        ...box,
+                        location: locationData
+                    };
+                    
+                    // Save to backend
+                    await window.api.updateBoxLocation(storeId, box.model, locationData);
+                    
+                    // Reload boxes
+                    await loadBoxes();
+                } catch (error) {
+                    alert(`Failed to update location: ${error.message}`);
+                }
+            };
+            
+            LocationUtils.editLocation(box.model, box.location, onSave);
+        }
+        
+        // Delete box
+        function deleteBox(index) {
+            boxToDelete = currentBoxes[index];
+            document.getElementById('delete-box-model').textContent = boxToDelete.model;
+            document.getElementById('delete-modal').style.display = 'block';
+        }
+        
+        // Close delete modal
+        function closeDeleteModal() {
+            document.getElementById('delete-modal').style.display = 'none';
+            boxToDelete = null;
+        }
+        
+        // Confirm delete
+        async function confirmDelete() {
+            if (!boxToDelete) return;
+            
+            try {
+                await window.api.deleteBox(storeId, boxToDelete.model);
+                
+                closeDeleteModal();
+                await loadBoxes();
+            } catch (error) {
+                alert(`Failed to delete box: ${error.message}`);
+            }
+        }
+        
+        // Add new box
+        async function addNewBox() {
+            // Reset state
+            selectedLibraryBox = null;
+            librarySearchResults = [];
+            isPivotFromLibrary = false;
+            document.getElementById('library-search').value = '';
+            document.getElementById('library-results').innerHTML = '';
+            document.getElementById('custom-box-form').reset();
+            
+            // Show the modal with source selection
+            showStep('source');
+            document.getElementById('add-modal').style.display = 'block';
+        }
+        
+        // Show wizard step
+        function showStep(stepName) {
+            // Hide all steps
+            document.querySelectorAll('.wizard-step').forEach(step => {
+                step.style.display = 'none';
+            });
+            // Show requested step
+            document.getElementById(`step-${stepName}`).style.display = 'block';
+            
+            // Update modal title based on step
+            const modalTitle = document.getElementById('modal-title');
+            if (modalTitle) {
+                switch(stepName) {
+                    case 'library':
+                        modalTitle.textContent = 'Add New Box: Box Library';
+                        break;
+                    case 'name-selection':
+                        modalTitle.textContent = 'Add New Box: Details';
+                        break;
+                    case 'custom':
+                        modalTitle.textContent = 'Add New Box: Custom Box';
+                        break;
+                    default:
+                        modalTitle.textContent = 'Add New Box';
+                }
+            }
+        }
+        
+        // Show library search
+        async function showLibrarySearch() {
+            showStep('library');
+            document.getElementById('library-search').focus();
+            
+            // Load all boxes by default
+            document.getElementById('library-results').innerHTML = '<p style="text-align: center; color: #666;">Loading all boxes...</p>';
+            try {
+                if (allLibraryBoxes.length === 0) {
+                    // Only fetch if we haven't already
+                    allLibraryBoxes = await window.api.getLibraryBoxes(storeId);
+                }
+                libraryFullResults = allLibraryBoxes; // Start with all boxes
+                filterLibraryResults(); // Apply filter
+            } catch (error) {
+                document.getElementById('library-results').innerHTML = `<p style="color: #e74c3c;">Error loading library: ${error.message}</p>`;
+            }
+        }
+        
+        // Show custom form
+        function showCustomForm() {
+            isPivotFromLibrary = false;
+            showStep('custom');
+            document.getElementById('custom-model').focus();
+        }
+        
+        // Back to source selection
+        function backToSource() {
+            showStep('source');
+        }
+        
+        // Back to library search
+        function backToLibrary() {
+            showStep('library');
+        }
+        
+        // Back from custom form (could be to source or name selection)
+        function backFromCustom() {
+            if (isPivotFromLibrary && selectedLibraryBox) {
+                // Go back to name selection if we came from pivot
+                showStep('name-selection');
+                isPivotFromLibrary = false;
+            } else {
+                // Otherwise go back to source selection
+                showStep('source');
+            }
+        }
+        
+        // Debounced library search
+        function searchLibraryDebounced() {
+            if (librarySearchTimeout) {
+                clearTimeout(librarySearchTimeout);
+            }
+            
+            const searchTerm = document.getElementById('library-search').value.trim();
+            if (searchTerm.length < 1) {
+                // Show all boxes when search is empty
+                libraryFullResults = allLibraryBoxes;
+                filterLibraryResults();
+                return;
+            }
+            
+            // Show loading state
+            document.getElementById('library-results').innerHTML = '<p style="text-align: center; color: #666;">Searching...</p>';
+            
+            librarySearchTimeout = setTimeout(() => searchLibrary(searchTerm), 300);
+        }
+        
+        // Search library (client-side)
+        function searchLibrary(searchTerm) {
+            // Filter the boxes we already have
+            const searchLower = searchTerm.toLowerCase().replace(/\s+/g, '');
+            
+            const filtered = allLibraryBoxes.filter(box => {
+                // Check dimensions
+                const dimStr = box.dimensions.join('x').toLowerCase().replace(/\s+/g, '');
+                if (dimStr.includes(searchLower)) return true;
+                
+                // Check alternate depths
+                if (box.alternate_depths) {
+                    const depthsStr = box.alternate_depths.join(',').toLowerCase().replace(/\s+/g, '');
+                    if (depthsStr.includes(searchLower)) return true;
+                }
+                
+                // Check names
+                if (box.names) {
+                    for (const name of box.names) {
+                        if (name.toLowerCase().replace(/\s+/g, '').includes(searchLower)) {
+                            return true;
+                        }
+                    }
+                }
+                
+                // Check category
+                if (box.category && box.category.toLowerCase().replace(/\s+/g, '').includes(searchLower)) {
+                    return true;
+                }
+                
+                // Check volume
+                if (box.volume && String(box.volume).includes(searchTerm)) {
+                    return true;
+                }
+                
+                return false;
+            });
+            
+            libraryFullResults = filtered;
+            filterLibraryResults();
+        }
+        
+        // Filter library results based on checkbox
+        function filterLibraryResults() {
+            if (!libraryFullResults || libraryFullResults.length === 0) {
+                librarySearchResults = [];
+                displayLibraryResults([]);
+                return;
+            }
+            
+            const hideExisting = document.getElementById('hide-existing-boxes').checked;
+            
+            if (!hideExisting) {
+                // Show all results
+                librarySearchResults = libraryFullResults;
+            } else {
+                // Filter out boxes that already exist in the store
+                librarySearchResults = libraryFullResults.filter(box => !boxExistsInStore(box));
+            }
+            
+            displayLibraryResults(librarySearchResults);
+        }
+        
+        // Display library search results
+        function displayLibraryResults(results) {
+            const container = document.getElementById('library-results');
+            
+            if (results.length === 0) {
+                const hideExisting = document.getElementById('hide-existing-boxes').checked;
+                if (hideExisting && libraryFullResults.length > 0) {
+                    container.innerHTML = '<p style="text-align: center; color: #666;">All matching boxes are already in your store. Try unchecking the filter or search for different boxes.</p>';
+                } else {
+                    container.innerHTML = '<p style="text-align: center; color: #666;">No boxes found. Try a different search term or create a custom box.</p>';
+                }
+                return;
+            }
+            
+            let html = `<p style="margin: 0 0 10px 0; color: #666;">Showing ${results.length} box${results.length !== 1 ? 'es' : ''}</p>`;
+            html += '<div style="display: flex; flex-direction: column; gap: 10px;">';
+            
+            results.forEach((box, index) => {
+                const [l, w, d] = box.dimensions;
+                const hasAlternateDepths = box.alternate_depths && box.alternate_depths.length > 0;
+                
+                html += `
+                    <div class="box-card" onclick="selectLibraryBox(${index})" style="cursor: pointer;">
+                        <div class="box-info">
+                            <h4>${l}" × ${w}" × ${d}"</h4>
+                            ${hasAlternateDepths ? 
+                                `<div class="box-alt-depths">Pre-scored at: ${box.alternate_depths.join('", ')}"</div>` : 
+                                '<div class="box-alt-depths" style="color: #999;">No pre-scoring</div>'}
+                            ${box.names && box.names.length > 0 ? 
+                                `<div style="color: #666; font-size: 12px; margin-top: 5px;">Names: ${box.names.slice(0, 3).join(', ')}${box.names.length > 3 ? '...' : ''}</div>` : 
+                                ''}
+                            ${box.category ? 
+                                `<span class="category-badge" style="font-size: 11px; padding: 2px 8px; background: #e3f2fd; color: #1976d2; border-radius: 3px; margin-top: 5px; display: inline-block;">${box.category}</span>` : 
+                                ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+        
+        // Select a box from library
+        function selectLibraryBox(index) {
+            selectedLibraryBox = librarySearchResults[index];
+            showNameSelection();
+        }
+        
+        // Show name selection for library box
+        function showNameSelection() {
+            const box = selectedLibraryBox;
+            if (!box) {
+                console.error('No library box selected');
+                return;
+            }
+            const [l, w, d] = box.dimensions;
+            
+            // Show box details
+            const infoHtml = `
+                <h4>Selected Box: ${l}" × ${w}" × ${d}"</h4>
+                ${box.alternate_depths && box.alternate_depths.length > 0 ? 
+                    `<p>Pre-scored at: ${box.alternate_depths.join('", ')}"</p>` : 
+                    '<p>No pre-scoring</p>'}
+                ${box.category ? `<p>Category: ${box.category}</p>` : ''}
+            `;
+            document.getElementById('selected-box-info').innerHTML = infoHtml;
+            
+            // Show name options
+            let nameOptionsHtml = '';
+            
+            // Always add the default dimensions option first (10x4x4 format)
+            const defaultName = `${l}x${w}x${d}`;
+            nameOptionsHtml += `
+                <label style="display: inline-block !important; width: auto !important; margin: 10px 0; cursor: pointer; text-align: left; padding: 0;">
+                    <input type="radio" name="box-name" value="${defaultName}" checked style="margin: 0 8px 0 0; vertical-align: middle; display: inline; width: auto;">
+                    <span style="vertical-align: middle;">${defaultName}</span>
+                </label>
+                <br>
+            `;
+            
+            // Add any library names
+            if (box.names && box.names.length > 0) {
+                box.names.forEach((name) => {
+                    nameOptionsHtml += `
+                        <label style="display: inline-block !important; width: auto !important; margin: 10px 0; cursor: pointer; text-align: left; padding: 0;">
+                            <input type="radio" name="box-name" value="${name}" style="margin: 0 8px 0 0; vertical-align: middle; display: inline; width: auto;">
+                            <span style="vertical-align: middle;">${name}</span>
+                        </label>
+                        <br>
+                    `;
+                });
+            }
+            
+            document.getElementById('name-options').innerHTML = nameOptionsHtml;
+            document.getElementById('custom-name-input').value = '';
+            
+            showStep('name-selection');
+        }
+        
+        // Confirm box selection with chosen name
+        async function confirmBoxSelection() {
+            const selectedName = document.querySelector('input[name="box-name"]:checked').value;
+            let modelName = selectedName;
+            
+            if (selectedName === 'custom') {
+                modelName = document.getElementById('custom-name-input').value.trim();
+                if (!modelName) {
+                    alert('Please enter a custom name for the box.');
+                    return;
+                }
+            }
+            
+            const box = selectedLibraryBox;
+            // Get all offered names (default dimensions name + library names)
+            const defaultName = `${box.dimensions[0]}x${box.dimensions[1]}x${box.dimensions[2]}`;
+            const offeredNames = [defaultName];
+            if (box.names && box.names.length > 0) {
+                offeredNames.push(...box.names);
+            }
+            
+            const boxData = {
+                model: modelName,
+                // No supplier field in new system
+                dimensions: box.dimensions,
+                alternate_depths: box.alternate_depths,
+                from_library: true,
+                offered_names: offeredNames
+            };
+            
+            try {
+                await window.api.createBox(storeId, boxData);
+                closeAddModal();
+                await loadBoxes();
+            } catch (error) {
+                alert(`Failed to add box: ${error.message}`);
+            }
+        }
+        
+        // Close add modal
+        function closeAddModal() {
+            document.getElementById('add-modal').style.display = 'none';
+            document.getElementById('custom-box-form').reset();
+            document.getElementById('library-search').value = '';
+            selectedLibraryBox = null;
+            librarySearchResults = [];
+            isPivotFromLibrary = false;
+            showStep('source'); // Reset to source selection
+            
+            // Reset submit button text
+            const submitBtn = document.querySelector('#custom-box-form button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.textContent = 'Add Custom Box';
+                submitBtn.disabled = false;
+            }
+            
+            // Reset any validation error messages
+            const errorElement = document.getElementById('custom-alternate-depths-error');
+            if (errorElement) {
+                errorElement.style.display = 'none';
+            }
+        }
+        
+        
+        // Show wizard step
+        function showStep(stepName) {
+            // Hide all steps
+            document.querySelectorAll('.wizard-step').forEach(step => {
+                step.style.display = 'none';
+            });
+            // Show requested step
+            document.getElementById(`step-${stepName}`).style.display = 'block';
+            
+            // Update modal title based on step
+            const modalTitle = document.getElementById('modal-title');
+            if (modalTitle) {
+                switch(stepName) {
+                    case 'library':
+                        modalTitle.textContent = 'Add New Box: Box Library';
+                        break;
+                    case 'name-selection':
+                        modalTitle.textContent = 'Add New Box: Details';
+                        break;
+                    case 'custom':
+                        modalTitle.textContent = 'Add New Box: Custom Box';
+                        break;
+                    default:
+                        modalTitle.textContent = 'Add New Box';
+                }
+            }
+        }
+        
+        // Show library search
+        async function showLibrarySearch() {
+            showStep('library');
+            document.getElementById('library-search').focus();
+            
+            // Load all boxes by default
+            document.getElementById('library-results').innerHTML = '<p style="text-align: center; color: #666;">Loading all boxes...</p>';
+            try {
+                if (allLibraryBoxes.length === 0) {
+                    // Only fetch if we haven't already
+                    allLibraryBoxes = await window.api.getLibraryBoxes(storeId);
+                }
+                libraryFullResults = allLibraryBoxes; // Start with all boxes
+                filterLibraryResults(); // Apply filter
+            } catch (error) {
+                document.getElementById('library-results').innerHTML = `<p style="color: #e74c3c;">Error loading library: ${error.message}</p>`;
+            }
+        }
+        
+        // Show custom form
+        function showCustomForm() {
+            isPivotFromLibrary = false;
+            showStep('custom');
+            document.getElementById('custom-model').focus();
+        }
+        
+        // Back to source selection
+        function backToSource() {
+            showStep('source');
+        }
+        
+        // Back to library search
+        function backToLibrary() {
+            showStep('library');
+        }
+        
+        // Back from custom form (could be to source or name selection)
+        function backFromCustom() {
+            if (isPivotFromLibrary && selectedLibraryBox) {
+                // Go back to name selection if we came from pivot
+                showStep('name-selection');
+                isPivotFromLibrary = false;
+            } else {
+                // Otherwise go back to source selection
+                showStep('source');
+            }
+        }
+        
+        // Debounced library search
+        function searchLibraryDebounced() {
+            if (librarySearchTimeout) {
+                clearTimeout(librarySearchTimeout);
+            }
+            
+            const searchTerm = document.getElementById('library-search').value.trim();
+            if (searchTerm.length < 1) {
+                // Show all boxes when search is empty
+                libraryFullResults = allLibraryBoxes;
+                filterLibraryResults();
+                return;
+            }
+            
+            // Show loading state
+            document.getElementById('library-results').innerHTML = '<p style="text-align: center; color: #666;">Searching...</p>';
+            
+            librarySearchTimeout = setTimeout(() => searchLibrary(searchTerm), 300);
+        }
+        
+        // Search library (client-side)
+        function searchLibrary(searchTerm) {
+            // Filter the boxes we already have
+            const searchLower = searchTerm.toLowerCase().replace(/\s+/g, '');
+            
+            const filtered = allLibraryBoxes.filter(box => {
+                // Check dimensions
+                const dimStr = box.dimensions.join('x').toLowerCase().replace(/\s+/g, '');
+                if (dimStr.includes(searchLower)) return true;
+                
+                // Check alternate depths
+                if (box.alternate_depths) {
+                    const depthsStr = box.alternate_depths.join(',').toLowerCase().replace(/\s+/g, '');
+                    if (depthsStr.includes(searchLower)) return true;
+                }
+                
+                // Check names
+                if (box.names) {
+                    for (const name of box.names) {
+                        if (name.toLowerCase().replace(/\s+/g, '').includes(searchLower)) {
+                            return true;
+                        }
+                    }
+                }
+                
+                // Check category
+                if (box.category && box.category.toLowerCase().replace(/\s+/g, '').includes(searchLower)) {
+                    return true;
+                }
+                
+                // Check volume
+                if (box.volume && String(box.volume).includes(searchTerm)) {
+                    return true;
+                }
+                
+                return false;
+            });
+            
+            libraryFullResults = filtered;
+            filterLibraryResults();
+        }
+        
+        // Filter library results based on checkbox
+        function filterLibraryResults() {
+            if (!libraryFullResults || libraryFullResults.length === 0) {
+                librarySearchResults = [];
+                displayLibraryResults([]);
+                return;
+            }
+            
+            const hideExisting = document.getElementById('hide-existing-boxes').checked;
+            
+            if (!hideExisting) {
+                // Show all results
+                librarySearchResults = libraryFullResults;
+            } else {
+                // Filter out boxes that already exist in the store
+                librarySearchResults = libraryFullResults.filter(box => !boxExistsInStore(box));
+            }
+            
+            displayLibraryResults(librarySearchResults);
+        }
+        
+        // Display library search results
+        function displayLibraryResults(results) {
+            const container = document.getElementById('library-results');
+            
+            if (results.length === 0) {
+                const hideExisting = document.getElementById('hide-existing-boxes').checked;
+                if (hideExisting && libraryFullResults.length > 0) {
+                    container.innerHTML = '<p style="text-align: center; color: #666;">All matching boxes are already in your store. Try unchecking the filter or search for different boxes.</p>';
+                } else {
+                    container.innerHTML = '<p style="text-align: center; color: #666;">No boxes found. Try a different search term or create a custom box.</p>';
+                }
+                return;
+            }
+            
+            let html = `<p style="margin: 0 0 10px 0; color: #666;">Showing ${results.length} box${results.length !== 1 ? 'es' : ''}</p>`;
+            html += '<div style="display: flex; flex-direction: column; gap: 10px;">';
+            
+            results.forEach((box, index) => {
+                const [l, w, d] = box.dimensions;
+                const hasAlternateDepths = box.alternate_depths && box.alternate_depths.length > 0;
+                
+                html += `
+                    <div class="box-card" onclick="selectLibraryBox(${index})" style="cursor: pointer;">
+                        <div class="box-info">
+                            <h4>${l}" × ${w}" × ${d}"</h4>
+                            ${hasAlternateDepths ? 
+                                `<div class="box-alt-depths">Pre-scored at: ${box.alternate_depths.join('", ')}"</div>` : 
+                                '<div class="box-alt-depths" style="color: #999;">No pre-scoring</div>'}
+                            ${box.names && box.names.length > 0 ? 
+                                `<div style="color: #666; font-size: 12px; margin-top: 5px;">Names: ${box.names.slice(0, 3).join(', ')}${box.names.length > 3 ? '...' : ''}</div>` : 
+                                ''}
+                            ${box.category ? 
+                                `<span class="category-badge" style="font-size: 11px; padding: 2px 8px; background: #e3f2fd; color: #1976d2; border-radius: 3px; margin-top: 5px; display: inline-block;">${box.category}</span>` : 
+                                ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+        
+        // Select a box from library
+        function selectLibraryBox(index) {
+            selectedLibraryBox = librarySearchResults[index];
+            showNameSelection();
+        }
+        
+        // Show name selection for library box
+        function showNameSelection() {
+            const box = selectedLibraryBox;
+            if (!box) {
+                console.error('No library box selected');
+                return;
+            }
+            const [l, w, d] = box.dimensions;
+            
+            // Show box details
+            const infoHtml = `
+                <h4>Selected Box: ${l}" × ${w}" × ${d}"</h4>
+                ${box.alternate_depths && box.alternate_depths.length > 0 ? 
+                    `<p>Pre-scored at: ${box.alternate_depths.join('", ')}"</p>` : 
+                    '<p>No pre-scoring</p>'}
+                ${box.category ? `<p>Category: ${box.category}</p>` : ''}
+            `;
+            document.getElementById('selected-box-info').innerHTML = infoHtml;
+            
+            // Show name options
+            let nameOptionsHtml = '';
+            
+            // Always add the default dimensions option first (10x4x4 format)
+            const defaultName = `${l}x${w}x${d}`;
+            nameOptionsHtml += `
+                <label style="display: inline-block !important; width: auto !important; margin: 10px 0; cursor: pointer; text-align: left; padding: 0;">
+                    <input type="radio" name="box-name" value="${defaultName}" checked style="margin: 0 8px 0 0; vertical-align: middle; display: inline; width: auto;">
+                    <span style="vertical-align: middle;">${defaultName}</span>
+                </label>
+                <br>
+            `;
+            
+            // Add any library names
+            if (box.names && box.names.length > 0) {
+                box.names.forEach((name) => {
+                    nameOptionsHtml += `
+                        <label style="display: inline-block !important; width: auto !important; margin: 10px 0; cursor: pointer; text-align: left; padding: 0;">
+                            <input type="radio" name="box-name" value="${name}" style="margin: 0 8px 0 0; vertical-align: middle; display: inline; width: auto;">
+                            <span style="vertical-align: middle;">${name}</span>
+                        </label>
+                        <br>
+                    `;
+                });
+            }
+            
+            document.getElementById('name-options').innerHTML = nameOptionsHtml;
+            document.getElementById('custom-name-input').value = '';
+            
+            showStep('name-selection');
+        }
+        
+        // Confirm box selection with chosen name
+        async function confirmBoxSelection() {
+            const selectedName = document.querySelector('input[name="box-name"]:checked').value;
+            let modelName = selectedName;
+            
+            if (selectedName === 'custom') {
+                modelName = document.getElementById('custom-name-input').value.trim();
+                if (!modelName) {
+                    alert('Please enter a custom name for the box.');
+                    return;
+                }
+            }
+            
+            const box = selectedLibraryBox;
+            // Get all offered names (default dimensions name + library names)
+            const defaultName = `${box.dimensions[0]}x${box.dimensions[1]}x${box.dimensions[2]}`;
+            const offeredNames = [defaultName];
+            if (box.names && box.names.length > 0) {
+                offeredNames.push(...box.names);
+            }
+            
+            const boxData = {
+                model: modelName,
+                // No supplier field in new system
+                dimensions: box.dimensions,
+                alternate_depths: box.alternate_depths,
+                from_library: true,
+                offered_names: offeredNames
+            };
+            
+            try {
+                await window.api.createBox(storeId, boxData);
+                closeAddModal();
+                await loadBoxes();
+            } catch (error) {
+                alert(`Failed to add box: ${error.message}`);
+            }
+        }
+        
+        // Search handler - commented out as box-search element doesn't exist in new UI
+        // document.getElementById('box-search').addEventListener('input', displayVendorBoxes);
+        
+        // Handle table click events - use document-level delegation since table is dynamically created
+        document.addEventListener('click', async (e) => {
+            // Check if clicked element is a delete button within the boxes table
+            const deleteBtn = e.target.closest('.action-btn.delete');
+            if (deleteBtn && deleteBtn.dataset.boxIndex) {
+                const index = parseInt(deleteBtn.dataset.boxIndex, 10);
+                deleteBox(index);
+            }
+        });
+        
+        // Handle custom box form
+        document.getElementById('custom-box-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            
+            // Disable button immediately
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span style="display: inline-block; animation: spin 1s linear infinite;">⟳</span> Checking library...';
+            
+            const dimensions = [
+                parseFloat(document.getElementById('custom-length').value),
+                parseFloat(document.getElementById('custom-width').value),
+                parseFloat(document.getElementById('custom-depth').value)
+            ];
+            
+            // Handle alternate depths
+            const altDepthsValue = document.getElementById('custom-alternate-depths').value.trim();
+            let alternateDepths = null;
+            if (altDepthsValue) {
+                alternateDepths = altDepthsValue.split(',')
+                    .map(d => parseFloat(d.trim()))
+                    .filter(d => !isNaN(d));
+            }
+            
+            // Validate dimensions and alternate depths
+            const validation = validateBoxDimensions(dimensions, alternateDepths);
+            if (!validation.valid) {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+                alert(validation.error);
+                return;
+            }
+            
+            // Check if box exists in library
+            try {
+                const checkResult = await window.api.checkLibraryBox(storeId, dimensions, alternateDepths);
+                
+                if (checkResult.exact_match) {
+                    // Found exact match - offer to use it
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                    
+                    if (confirm('We found this box in our library! Would you like to use the existing box instead?')) {
+                        selectedLibraryBox = checkResult.box;
+                        showNameSelection();
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error('Library check failed:', error);
+                // Continue with custom box creation
+            }
+            
+            // Continue with custom box creation
+            submitBtn.innerHTML = '<span style="display: inline-block; animation: spin 1s linear infinite;">⟳</span> Adding box...';
+            
+            const boxData = {
+                model: document.getElementById('custom-model').value.trim(),
+                // No supplier field in new system
+                dimensions: dimensions,
+                alternate_depths: alternateDepths,
+                from_library: false,  // This is a custom box
+                offered_names: null   // No names were offered for custom boxes
+            };
+            
+            // Handle notes
+            const notesValue = document.getElementById('custom-notes').value.trim();
+            if (notesValue) {
+                boxData.notes = notesValue;
+            }
+            
+            try {
+                await window.api.createBox(storeId, boxData);
+                submitBtn.innerHTML = '✓ Added successfully!';
+                setTimeout(() => {
+                    closeAddModal();
+                    loadBoxes();
+                }, 1000);
+            } catch (error) {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+                alert(`Failed to add box: ${error.message}`);
+            }
+        });
+        
+        // Close modal on outside click
+        window.onclick = function(event) {
+            if (event.target.className === 'modal') {
+                event.target.style.display = 'none';
+            }
+        }
+        
+        // Handle location edit requests using event-based approach
+        document.addEventListener('location-edit-requested', function(event) {
+            const model = event.detail.model;
+            const index = currentBoxes.findIndex(box => box.model === model);
+            if (index !== -1) {
+                editLocation(index);
+            }
+        });
+        
+        // Keep global function for backward compatibility
+        window.editLocationForModel = function(model) {
+            const index = currentBoxes.findIndex(box => box.model === model);
+            if (index !== -1) {
+                editLocation(index);
+            }
+        };
+        
+        // Pivot from library box to custom box with pre-filled dimensions
+        function pivotToCustom() {
+            if (!selectedLibraryBox) {
+                console.error('No library box selected for pivot');
+                return;
+            }
+            
+            const box = selectedLibraryBox;
+            const [l, w, d] = box.dimensions;
+            
+            // Pre-fill the custom form with library box dimensions
+            document.getElementById('custom-length').value = l;
+            document.getElementById('custom-width').value = w;
+            document.getElementById('custom-depth').value = d;
+            
+            // Pre-fill alternate depths if they exist
+            if (box.alternate_depths && box.alternate_depths.length > 0) {
+                document.getElementById('custom-alternate-depths').value = box.alternate_depths.join(', ');
+            } else {
+                document.getElementById('custom-alternate-depths').value = '';
+            }
+            
+            // Suggest a model name based on the selected name or dimensions
+            const selectedName = document.querySelector('input[name="box-name"]:checked')?.value || `${l}x${w}x${d}`;
+            document.getElementById('custom-model').value = selectedName + '-CUSTOM';
+            
+            // Clear notes
+            document.getElementById('custom-notes').value = '';
+            
+            // Set flag to track we came from pivot
+            isPivotFromLibrary = true;
+            
+            // Focus on the model name field so user can edit it
+            showStep('custom');
+            document.getElementById('custom-model').focus();
+            document.getElementById('custom-model').select();
+            
+            // Track this pivot for analytics
+            if (window.api && window.api.trackBoxModification) {
+                window.api.trackBoxModification(storeId, {
+                    original_dimensions: box.dimensions,
+                    original_alternate_depths: box.alternate_depths,
+                    modification_type: 'pivot_from_library'
+                }).catch(console.error);
+            }
+        }
+        
+        // Validate alternate depths as user types
+        function validateAlternateDepthsInput() {
+            const depthField = document.getElementById('custom-depth');
+            const altDepthsField = document.getElementById('custom-alternate-depths');
+            const errorElement = document.getElementById('custom-alternate-depths-error');
+            
+            const depth = parseFloat(depthField.value);
+            const altDepthsValue = altDepthsField.value.trim();
+            
+            if (!altDepthsValue || !depth) {
+                errorElement.style.display = 'none';
+                return;
+            }
+            
+            const alternateDepths = altDepthsValue.split(',')
+                .map(d => parseFloat(d.trim()))
+                .filter(d => !isNaN(d));
+            
+            // Quick validation
+            const invalidDepths = alternateDepths.filter(d => d >= depth);
+            if (invalidDepths.length > 0) {
+                errorElement.textContent = `Values ${invalidDepths.join(', ')} must be less than depth (${depth}")`;
+                errorElement.style.display = 'block';
+            } else if (alternateDepths.some(d => d <= 0)) {
+                errorElement.textContent = 'All values must be greater than 0';
+                errorElement.style.display = 'block';
+            } else {
+                errorElement.style.display = 'none';
+            }
+        }
+        
+        // Add event listeners for real-time validation
+        document.getElementById('custom-alternate-depths').addEventListener('input', validateAlternateDepthsInput);
+        document.getElementById('custom-depth').addEventListener('input', validateAlternateDepthsInput);
+        
+        // Make wizard functions global
+        window.showLibrarySearch = showLibrarySearch;
+        window.showCustomForm = showCustomForm;
+        window.backToSource = backToSource;
+        window.backToLibrary = backToLibrary;
+        window.backFromCustom = backFromCustom;
+        window.searchLibraryDebounced = searchLibraryDebounced;
+        window.selectLibraryBox = selectLibraryBox;
+        window.confirmBoxSelection = confirmBoxSelection;
+        window.addNewBox = addNewBox;
+        window.closeAddModal = closeAddModal;
+        window.closeDeleteModal = closeDeleteModal;
+        window.confirmDelete = confirmDelete;
+        window.pivotToCustom = pivotToCustom;
+        window.filterLibraryResults = filterLibraryResults;
+        
+            // Load on page ready with a small delay to ensure API is loaded
+            setTimeout(() => {
+                loadBoxes();
+            }, 100);
+        });
+    </script>
+</body>
+</html>

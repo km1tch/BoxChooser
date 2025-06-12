@@ -1,0 +1,127 @@
+:80 {
+	# Enable compression
+	encode gzip
+
+	# Basic security headers for development
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		X-XSS-Protection "1; mode=block"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	# API routes - proxy to FastAPI backend
+	handle /api/* {
+		# Wide open CORS for development
+		header {
+			Access-Control-Allow-Origin "*"
+			Access-Control-Allow-Credentials "true"
+			Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+			Access-Control-Allow-Headers "Authorization, Content-Type, X-Requested-With"
+			Access-Control-Max-Age "86400"
+		}
+		
+		# Handle preflight requests
+		@options {
+			method OPTIONS
+		}
+		handle @options {
+			respond 204
+		}
+		
+		# Simple proxy for dev - no need for header manipulation
+		reverse_proxy backend:8000
+	}
+
+	# Health check for backend
+	handle /health {
+		reverse_proxy backend:8000
+	}
+
+	# Serve static files
+	root * /srv/frontend
+
+	# JavaScript files with proper MIME type
+	handle /js/*.js {
+		header Content-Type "application/javascript"
+		header Cache-Control "public, max-age=3600"
+		file_server
+	}
+
+	# CSS files
+	handle /assets/css/*.css {
+		header Content-Type "text/css"
+		header Cache-Control "public, max-age=3600"
+		file_server
+	}
+
+	# Favicon
+	handle /favicon.ico {
+		rewrite * /assets/favicon.ico
+		file_server
+	}
+
+	# Cache static assets
+	handle /assets/* {
+		header Cache-Control "public, max-age=31536000"
+		file_server
+	}
+
+	# Simple page routes
+	handle /login {
+		rewrite * /login.html
+		file_server
+	}
+
+	handle /wizard {
+		rewrite * /wizard.html
+		file_server
+	}
+
+	handle /prices {
+		rewrite * /prices.html
+		file_server
+	}
+
+	handle /import {
+		rewrite * /import.html
+		file_server
+	}
+
+	handle /floorplan {
+		rewrite * /floorplan.html
+		file_server
+	}
+
+	handle /settings {
+		rewrite * /settings.html
+		file_server
+	}
+
+	handle /packing {
+		rewrite * /packing.html
+		file_server
+	}
+
+	handle /boxes {
+		rewrite * /boxes.html
+		file_server
+	}
+
+	handle /getting-started {
+		rewrite * /getting-started.html
+		file_server
+	}
+
+	# Root serves index.html (which redirects to wizard)
+	handle / {
+		rewrite * /index.html
+		file_server
+	}
+
+	# Default file server for everything else
+	handle {
+		file_server
+	}
+}

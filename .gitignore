@@ -1,0 +1,9 @@
+__pycache__
+venv
+.env
+floorplans/
+*.db
+*.swp 
+*_BAK
+tools/
+stores/store*.yml
