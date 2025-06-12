@@ -198,6 +198,7 @@ const AuthManager = (function() {
     // Always remove token and sudo flag locally
     removeToken(storeId);
     localStorage.removeItem(`store_${storeId}_is_sudo`);
+    localStorage.removeItem('current_store_id');
     
     // Clear auth cache
     delete authStatusCache[storeId];
