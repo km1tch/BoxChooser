@@ -79,7 +79,8 @@ class PriceTableView {
     getColumnDefinitions(data) {
         const columns = [
             { 
-                data: 'section'
+                data: 'section',
+                searchable: false
             },
             {
                 // Combined Model/Dimensions column for screen
@@ -88,6 +89,11 @@ class PriceTableView {
                     const dimensions = row.dimensions;
                     const model = row.model || '';
                     const location = row.location;
+                    
+                    // For search/filter, return just the text content
+                    if (type === 'filter' || type === 'search') {
+                        return `${dimensions} ${model}`;
+                    }
                     
                     if (type === 'display') {
                         let html = `<div class="box-details">`;
@@ -119,75 +125,88 @@ class PriceTableView {
             }
         ];
         
-        // Always use itemized pricing columns
+        // Always use itemized pricing columns - all non-searchable
         columns.push(
                 { 
                     data: 'box_price',
-                    render: (data) => parseFloat(data).toFixed(2)
+                    render: (data) => parseFloat(data).toFixed(2),
+                    searchable: false
                 },
                 // Basic group
                 { 
                     data: 'basic_materials',
                     render: (data) => parseFloat(data).toFixed(2),
-                    className: 'basic-group'
+                    className: 'basic-group',
+                    searchable: false
                 },
                 { 
                     data: 'basic_services',
                     render: (data) => parseFloat(data).toFixed(2),
-                    className: 'basic-group'
+                    className: 'basic-group',
+                    searchable: false
                 },
                 { 
                     data: 'basic_total',
                     render: (data) => parseFloat(data).toFixed(2),
-                    className: 'total-cell basic-group'
+                    className: 'total-cell basic-group',
+                    searchable: false
                 },
                 // Standard group
                 { 
                     data: 'standard_materials',
                     render: (data) => parseFloat(data).toFixed(2),
-                    className: 'standard-group'
+                    className: 'standard-group',
+                    searchable: false
                 },
                 { 
                     data: 'standard_services',
                     render: (data) => parseFloat(data).toFixed(2),
-                    className: 'standard-group'
+                    className: 'standard-group',
+                    searchable: false
                 },
                 { 
                     data: 'standard_total',
                     render: (data) => parseFloat(data).toFixed(2),
-                    className: 'total-cell standard-group'
+                    className: 'total-cell standard-group',
+                    searchable: false
                 },
                 // Fragile group
                 { 
                     data: 'fragile_materials',
                     render: (data) => parseFloat(data).toFixed(2),
-                    className: 'fragile-group'
+                    className: 'fragile-group',
+                    searchable: false
                 },
                 { 
                     data: 'fragile_services',
                     render: (data) => parseFloat(data).toFixed(2),
-                    className: 'fragile-group'
+                    className: 'fragile-group',
+                    searchable: false
                 },
                 { 
                     data: 'fragile_total',
                     render: (data) => parseFloat(data).toFixed(2),
-                    className: 'total-cell fragile-group'
+                    className: 'total-cell fragile-group',
+                    searchable: false
                 },
                 // Custom group
                 { 
                     data: 'custom_materials',
                     render: (data) => parseFloat(data).toFixed(2),
-                    className: 'custom-group'
+                    className: 'custom-group',
+                    searchable: false
                 },
                 { 
                     data: 'custom_services',
                     render: (data) => parseFloat(data).toFixed(2),
-                    className: 'custom-group'
+                    className: 'custom-group',
+                    searchable: false
                 },
                 { 
                     data: 'custom_total',
                     render: (data) => parseFloat(data).toFixed(2),
-                    className: 'total-cell custom-group'
+                    className: 'total-cell custom-group',
+                    searchable: false
                 }
             );
         

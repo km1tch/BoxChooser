@@ -87,86 +87,117 @@ class PriceTableEdit {
     // Get column definitions for DataTable
     getColumnDefinitions(data) {
         const columns = [
-            { data: 'section' }
+            { data: 'section', searchable: false }
         ];
         
         // Add model column if needed
         if (this.hasRealModels) {
-            columns.push({ data: 'model' });
+            columns.push({ 
+                data: 'model',
+                render: (data, type, row) => {
+                    // For search/filter, return the text content
+                    if (type === 'filter' || type === 'search') {
+                        return data || '';
+                    }
+                    return data;
+                }
+            });
         }
         
-        columns.push({ data: 'dimensions' });
+        columns.push({ 
+            data: 'dimensions',
+            render: (data, type, row) => {
+                // For search/filter, return the text content
+                if (type === 'filter' || type === 'search') {
+                    return data || '';
+                }
+                return data;
+            }
+        });
         
-        // Always use itemized pricing columns
+        // Always use itemized pricing columns - all non-searchable
         columns.push(
                 { 
                     data: 'box_price',
                     render: (data) => parseFloat(data).toFixed(2),
-                    className: 'editable box-price-cell'
+                    className: 'editable box-price-cell',
+                    searchable: false
                 },
                 // Basic group
                 { 
                     data: 'basic_materials',
                     render: (data) => parseFloat(data).toFixed(2),
-                    className: 'editable basic-group'
+                    className: 'editable basic-group',
+                    searchable: false
                 },
                 { 
                     data: 'basic_services',
                     render: (data) => parseFloat(data).toFixed(2),
-                    className: 'editable basic-group'
+                    className: 'editable basic-group',
+                    searchable: false
                 },
                 { 
                     data: 'basic_total',
                     render: (data) => parseFloat(data).toFixed(2),
-                    className: 'total-cell basic-group'
+                    className: 'total-cell basic-group',
+                    searchable: false
                 },
                 // Standard group
                 { 
                     data: 'standard_materials',
                     render: (data) => parseFloat(data).toFixed(2),
-                    className: 'editable standard-group'
+                    className: 'editable standard-group',
+                    searchable: false
                 },
                 { 
                     data: 'standard_services',
                     render: (data) => parseFloat(data).toFixed(2),
-                    className: 'editable standard-group'
+                    className: 'editable standard-group',
+                    searchable: false
                 },
                 { 
                     data: 'standard_total',
                     render: (data) => parseFloat(data).toFixed(2),
-                    className: 'total-cell standard-group'
+                    className: 'total-cell standard-group',
+                    searchable: false
                 },
                 // Fragile group
                 { 
                     data: 'fragile_materials',
                     render: (data) => parseFloat(data).toFixed(2),
-                    className: 'editable fragile-group'
+                    className: 'editable fragile-group',
+                    searchable: false
                 },
                 { 
                     data: 'fragile_services',
                     render: (data) => parseFloat(data).toFixed(2),
-                    className: 'editable fragile-group'
+                    className: 'editable fragile-group',
+                    searchable: false
                 },
                 { 
                     data: 'fragile_total',
                     render: (data) => parseFloat(data).toFixed(2),
-                    className: 'total-cell fragile-group'
+                    className: 'total-cell fragile-group',
+                    searchable: false
                 },
                 // Custom group
                 { 
                     data: 'custom_materials',
                     render: (data) => parseFloat(data).toFixed(2),
-                    className: 'editable custom-group'
+                    className: 'editable custom-group',
+                    searchable: false
                 },
                 { 
                     data: 'custom_services',
                     render: (data) => parseFloat(data).toFixed(2),
-                    className: 'editable custom-group'
+                    className: 'editable custom-group',
+                    searchable: false
                 },
                 { 
                     data: 'custom_total',
                     render: (data) => parseFloat(data).toFixed(2),
-                    className: 'total-cell custom-group'
+                    className: 'total-cell custom-group',
+                    searchable: false
                 }
             );
         
@@ -174,6 +205,7 @@ class PriceTableEdit {
         if (this.hasLocations) {
             columns.push({
                 data: 'location',
+                searchable: false,
                 render: (data, type, row) => {
                     const hasCoords = data && typeof data === 'object' && 
                                      data.coords && data.coords.length > 0;
